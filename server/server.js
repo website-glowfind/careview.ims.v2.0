@@ -37,9 +37,10 @@ app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/subscriptions', subscriptionRoute);
 app.use('/api/v1/assets', assetRoute);
 
-// Serve React build in production
-if (process.env.NODE_ENV === "production") {
-  const clientDist = path.join(__dirname, "../client/dist");
+// Serve React build
+import { existsSync } from "fs";
+const clientDist = path.join(__dirname, "../client/dist");
+if (existsSync(clientDist)) {
   app.use(express.static(clientDist));
   app.get("*", (req, res) => {
     res.sendFile(path.join(clientDist, "index.html"));
