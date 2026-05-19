@@ -202,8 +202,7 @@ export function AssetForm({ asset, assets, categories, onAddCategory, onDeleteCa
                 {/* QR Code Section */}
                 <div className="mt-4 lg:mt-0">
                   <QRCodeDisplay
-                    deviceCode={previewCode}
-                    assetId={asset._id}
+                    asset={asset}
                     size={100}
                     showDownload={true}
                     showLabel={true}

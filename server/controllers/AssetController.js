@@ -19,6 +19,18 @@ async function generateDeviceCode(company, category) {
   const categoryPrefix = CATEGORY_PREFIXES[category] || 'OT';
   return `${companyPrefix}-${categoryPrefix}-${(maxNumber + 1).toString().padStart(3, '0')}`;
 }
+export const getAssetById = async (req, res) => {
+    try {
+        const asset = await Asset.findById(req.params.id);
+        if (!asset || asset.isDeleted) {
+            return res.status(404).json({ error: "Asset not found" });
+        }
+        res.status(200).json(asset);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 export const getAssets = async (req, res) => {
     try {
         // Kunin lahat ng assets na hindi pa 'deleted'
@@ -41,6 +53,28 @@ export const createAsset = async (req, res) => {
 };
 
 
+
+export const updateAsset = async (req, res) => {
+    try {
+        const asset = await Asset.findById(req.params.id);
+        if (!asset || asset.isDeleted) {
+            return res.status(404).json({ error: "Asset not found" });
+        }
+
+        // Prevent deviceCode from being overwritten
+        delete req.body.deviceCode;
+
+        const updated = await Asset.findByIdAndUpdate(
+            req.params.id,
+            { $set: req.body },
+            { new: true, runValidators: true }
+        );
+
+        res.status(200).json(updated);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
 
 export const addAsset = async (req, res) => {
     try {

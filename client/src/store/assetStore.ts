@@ -6,6 +6,7 @@ import type { ITAsset, Company, LicenseSubscription } from "@/types/inventory";
 
 interface AssetState {
   assets: ITAsset[];
+  setAssets: (assets: ITAsset[]) => void;
   subscriptions: LicenseSubscription[]; // Gamitin ang detailed interface mo
   selectedCompany: Company | 'all';
   isLoading: boolean;
@@ -26,6 +27,7 @@ interface AssetState {
 
 export const useAssetStore = create<AssetState>((set, get) => ({
   assets: [],
+  setAssets: (assets) => set({ assets }),
   subscriptions: [],
   selectedCompany: 'all',
   isLoading: false,

@@ -1,10 +1,11 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Download, QrCode } from 'lucide-react';
+import type { ITAsset } from '@/types/inventory';
 
 interface QRCodeDisplayProps {
-  deviceCode: string;
-  assetId?: string;
+  asset?: ITAsset;
+  deviceCode?: string;
   size?: number;
   showDownload?: boolean;
   showLabel?: boolean;
@@ -12,21 +13,46 @@ interface QRCodeDisplayProps {
 }
 
 export function QRCodeDisplay({
+  asset,
   deviceCode,
-  assetId,
   size = 128,
   showDownload = true,
   showLabel = true,
   className = ''
 }: QRCodeDisplayProps) {
   const qrRef = useRef<HTMLDivElement>(null);
+  const code = asset?.deviceCode ?? deviceCode ?? '';
 
-  // Generate the URL that the QR code will encode
-  // When scanned, it will open the asset details page
   const getQRCodeValue = () => {
-    const baseUrl = window.location.origin;
-    // Encode the device code in the URL - this can be used to look up the asset
-    return `${baseUrl}/asset/${encodeURIComponent(deviceCode)}`;
+    if (!asset) return code;
+
+    const employeeLines: string[] = [];
+    if (asset.assignedTo) employeeLines.push(`Name: ${asset.assignedTo}`);
+    if (asset.employeeId) employeeLines.push(`ID No.: ${asset.employeeId}`);
+    if (asset.position) employeeLines.push(`Position: ${asset.position}`);
+    if (asset.department) employeeLines.push(`Department: ${asset.department}`);
+    if (asset.company) employeeLines.push(`Company: ${asset.company}`);
+    if (asset.location) employeeLines.push(`Location: ${asset.location}`);
+
+    const deviceLines: string[] = [
+      `Asset/Tag Number: ${asset.deviceCode}`,
+      `Item Description: ${asset.name}`,
+      `Brand/Model: ${asset.brand} / ${asset.model}`,
+      `Serial Number: ${asset.serialNumber}`,
+    ];
+    if (asset.specifications) deviceLines.push(`Device Specs: ${asset.specifications}`);
+    if (asset.notes) deviceLines.push(`Remarks: ${asset.notes}`);
+
+    const sections: string[] = [];
+    if (employeeLines.length > 0) {
+      sections.push('EMPLOYEE INFORMATION');
+      sections.push(...employeeLines);
+      sections.push('');
+    }
+    sections.push('DEVICE INFORMATION');
+    sections.push(...deviceLines);
+
+    return sections.join('\n');
   };
 
   // Download QR code as PNG
@@ -64,7 +90,7 @@ export function QRCodeDisplay({
           const downloadUrl = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = downloadUrl;
-          link.download = `QR-${deviceCode}.png`;
+          link.download = `QR-${code}.png`;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);

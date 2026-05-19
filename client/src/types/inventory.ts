@@ -33,6 +33,7 @@ export interface ITAsset {
   specifications?: string;
   status: AssetStatus;
   assignedTo?: string;
+  employeeId?: string;
   position?: string;
   department?: string;
   purchaseDate: string;
@@ -41,7 +42,7 @@ export interface ITAsset {
   notes?: string;
   isDeleted?: boolean;
   deletedAt?: string;
-  disposalId?: string; // Link to disposal record
+  disposalId?: string;
 }
 
 export interface Subscription {

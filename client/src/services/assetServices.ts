@@ -10,6 +10,15 @@ const handleAxiosError = (error: any) => {
 };
 
 export const assetServices = {
+    getAssetById: async (id: string): Promise<ITAsset> => {
+        try {
+            const response = await api.get(`/assets/${id}`);
+            return response.data;
+        } catch (error) {
+            throw handleAxiosError(error);
+        }
+    },
+
     getAllAssets: async (): Promise<ITAsset[]> => {
         try {
             const response = await api.get("/assets");
