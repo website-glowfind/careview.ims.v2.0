@@ -62,7 +62,7 @@ export function Dashboard() {
             </div>
             <ul className="space-y-2">
               {expiringWarranties.map(asset => (
-                <li key={asset.id} className="text-sm text-yellow-700 flex justify-between border-b border-yellow-200/50 pb-1">
+                <li key={asset._id} className="text-sm text-yellow-700 flex justify-between border-b border-yellow-200/50 pb-1">
                   <span><span className="font-medium">{asset.deviceCode}</span> - {asset.name}</span>
                   <span className="font-semibold italic">
                     Expires: {new Date(asset.warrantyExpiry!).toLocaleDateString()}
