@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: hris-app
+    runtime: node
+    buildCommand: npm install --workspaces && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
