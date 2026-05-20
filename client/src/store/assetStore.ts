@@ -99,16 +99,17 @@ export const useAssetStore = create<AssetState>((set, get) => ({
     }
   },
   addAsset: async (assetData, subscriptionData) => {
-        set({ isLoading: true });
+        set({ isLoading: true, error: null });
         try {
             const newAsset = await assetServices.createAsset(assetData, subscriptionData);
-            set((state) => ({ 
-                assets: [...state.assets, newAsset], 
-                isLoading: false 
+            set((state) => ({
+                assets: [...state.assets, newAsset],
+                isLoading: false
             }));
         } catch (err: any) {
-            set({ isLoading: false });
-            throw err;
+            const message = err.response?.data?.error || 'Failed to save asset';
+            set({ isLoading: false, error: message });
+            throw new Error(message);
         }
     },
 

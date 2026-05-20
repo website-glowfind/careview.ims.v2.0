@@ -9,14 +9,16 @@ import { useAssetStore } from '@/store/assetStore';
 
 export default function MainLayout() {
   const [currentView, setCurrentView] = useState('dashboard');
+  const [formError, setFormError] = useState<string | null>(null);
     const { user, logout } = useAuthStore();
     const { assets, addAsset } = useAssetStore();
     const handleSaveAsset = async (assetData: any, subscriptionData?: any) => {
+      setFormError(null);
       try {
         await addAsset(assetData, subscriptionData);
         setCurrentView('inventory'); // Auto-redirect sa table pagkatapos mag-save
-      } catch (error) {
-        console.error("Failed to save asset:", error);
+      } catch (error: any) {
+        setFormError(error?.message || 'Failed to save asset.');
       }
     };
   const renderView = () => {
@@ -28,14 +30,19 @@ export default function MainLayout() {
       case 'add':
         return (
           <div className="max-w-4xl mx-auto">
-            <AssetForm 
+            {formError && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-300 rounded-lg text-red-700 text-sm font-medium">
+                ⚠️ {formError}
+              </div>
+            )}
+            <AssetForm
               assets={assets}
               categories={['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'networking', 'phone', 'tablet', 'other']}
               onAddCategory={() => {}} // Opsyonal: logic para sa custom categories
               onDeleteCategory={() => {}}
               defaultCategories={['laptop', 'desktop', 'monitor', 'phone']}
               onSave={handleSaveAsset}
-              onCancel={() => setCurrentView('dashboard')}
+              onCancel={() => { setFormError(null); setCurrentView('dashboard'); }}
               currentUser={user?.name || 'Admin'}
               onSaveFormRecord={(record) => console.log("Form Record:", record)}
             />

@@ -48,6 +48,11 @@ export const createAsset = async (req, res) => {
         const newAsset = await Asset.create(assetData);
         res.status(201).json(newAsset);
     } catch (error) {
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyValue || {})[0] || 'field';
+            const value = error.keyValue?.[field] || '';
+            return res.status(400).json({ error: `Duplicate value: "${value}" is already used by another asset (${field}).` });
+        }
         res.status(400).json({ error: error.message });
     }
 };
@@ -72,6 +77,11 @@ export const updateAsset = async (req, res) => {
 
         res.status(200).json(updated);
     } catch (error) {
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyValue || {})[0] || 'field';
+            const value = error.keyValue?.[field] || '';
+            return res.status(400).json({ error: `Duplicate value: "${value}" is already used by another asset (${field}).` });
+        }
         res.status(400).json({ error: error.message });
     }
 };

@@ -62,7 +62,7 @@ export function AssetForm({ asset, assets, categories, onAddCategory, onDeleteCa
 
   useEffect(() => {
     if (asset) {
-      setFormData({
+setFormData({
         _id: asset._id,
         name: asset.name,
         category: asset.category,
@@ -76,8 +76,8 @@ export function AssetForm({ asset, assets, categories, onAddCategory, onDeleteCa
         assignedTo: asset.assignedTo || '',
         position: asset.position || '',
         department: asset.department || '',
-        purchaseDate: asset.purchaseDate,
-        warrantyExpiry: asset.warrantyExpiry || '',
+        purchaseDate: asset.purchaseDate ? asset.purchaseDate.split('T')[0] : '',
+        warrantyExpiry: asset.warrantyExpiry ? asset.warrantyExpiry.split('T')[0] : '',
         location: asset.location,
         notes: asset.notes || '',
       });
