@@ -44,6 +44,7 @@ export function AssetForm({ asset, assets, categories, onAddCategory, onDeleteCa
 
   const [previewCode, setPreviewCode] = useState<string>('');
   const [showAgreement, setShowAgreement] = useState(false);
+  const [serialError, setSerialError] = useState<string>('');
   
   // Subscription form data for phone category
   const [subscriptionData, setSubscriptionData] = useState({
@@ -99,8 +100,19 @@ setFormData({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    
+    setSerialError('');
+
+    // Check for duplicate serial number (exclude self when editing)
+    const duplicate = assets.find(
+      (a) =>
+        a.serialNumber.trim().toLowerCase() === formData.serialNumber.trim().toLowerCase() &&
+        a._id !== asset?._id
+    );
+    if (duplicate) {
+      setSerialError(`Serial number "${formData.serialNumber}" is already used by asset ${duplicate.deviceCode} (${duplicate.name}).`);
+      return;
+    }
+
     if (!asset && isPhoneCategory) {
       if (!subscriptionData.provider || !subscriptionData.planType || !subscriptionData.cost || !subscriptionData.renewalDate) {
         alert('Please fill in all required subscription fields (Provider, Plan Type, Cost, and Renewal Date)');
@@ -399,11 +411,14 @@ setFormData({
                   type="text"
                   name="serialNumber"
                   value={formData.serialNumber}
-                  onChange={handleChange}
+                  onChange={(e) => { setSerialError(''); handleChange(e); }}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 bg-white ${serialError ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'}`}
                   placeholder="e.g., SN123456789"
                 />
+                {serialError && (
+                  <p className="mt-1 text-xs text-red-600">{serialError}</p>
+                )}
               </div>
 
               {/* Specifications */}
