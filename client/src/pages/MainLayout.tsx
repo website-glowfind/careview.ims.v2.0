@@ -6,17 +6,20 @@ import { useAuthStore } from '@/store/authStore';
 import { LogOut } from 'lucide-react';
 import { AssetForm } from '@/components/asset-form';
 import { useAssetStore } from '@/store/assetStore';
+import { useFormRecordStore } from '@/store/formRecordStore';
+import { FormMasterlistPage } from './Form-Masterlist/FormMasterListPage';
 
 export default function MainLayout() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [formError, setFormError] = useState<string | null>(null);
     const { user, logout } = useAuthStore();
     const { assets, addAsset } = useAssetStore();
+    const { addFormRecord } = useFormRecordStore();
     const handleSaveAsset = async (assetData: any, subscriptionData?: any) => {
       setFormError(null);
       try {
         await addAsset(assetData, subscriptionData);
-        setCurrentView('inventory'); // Auto-redirect sa table pagkatapos mag-save
+        setCurrentView('inventory'); 
       } catch (error: any) {
         setFormError(error?.message || 'Failed to save asset.');
       }
@@ -24,9 +27,11 @@ export default function MainLayout() {
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard />; // Dito lalabas yung stats at alerts mo
+        return <Dashboard />;
       case 'inventory':
-        return <InventoryPage />; // Dito lalabas yung dynamic table
+        return <InventoryPage />;
+      case 'form-masterlist':
+        return <FormMasterlistPage />;
       case 'add':
         return (
           <div className="max-w-4xl mx-auto">
@@ -44,7 +49,7 @@ export default function MainLayout() {
               onSave={handleSaveAsset}
               onCancel={() => { setFormError(null); setCurrentView('dashboard'); }}
               currentUser={user?.name || 'Admin'}
-              onSaveFormRecord={(record) => console.log("Form Record:", record)}
+              onSaveFormRecord={addFormRecord}
             />
           </div>
         );
