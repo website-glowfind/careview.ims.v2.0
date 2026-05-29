@@ -8,6 +8,7 @@ import { AssetForm } from '@/components/asset-form';
 import { useAssetStore } from '@/store/assetStore';
 import { useFormRecordStore } from '@/store/formRecordStore';
 import { FormMasterlistPage } from './Form-Masterlist/FormMasterListPage';
+import { DisposalFormPage } from './Disposal-form/DisposalFormPage';
 
 export default function MainLayout() {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -32,6 +33,8 @@ export default function MainLayout() {
         return <InventoryPage />;
       case 'form-masterlist':
         return <FormMasterlistPage />;
+      case 'disposal':
+        return <DisposalFormPage />;
       case 'add':
         return (
           <div className="max-w-4xl mx-auto">
