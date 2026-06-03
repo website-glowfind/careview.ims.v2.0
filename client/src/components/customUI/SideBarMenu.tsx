@@ -25,20 +25,17 @@ export function SidebarMenu({ currentView, onViewChange }: SidebarProps) {
   const menuItems = allMenuItems.filter(item => !item.adminOnly || isAdmin);
 
   return (
-    <div className="w-64 bg-[#d5e1f1] border-r border-gray-200 min-h-screen p-4">
+    <div className="w-64 bg-[#d5e1f1] dark:bg-[#0d1535] border-r border-gray-200 dark:border-[#1e3a5f] min-h-screen p-4 transition-colors duration-300">
       <div className="mb-8">
-        {/* Logo and Title - Side by Side */}
         <div className="flex justify-center items-center gap-3 mb-3">
-          <img 
-            src={'/logo.png'} 
-            alt="IMS Logo" 
+          <img
+            src={'/logo.png'}
+            alt="IMS Logo"
             className="w-12 h-12 object-contain"
           />
         </div>
-        
-        {/* Subtitle */}
         <div className="text-center">
-          <p className="text-gray-600 text-xs">Inventory Management System</p>
+          <p className="text-gray-600 dark:text-slate-400 text-xs">Inventory Management System</p>
         </div>
       </div>
 
@@ -51,7 +48,7 @@ export function SidebarMenu({ currentView, onViewChange }: SidebarProps) {
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   currentView === item.id
                     ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-blue-100'
+                    : 'text-gray-700 dark:text-slate-300 hover:bg-blue-100 dark:hover:bg-[#1e2d4a]'
                 }`}
               >
                 <item.icon className="w-5 h-5" />

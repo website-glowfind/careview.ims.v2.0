@@ -1,8 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
 
-
 @import "tailwindcss";
 @import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 
 
@@ -92,38 +93,75 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  /* Navy dark theme */
+  --dm-bg:        #0f1729;
+  --dm-surface:   #162236;
+  --dm-surface2:  #1e2d4a;
+  --dm-border:    #1e3a5f;
+  --dm-text:      #f1f5f9;
+  --dm-text-muted:#94a3b8;
+
+  --background: #0f1729;
+  --foreground: #f1f5f9;
+  --card: #162236;
+  --card-foreground: #f1f5f9;
+  --popover: #162236;
+  --popover-foreground: #f1f5f9;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #1e2d4a;
+  --secondary-foreground: #f1f5f9;
+  --muted: #1e2d4a;
+  --muted-foreground: #94a3b8;
+  --accent: #1e2d4a;
+  --accent-foreground: #f1f5f9;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: #1e3a5f;
+  --input: #1e2d4a;
+  --ring: #3b82f6;
+  --sidebar: #0d1535;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e2d4a;
+  --sidebar-accent-foreground: #f1f5f9;
+  --sidebar-border: #1e3a5f;
+  --sidebar-ring: #3b82f6;
 }
+
+/* ── Global dark-mode overrides ───────────────────────────────────────────
+   These automatically apply dark styles to all existing components that
+   use standard Tailwind bg/text/border utility classes.                   */
+.dark .bg-white        { background-color: #162236 !important; }
+.dark .bg-gray-50      { background-color: #1e2d4a !important; }
+.dark .bg-gray-100     { background-color: #1e2d4a !important; }
+.dark .bg-gray-200     { background-color: #243352 !important; }
+
+.dark .text-gray-900   { color: #f1f5f9 !important; }
+.dark .text-gray-800   { color: #e2e8f0 !important; }
+.dark .text-gray-700   { color: #cbd5e1 !important; }
+.dark .text-gray-600   { color: #94a3b8 !important; }
+.dark .text-gray-500   { color: #64748b !important; }
+.dark .text-gray-400   { color: #475569 !important; }
+
+.dark .border-gray-200 { border-color: #1e3a5f !important; }
+.dark .border-gray-300 { border-color: #243352 !important; }
+.dark .border-gray-400 { border-color: #2d4269 !important; }
+
+.dark .divide-gray-200 > * + * { border-color: #1e3a5f !important; }
+
+.dark input:not([class*="bg-"]),
+.dark textarea:not([class*="bg-"]),
+.dark select:not([class*="bg-"]) {
+  background-color: #1e2d4a;
+  color: #f1f5f9;
+  border-color: #1e3a5f;
+}
+.dark input::placeholder,
+.dark textarea::placeholder { color: #475569; }
+
+.dark table thead { background-color: #1e2d4a !important; }
+.dark table tr:hover { background-color: #1e2d4a !important; }
 
 @layer base {
   * {

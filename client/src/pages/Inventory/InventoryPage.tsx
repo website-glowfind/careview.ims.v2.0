@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { LayoutList, LayoutGrid } from 'lucide-react';
 import { InventoryTable } from '@/components/inventory-table';
+import { InventoryCards } from '@/components/inventory-cards';
 import { useAssetStore } from '@/store/assetStore';
 import { useAuthStore } from '@/store/authStore';
 import type { ITAsset, Company, DeviceActivity, HistoryEntry, FieldChange, UserRole, Subscription, FormRecord } from '@/types/inventory';
@@ -21,6 +23,9 @@ export function InventoryPage() {
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === 'admin';
 
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>(() =>
+    (localStorage.getItem('inventoryViewMode') as 'table' | 'cards') ?? 'table'
+  );
   const [viewingAsset, setViewingAsset] = useState<ITAsset | undefined>(undefined);
   const [editingAsset, setEditingAsset] = useState<ITAsset | undefined>(undefined);
   const [deviceActivities, setDeviceActivities] = useState<DeviceActivity[]>([]);
@@ -192,12 +197,53 @@ export function InventoryPage() {
   };
 
 
+  const handleViewModeChange = (mode: 'table' | 'cards') => {
+    setViewMode(mode);
+    localStorage.setItem('inventoryViewMode', mode);
+  };
+
+  const sharedProps = {
+    assets,
+    selectedCompany,
+    onCompanyChange: setSelectedCompany,
+    onEdit: handleEdit,
+    onDelete: handleDelete,
+    onViewDetails: handleView,
+    onTransfer: handleTransfer,
+    isAdmin,
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
-          <p className="text-gray-600 mt-1">Manage and track all IT assets across companies</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Inventory Management</h1>
+          <p className="text-gray-600 dark:text-slate-400 mt-1">Manage and track all IT assets across companies</p>
+        </div>
+        {/* View toggle */}
+        <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-[#1e2d4a] rounded-xl">
+          <button
+            onClick={() => handleViewModeChange('table')}
+            title="Table view"
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'table'
+                ? 'bg-white dark:bg-[#162236] text-blue-600 shadow-sm'
+                : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
+            }`}
+          >
+            <LayoutList className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => handleViewModeChange('cards')}
+            title="Card view"
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'cards'
+                ? 'bg-white dark:bg-[#162236] text-blue-600 shadow-sm'
+                : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
+            }`}
+          >
+            <LayoutGrid className="w-5 h-5" />
+          </button>
         </div>
       </div>
 
@@ -205,17 +251,10 @@ export function InventoryPage() {
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
+      ) : viewMode === 'cards' ? (
+        <InventoryCards {...sharedProps} />
       ) : (
-        <InventoryTable
-          assets={assets}
-          selectedCompany={selectedCompany}
-          onCompanyChange={setSelectedCompany}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onViewDetails={handleView}
-          onTransfer={handleTransfer}
-          isAdmin={isAdmin}
-        />
+        <InventoryTable {...sharedProps} />
       )}
       {showForm && isAdmin && (
         <AssetForm

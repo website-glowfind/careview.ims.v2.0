@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {Routes, Route} from 'react-router-dom'
 import { Dashboard } from './pages/Dashboard'
 import ProtectedRoute from './middleware/ProtectedRoute'
@@ -6,7 +7,14 @@ import Employees from './pages/Employees/Employees'
 import { LoginPage } from './pages/Figma-UI/Login-page'
 import { InventoryPage } from './pages/Inventory/InventoryPage'
 import MainLayout from './pages/MainLayout'
+import { useThemeStore } from './store/themeStore'
+
 function App() {
+  const { initTheme } = useThemeStore();
+
+  useEffect(() => {
+    initTheme();
+  }, [initTheme]);
 
   return (
     <ProtectedRoute>
