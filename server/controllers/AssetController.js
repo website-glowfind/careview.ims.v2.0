@@ -86,6 +86,41 @@ export const updateAsset = async (req, res) => {
     }
 };
 
+export const deleteAsset = async (req, res) => {
+    try {
+        const asset = await Asset.findById(req.params.id);
+        if (!asset) return res.status(404).json({ error: "Asset not found" });
+        asset.isDeleted = true;
+        asset.deletedAt = new Date();
+        await asset.save();
+        res.status(200).json({ message: "Asset deleted", asset });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const restoreAsset = async (req, res) => {
+    try {
+        const asset = await Asset.findById(req.params.id);
+        if (!asset) return res.status(404).json({ error: "Asset not found" });
+        asset.isDeleted = false;
+        asset.deletedAt = undefined;
+        await asset.save();
+        res.status(200).json(asset);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const getDeletedAssets = async (req, res) => {
+    try {
+        const assets = await Asset.find({ isDeleted: true });
+        res.status(200).json(assets);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 export const addAsset = async (req, res) => {
     try {
         const { assetData, subscriptionData } = req.body;

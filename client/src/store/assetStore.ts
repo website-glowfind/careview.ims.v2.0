@@ -18,7 +18,8 @@ interface AssetState {
   setSelectedCompany: (company: Company | 'all') => void;
   addAsset: (assetData: any, subscriptionData?: any) => Promise<void>;
   updateAsset: (id: string, assetData: any) => Promise<void>;
-  deleteAsset: (id: string) => void
+  deleteAsset: (id: string) => void;
+  restoreAsset: (id: string) => Promise<void>;
 
   // Logic/Getters (Helper functions para sa Dashboard)
   getWarrantyExpiringAssets: () => ITAsset[];
@@ -88,14 +89,28 @@ export const useAssetStore = create<AssetState>((set, get) => ({
   },
   deleteAsset: async (id: string) => {
     try {
-      await api.patch(`/assets/${id}/delete`); 
+      await api.patch(`/assets/${id}/delete`);
       set((state) => ({
-        assets: state.assets.map(asset => 
-          asset._id === id ? { ...asset, isDeleted: true } : asset
+        assets: state.assets.map(asset =>
+          asset._id === id ? { ...asset, isDeleted: true, deletedAt: new Date().toISOString() } : asset
         )
       }));
     } catch (err) {
       console.error("Failed to delete asset:", err);
+    }
+  },
+
+  restoreAsset: async (id: string) => {
+    try {
+      const response = await api.patch(`/assets/${id}/restore`);
+      set((state) => ({
+        assets: state.assets.map(asset =>
+          asset._id === id ? { ...response.data, isDeleted: false } : asset
+        )
+      }));
+    } catch (err) {
+      console.error("Failed to restore asset:", err);
+      throw err;
     }
   },
   addAsset: async (assetData, subscriptionData) => {

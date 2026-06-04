@@ -375,7 +375,7 @@ export function InventoryCards({
 
       {/* Delete Modal */}
       {showDeleteModal && assetToDelete && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-[#162236] rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-[#1e3a5f]">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Confirm Delete</h3>
             <p className="text-gray-600 dark:text-slate-400 text-sm mb-6">

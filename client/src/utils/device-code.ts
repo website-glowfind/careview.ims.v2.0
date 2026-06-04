@@ -82,22 +82,52 @@ export function generateLicenseSubscriptionCode(
 
 export function getCompanyColor(company: Company): string {
   switch (company) {
-    case 'KHEALTH':
-      return 'blue';
-    case 'CAREVIEW':
-      return 'green';
-    case 'GLOWFIND':
-      return 'orange';
+    case 'KHEALTH':  return 'blue';
+    case 'CAREVIEW': return 'green';
+    case 'GLOWFIND': return 'orange';
   }
 }
 
 export function getCompanyBadgeClasses(company: Company): string {
   switch (company) {
-    case 'KHEALTH':
-      return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'CAREVIEW':
-      return 'bg-green-100 text-green-800 border-green-200';
-    case 'GLOWFIND':
-      return 'bg-orange-100 text-orange-800 border-orange-200';
+    case 'KHEALTH':  return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'CAREVIEW': return 'bg-green-100 text-green-800 border-green-200';
+    case 'GLOWFIND': return 'bg-orange-100 text-orange-800 border-orange-200';
   }
+}
+
+// ── Company logos (public folder) ─────────────────────────────────────────
+export const COMPANY_LOGOS: Record<Company, string> = {
+  KHEALTH:  '/khealthlogo.png',
+  CAREVIEW: '/logo.png',
+  GLOWFIND: '/glowfindName.png',
+};
+
+/** Returns the logo path or null if company is unknown */
+export function getCompanyLogo(company: string): string | undefined {
+  return (COMPANY_LOGOS as Record<string, string>)[company] ?? undefined;
+}
+
+// ── Company hex colors (for inline styles / PDF) ──────────────────────────
+export const COMPANY_HEX_COLORS: Record<Company, string> = {
+  KHEALTH:  '#1d4ed8',
+  CAREVIEW: '#16a34a',
+  GLOWFIND: '#ea580c',
+};
+
+/** Returns the hex color string or a default blue */
+export function getCompanyHexColor(company: string): string {
+  return (COMPANY_HEX_COLORS as Record<string, string>)[company] ?? '#1d4ed8';
+}
+
+// ── Company Tailwind bg classes (for colored headers / badges) ────────────
+export const COMPANY_BG_CLASSES: Record<Company, string> = {
+  KHEALTH:  'bg-blue-600',
+  CAREVIEW: 'bg-green-600',
+  GLOWFIND: 'bg-orange-600',
+};
+
+/** Returns the Tailwind bg class string */
+export function getCompanyBgClass(company: string): string {
+  return (COMPANY_BG_CLASSES as Record<string, string>)[company] ?? 'bg-gray-600';
 }

@@ -1,7 +1,8 @@
 import { useRef } from 'react';
 import { X, Printer, ArrowLeft, Download, Save } from 'lucide-react';
 import type { ITAsset, FormRecord } from '@/types/inventory';
-import html2canvas from 'html2canvas';
+import { getCompanyLogo, getCompanyHexColor } from '@/utils/device-code';
+import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
 import { QRCodeDisplay } from '@/components/qr-code-display';
 
@@ -20,20 +21,8 @@ export function IssuanceAgreement({ asset, assetData, onClose, currentUser, onSa
 
   if (!data) return null;
 
-  const companyLogoMap: Record<string, string> = {
-    KHEALTH: '/khealthlogo.png',
-    CAREVIEW: '/logo.png',
-    GLOWFIND: '/glowfindName.png',
-  };
-
-  const companyColorMap: Record<string, string> = {
-    KHEALTH: '#1d4ed8',
-    CAREVIEW: '#16a34a',
-    GLOWFIND: '#ea580c',
-  };
-
-  const companyLogo = companyLogoMap[data.company] ?? '/logo.png';
-  const companyColor = companyColorMap[data.company] ?? '#1d4ed8';
+  const companyLogo  = getCompanyLogo(data.company) ?? '/logo.png';
+  const companyColor = getCompanyHexColor(data.company);
 
   const companyName = data.company === 'KHEALTH' ? 'KHEALTH CORPORATION' :
                        data.company === 'CAREVIEW' ? 'CAREVIEW COMMUNICATIONS' :
@@ -88,7 +77,7 @@ export function IssuanceAgreement({ asset, assetData, onClose, currentUser, onSa
   const handleDownload = async () => {
     const pdf = await generatePDF();
     if (!pdf) return;
-    pdf.save(`Asset_Issuance_${data.deviceCode}_${new Date().toISOString().split('T')[0]}.pdf`);
+    pdf.save(`Asset_Issuance_${data.deviceCode}_${data.assignedTo}.pdf`);
   };
 
   const handleSaveRecord = () => {
@@ -113,7 +102,7 @@ export function IssuanceAgreement({ asset, assetData, onClose, currentUser, onSa
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-20 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">

@@ -1,15 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, FileText, X, Download, Printer, Plus, ArrowLeft, Save } from 'lucide-react';
 import type { ITAsset, FormRecord, Company } from '@/types/inventory';
-import { getCompanyBadgeClasses } from '@/utils/device-code';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
-
-const COMPANY_LOGOS: Record<string, string> = {
-  KHEALTH: '/khealthlogo.png',
-  CAREVIEW: '/logo.png',
-  GLOWFIND: '/glowfindName.png',
-};
+import { getCompanyBadgeClasses, getCompanyLogo, getCompanyHexColor, getCompanyBgClass } from '@/utils/device-code';
+import { downloadPDF, printPDF } from '@/utils/pdf';
 
 interface DisposalFormProps {
   assets: ITAsset[];
@@ -33,6 +26,7 @@ interface BlankFormRow {
 
 export function DisposalForm({ assets, currentUser, onSaveFormRecord }: DisposalFormProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const previewRef = useRef<HTMLDivElement>(null);
   const [selectedAssets, setSelectedAssets] = useState<DisposalItem[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [disposalDate, setDisposalDate] = useState(new Date().toISOString().split('T')[0]);
@@ -169,8 +163,8 @@ export function DisposalForm({ assets, currentUser, onSaveFormRecord }: Disposal
     }));
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    if (previewRef.current) await printPDF(previewRef.current);
   };
 
   const handleSaveToMasterlist = () => {
@@ -219,90 +213,16 @@ export function DisposalForm({ assets, currentUser, onSaveFormRecord }: Disposal
   };
 
   const handleDownloadPDF = async () => {
-    const previewElement = document.getElementById('disposal-preview');
-    if (!previewElement) return;
-
-    try {
-      // Clone the element and convert oklch colors to standard colors
-      const clone = previewElement.cloneNode(true) as HTMLElement;
-      document.body.appendChild(clone);
-      clone.style.position = 'absolute';
-      clone.style.left = '-9999px';
-
-      // Force standard colors on all elements
-      const allElements = clone.querySelectorAll('*');
-      allElements.forEach((el) => {
-        const element = el as HTMLElement;
-        const computed = window.getComputedStyle(element);
-
-        // Convert colors to rgb format
-        if (computed.color) element.style.color = computed.color;
-        if (computed.backgroundColor) element.style.backgroundColor = computed.backgroundColor;
-        if (computed.borderColor) element.style.borderColor = computed.borderColor;
-      });
-
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        logging: false,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      });
-
-      // Remove clone
-      document.body.removeChild(clone);
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 10;
-
-      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      pdf.save(`IT-Asset-Disposal-Form-${disposalDate}.pdf`);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
-    }
-  };
-
-  const getCompanyLogo = (company: string) => COMPANY_LOGOS[company] ?? null;
-
-  const getCompanyColor = (company: string) => {
-    switch (company) {
-      case 'KHEALTH':
-        return '#3B82F6'; // blue
-      case 'CAREVIEW':
-        return '#10B981'; // green
-      case 'GLOWFIND':
-        return '#F97316'; // orange
-      default:
-        return '#6B7280'; // gray
-    }
-  };
-
-  const getCompanyBgColor = (company: string) => {
-    switch (company) {
-      case 'KHEALTH':
-        return 'bg-blue-600';
-      case 'CAREVIEW':
-        return 'bg-green-600';
-      case 'GLOWFIND':
-        return 'bg-orange-600';
-      default:
-        return 'bg-gray-600';
-    }
+    if (previewRef.current)
+      await downloadPDF(previewRef.current, `IT-Asset-Disposal-Form-${disposalDate}.pdf`);
   };
 
   // Get primary company from selected assets or use default for blank form
-  const primaryCompany = isBlankForm ? 'KHEALTH' : (selectedAssets.length > 0 ? selectedAssets[0].asset.company : '');
-  const primaryLocation = isBlankForm ? '' : (selectedAssets.length > 0 ? selectedAssets[0].asset.location : '');
-  const companyLogo = getCompanyLogo(primaryCompany);
-  const companyColor = getCompanyColor(primaryCompany);
-  const companyBgColor = getCompanyBgColor(primaryCompany);
+  const primaryCompany  = isBlankForm ? 'KHEALTH' : (selectedAssets[0]?.asset.company ?? '');
+  const primaryLocation = isBlankForm ? '' : (selectedAssets[0]?.asset.location ?? '');
+  const companyLogo    = getCompanyLogo(primaryCompany);
+  const companyColor   = getCompanyHexColor(primaryCompany);
+  const companyBgColor = getCompanyBgClass(primaryCompany);
 
   // Create minimum 5 rows for the assets table
   const minRows = 5;
@@ -596,7 +516,7 @@ export function DisposalForm({ assets, currentUser, onSaveFormRecord }: Disposal
           </div>
 
           {/* Preview */}
-          <div id="disposal-preview" className="bg-white p-8 rounded-lg border border-gray-300">
+          <div ref={previewRef} className="bg-white p-8 rounded-lg border border-gray-300">
             {/* Header */}
             <div className="text-center mb-8 pb-6">
               {companyLogo && (

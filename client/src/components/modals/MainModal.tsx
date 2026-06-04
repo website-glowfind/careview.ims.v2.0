@@ -18,7 +18,7 @@ const MainModal: React.FC<ModalProps> = ({ modalOpen, setModalOpen, children }) 
       className="relative z-50"
     >
       {/* Backdrop */}
-      <DialogBackdrop
+      {/* <DialogBackdrop
         transition
         className="
           fixed inset-0 bg-darkColor/50 backdrop-blur-sm
@@ -28,7 +28,7 @@ const MainModal: React.FC<ModalProps> = ({ modalOpen, setModalOpen, children }) 
           data-leave-active:opacity-0
           duration-300 ease-out
         "
-      />
+      /> */}
 
       {/* Modal Container */}
       <div className="fixed inset-0 flex items-center justify-center px-4">

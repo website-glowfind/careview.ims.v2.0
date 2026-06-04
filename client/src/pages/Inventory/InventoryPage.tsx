@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { LayoutList, LayoutGrid } from 'lucide-react';
 import { InventoryTable } from '@/components/inventory-table';
 import { InventoryCards } from '@/components/inventory-cards';
 import { useAssetStore } from '@/store/assetStore';
 import { useAuthStore } from '@/store/authStore';
 import type { ITAsset, Company, DeviceActivity, HistoryEntry, FieldChange, UserRole, Subscription, FormRecord } from '@/types/inventory';
+import { useActivityLogStore } from '@/store/activityLogStore';
 import { AssetDetails } from '@/components/asset-details';
 import { AssetForm } from '@/components/asset-form';
 
@@ -31,7 +32,7 @@ export function InventoryPage() {
   const [deviceActivities, setDeviceActivities] = useState<DeviceActivity[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formRecords, setFormRecords] = useState<FormRecord[]>([]);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const { addHistoryEntry } = useActivityLogStore();
   const [viewingActivityLog, setViewingActivityLog] = useState<ITAsset | undefined>(undefined);
   const defaultCategories = ['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'phone', 'tablet', 'other'];
   const [categories, setCategories] = useState<string[]>(() => {
@@ -110,15 +111,6 @@ export function InventoryPage() {
     setCategories(updatedCategories);
     localStorage.setItem('itInventoryCategories', JSON.stringify(updatedCategories));
   };
-  const addHistoryEntry = (entry: Omit<HistoryEntry, 'id' | 'timestamp'>) => {
-    const newEntry: HistoryEntry = {
-      ...entry,
-      id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
-    };
-    setHistory([...history, newEntry]);
-  };
-
   const handleUpdateAsset = async (updatedAsset: ITAsset | Omit<ITAsset, "id" | "deviceCode">) => {
     const oldAsset = assets.find(a => a._id === updatedAsset._id);
     if (!oldAsset || !updatedAsset._id) return;

@@ -3,13 +3,17 @@ import { SidebarMenu } from '@/components/customUI/SideBarMenu';
 import { Dashboard } from './Dashboard'; // Yung current dashboard mo
 import { InventoryPage } from '@/pages/Inventory/InventoryPage'; // Yung ginawa nating table page
 import { useAuthStore } from '@/store/authStore';
-import { LogOut, Sun, Moon } from 'lucide-react';
+import { LogOut, Sun, Moon, User } from 'lucide-react';
 import { useThemeStore } from '@/store/themeStore';
 import { AssetForm } from '@/components/asset-form';
 import { useAssetStore } from '@/store/assetStore';
 import { useFormRecordStore } from '@/store/formRecordStore';
 import { FormMasterlistPage } from './Form-Masterlist/FormMasterListPage';
+import { SubscriptionPage } from './Subscripton/SubscriptionPage';
+import { DeletedDevices } from './Deleted-Device/DeletedDevicePage';
+import { ActivityLog } from './ActivityLog/ActivityLogPage';
 import { DisposalFormPage } from './Disposal-form/DisposalFormPage';
+import { UserManagement } from './User-Management/UserManagement';
 
 export default function MainLayout() {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -33,10 +37,18 @@ export default function MainLayout() {
         return <Dashboard />;
       case 'inventory':
         return <InventoryPage />;
+      case 'subscriptions':
+        return <SubscriptionPage />;
+      case 'deleted':
+        return <DeletedDevices />;
+      case 'history':
+        return <ActivityLog />;
       case 'form-masterlist':
         return <FormMasterlistPage />;
       case 'disposal':
         return <DisposalFormPage />;
+      case 'users':
+        return <UserManagement />;
       case 'add':
         return (
           <div className="max-w-4xl mx-auto">

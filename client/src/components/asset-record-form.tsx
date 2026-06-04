@@ -1,15 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Printer, ArrowLeft, Save, Download, Lock } from 'lucide-react';
+import { X, Printer, ArrowLeft, Save, Download } from 'lucide-react';
 import type { ITAsset, AssetStatus, AssetCategory, Company, FormRecord } from '@/types/inventory';
-import { getCompanyBadgeClasses } from '@/utils/device-code';
+import { getCompanyBadgeClasses, getCompanyLogo, getCompanyHexColor } from '@/utils/device-code';
+import { downloadPDF, printPDF } from '@/utils/pdf';
 import { CategorySelector } from '@/components/category-selector';
 import { DatePickerInput } from '@/components/ui/date-picker-input';
-const COMPANY_LOGOS: Record<string, string> = {
-  KHEALTH: '/khealthlogo.png',
-  CAREVIEW: '/logo.png',
-  GLOWFIND: '/glowfindName.png',
-};
-import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
 interface AssetRecordFormProps {
@@ -134,146 +129,22 @@ export function AssetRecordForm({
     alert('Asset Record Form saved successfully!');
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    if (printRef.current) await printPDF(printRef.current);
   };
 
   const handleDownloadPDF = async () => {
-    const element = document.getElementById('asset-record-content');
-    
-    if (!element) return;
-    
-    try {
-      // Create a style element to override all potentially problematic colors
-      const styleOverride = document.createElement('style');
-      styleOverride.textContent = `
-        #asset-record-content-clone * {
-          border-color: ${companyColor} !important;
-        }
-        #asset-record-content-clone h3 {
-          border-bottom-color: ${companyColor} !important;
-        }
-        #asset-record-content-clone [style*="borderColor"] {
-          border-color: ${companyColor} !important;
-        }
-        #asset-record-content-clone [style*="backgroundColor"][style*="${companyColor}"],
-        #asset-record-content-clone [style*="background-color"][style*="${companyColor}"] {
-          background-color: ${companyColor} !important;
-        }
-        #asset-record-content-clone [style*="color: rgb"] {
-          color: ${companyColor} !important;
-        }
-      `;
-      document.head.appendChild(styleOverride);
-      
-      // Clone the element
-      const clone = element.cloneNode(true) as HTMLElement;
-      clone.id = 'asset-record-content-clone';
-      
-      // Create a temporary container
-      const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.top = '0';
-      container.style.width = element.offsetWidth + 'px';
-      container.style.backgroundColor = '#ffffff';
-      document.body.appendChild(container);
-      container.appendChild(clone);
-      
-      // Wait for rendering
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Remove all inline styles that might contain oklch
-      const allElements = clone.querySelectorAll('*');
-      allElements.forEach((el) => {
-        const htmlEl = el as HTMLElement;
-        const style = htmlEl.getAttribute('style');
-        
-        if (style) {
-          // Remove the entire style attribute and re-apply only safe colors
-          htmlEl.removeAttribute('style');
-          
-          // Check if this element needs company color styling
-          if (style.includes('borderColor') || style.includes('border-color')) {
-            htmlEl.style.borderColor = companyColor;
-          }
-          if (style.includes('backgroundColor') || style.includes('background-color')) {
-            htmlEl.style.backgroundColor = companyColor;
-          }
-          if (style.includes('color:') && !style.includes('background')) {
-            htmlEl.style.color = companyColor;
-          }
-        }
-      });
-      
-      // Capture as canvas
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        allowTaint: true,
-        foreignObjectRendering: false,
-      });
-      
-      // Cleanup
-      document.body.removeChild(container);
-      document.head.removeChild(styleOverride);
-      
-      const imgWidth = 210;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pageHeight = 297;
-      let heightLeft = imgHeight;
-      let position = 0;
-      
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-      
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-      
+    if (printRef.current) {
       const timestamp = new Date().toISOString().split('T')[0];
-      const filename = `IT-Subscription-Form_${timestamp}.pdf`;
-      
-      pdf.save(filename);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      await downloadPDF(printRef.current, `IT-Subscription-Form_${timestamp}.pdf`);
     }
   };
 
-  const getCompanyColor = (company: string) => {
-    switch (company) {
-      case 'KHEALTH':
-        return '#3B82F6'; // blue
-      case 'CAREVIEW':
-        return '#10B981'; // green
-      case 'GLOWFIND':
-        return '#F97316'; // orange
-      default:
-        return '#6B7280'; // gray
-    }
-  };
-
-  const getCompanyLogo = (company: string): string | null => COMPANY_LOGOS[company] ?? null;
-
-  const companyColor = getCompanyColor(formData.company);
+  const companyColor = getCompanyHexColor(formData.company);
   const companyLogo = getCompanyLogo(formData.company);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header - Hidden on print */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10 print:hidden">
@@ -331,7 +202,7 @@ export function AssetRecordForm({
 
         {/* Form Content - Scrollable */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-8 print:p-12" id="asset-record-content">
+          <div ref={printRef} className="p-8 print:p-12">
             {/* Company Header */}
             <div className="text-center mb-8 pb-6">
               {companyLogo && (

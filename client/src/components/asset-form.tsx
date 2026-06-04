@@ -143,15 +143,15 @@ setFormData({
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-20 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-xl font-semibold">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-[#162236] rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border dark:border-[#1e3a5f]">
+        <div className="sticky top-0 bg-white dark:bg-[#162236]/50 border-b border-gray-200 dark:border-[#1e3a5f] px-6 py-4 flex items-center justify-between z-10">
+          <h2 className="text-xl font-semibold dark:text-white">
             {asset ? 'Edit Asset' : 'Add New Asset'}
           </h2>
           <button
             onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 p-1 rounded hover:bg-gray-100 dark:hover:bg-[#1e2d4a]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -160,21 +160,21 @@ setFormData({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Auto-generated Device Code Preview with QR Code */}
           {!asset && (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="p-4 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg">
               <div className="flex flex-col lg:flex-row lg:items-start lg:gap-6">
                 {/* Device Code Section */}
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <Hash className="w-5 h-5 text-blue-600" />
-                    <h3 className="font-semibold text-blue-900">Auto-Generated Device Code</h3>
+                    <Hash className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <h3 className="font-semibold text-blue-900 dark:text-blue-300">Auto-Generated Device Code</h3>
                   </div>
-                  <p className="text-sm text-blue-700 mb-2">
+                  <p className="text-sm text-blue-700 dark:text-blue-400 mb-2">
                     This code will be automatically assigned when you save:
                   </p>
-                  <div className="font-mono text-lg font-bold text-blue-900 bg-white px-4 py-2 rounded border border-blue-300">
+                  <div className="font-mono text-lg font-bold text-blue-900 dark:text-blue-300 bg-white dark:bg-[#0f1729] px-4 py-2 rounded border border-blue-300 dark:border-blue-500/30">
                     {previewCode}
                   </div>
-                  <p className="text-xs text-blue-600 mt-2">
+                  <p className="text-xs text-blue-600 dark:text-blue-400/70 mt-2">
                     Format: Company Prefix + Category Code + Sequential Number
                   </p>
                 </div>
@@ -186,7 +186,7 @@ setFormData({
                     size={100}
                     showDownload={false}
                     showLabel={false}
-                    className="bg-white p-2 rounded-lg border border-blue-300"
+                    className="bg-white dark:bg-[#0f1729] p-2 rounded-lg border border-blue-300 dark:border-blue-500/30"
                   />
                 </div>
               </div>

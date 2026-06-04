@@ -1,11 +1,7 @@
 import { X, Download, Printer } from 'lucide-react';
-const COMPANY_LOGOS: Record<string, string> = {
-  KHEALTH: '/khealthlogo.png',
-  CAREVIEW: '/logo.png',
-  GLOWFIND: '/glowfindName.png',
-};
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import { getCompanyLogo, getCompanyHexColor, getCompanyBgClass } from '@/utils/device-code';
+import { downloadPDF, printPDF } from '@/utils/pdf';
+import { useRef } from 'react';
 
 interface DisposalFormViewerProps {
   formData: any;
@@ -14,92 +10,24 @@ interface DisposalFormViewerProps {
 }
 
 export function DisposalFormViewer({ formData, onClose, isReadOnly = false }: DisposalFormViewerProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+
   const handleDownloadPDF = async () => {
-    const previewElement = document.getElementById('disposal-form-view');
-    if (!previewElement) return;
-
-    try {
-      const clone = previewElement.cloneNode(true) as HTMLElement;
-      document.body.appendChild(clone);
-      clone.style.position = 'absolute';
-      clone.style.left = '-9999px';
-      
-      const allElements = clone.querySelectorAll('*');
-      allElements.forEach((el) => {
-        const element = el as HTMLElement;
-        const computed = window.getComputedStyle(element);
-        
-        if (computed.color) element.style.color = computed.color;
-        if (computed.backgroundColor) element.style.backgroundColor = computed.backgroundColor;
-        if (computed.borderColor) element.style.borderColor = computed.borderColor;
-      });
-
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        logging: false,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      });
-
-      document.body.removeChild(clone);
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 10;
-
-      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      pdf.save(`IT-Asset-Disposal-Form-${formData.disposalDate}.pdf`);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
-    }
+    if (contentRef.current)
+      await downloadPDF(contentRef.current, `IT-Asset-Disposal-Form-${formData.disposalDate || 'form'}.pdf`);
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const getCompanyLogo = (company: string): string | null => COMPANY_LOGOS[company] ?? null;
-
-  const getCompanyColor = (company: string) => {
-    switch (company) {
-      case 'KHEALTH':
-        return '#3B82F6';
-      case 'CAREVIEW':
-        return '#10B981';
-      case 'GLOWFIND':
-        return '#F97316';
-      default:
-        return '#6B7280';
-    }
-  };
-
-  const getCompanyBgColor = (company: string) => {
-    switch (company) {
-      case 'KHEALTH':
-        return 'bg-blue-600';
-      case 'CAREVIEW':
-        return 'bg-green-600';
-      case 'GLOWFIND':
-        return 'bg-orange-600';
-      default:
-        return 'bg-gray-600';
-    }
+  const handlePrint = async () => {
+    if (contentRef.current) await printPDF(contentRef.current);
   };
 
   const company = formData.company || 'KHEALTH';
-  const companyLogo = getCompanyLogo(company);
-  const companyColor = getCompanyColor(company);
-  const companyBgColor = getCompanyBgColor(company);
+  const companyLogo    = getCompanyLogo(company);
+  const companyColor   = getCompanyHexColor(company);
+  const companyBgColor = getCompanyBgClass(company);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between print:hidden">
@@ -135,7 +63,7 @@ export function DisposalFormViewer({ formData, onClose, isReadOnly = false }: Di
 
         {/* Content */}
         <div className="overflow-y-auto flex-1 p-6">
-          <div id="disposal-form-view" className="bg-white p-8 max-w-4xl mx-auto">
+          <div ref={contentRef} className="bg-white p-8 max-w-4xl mx-auto">
             {/* Header */}
             <div className="text-center mb-8 pb-6">
               {companyLogo && (

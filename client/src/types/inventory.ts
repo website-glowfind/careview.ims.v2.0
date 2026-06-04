@@ -127,12 +127,19 @@ export type FormStatus = 'Active' | 'Returned' | 'Disposed' | 'Completed';
 
 export interface FormRecord {
   id: string;
-  formType: FormType;
+  formType?: FormType;
+  assignedTo?: string;
+  position?: string;
+  deviceCode?: string; // For asset-related forms
   assetTag?: string; // Device code or reference ID
   referenceId?: string; // For subscriptions or non-asset forms
   employeeName?: string; // Assigned to
   department?: string;
   company?: Company;
+  location?: string;
+  brand?: string;
+  category?: AssetCategory;
+  name?: string; // For subscription or license name
   dateCreated: string;
   status: FormStatus;
   details?: string; // Additional context

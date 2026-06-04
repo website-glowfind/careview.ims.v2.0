@@ -1,12 +1,7 @@
 import { useRef } from 'react';
 import { X, ArrowRightLeft, Building2, Printer } from 'lucide-react';
-import { getCompanyBadgeClasses } from '@/utils/device-code';
-const COMPANY_LOGOS: Record<string, string> = {
-  KHEALTH: '/khealthlogo.png',
-  CAREVIEW: '/logo.png',
-  GLOWFIND: '/glowfindName.png',
-};
-import html2canvas from 'html2canvas';
+import { getCompanyBadgeClasses, getCompanyLogo } from '@/utils/device-code';
+import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
 
 interface TransferFormViewerProps {
@@ -61,7 +56,7 @@ export function TransferFormViewer({ formData, onClose, isReadOnly = true }: Tra
   const toCompanyLogo = COMPANY_LOGOS[formData.toCompany] ?? null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between">
