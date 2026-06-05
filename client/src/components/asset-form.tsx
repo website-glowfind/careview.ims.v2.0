@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Hash, Users, Package, FileText, ArrowLeft, FileSignature, Smartphone, CheckCircle } from 'lucide-react';
 import type { ITAsset, AssetStatus, AssetCategory, Company, FormRecord } from '@/types/inventory';
 import { generateDeviceCode } from '@/utils/device-code';
@@ -49,6 +49,11 @@ export function AssetForm({ asset, assets, categories, onAddCategory, onDeleteCa
   const [empLookupStatus, setEmpLookupStatus] = useState<'idle' | 'found' | 'not-found'>('idle');
   const [empLookupLoading, setEmpLookupLoading] = useState(false);
   const [showEmpNotFound, setShowEmpNotFound] = useState(false);
+  // Name autocomplete
+  const [nameSuggestions, setNameSuggestions] = useState<{ _id?: string; fullName: string; employeeId: string; position: string; department: string }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [nameSearchLoading, setNameSearchLoading] = useState(false);
+  const nameTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Subscription form data for phone category
   const [subscriptionData, setSubscriptionData] = useState({
@@ -149,6 +154,43 @@ setFormData({
   const handleEmployeeIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, employeeId: e.target.value } as any));
     setEmpLookupStatus('idle');
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, assignedTo: value }));
+    setShowSuggestions(false);
+    setNameSuggestions([]);
+
+    if (nameTimerRef.current) clearTimeout(nameTimerRef.current);
+    if (!value.trim() || value.trim().length < 2) return;
+
+    nameTimerRef.current = setTimeout(async () => {
+      setNameSearchLoading(true);
+      try {
+        const data = await employeeServices.getEmployees({ search: value.trim(), limit: 8 });
+        const list = data.employees ?? [];
+        setNameSuggestions(list);
+        setShowSuggestions(list.length > 0);
+      } catch {
+        setNameSuggestions([]);
+      } finally {
+        setNameSearchLoading(false);
+      }
+    }, 300);
+  };
+
+  const handleSelectSuggestion = (emp: typeof nameSuggestions[0]) => {
+    setFormData(prev => ({
+      ...prev,
+      assignedTo: emp.fullName,
+      position:   emp.position   || prev.position,
+      department: emp.department || prev.department,
+      employeeId: emp.employeeId,
+    } as any));
+    setEmpLookupStatus('found');
+    setShowSuggestions(false);
+    setNameSuggestions([]);
   };
 
   const handleEmployeeIdKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -269,19 +311,47 @@ setFormData({
               <h3 className="text-base font-semibold text-gray-900">Employee Information</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Assigned To */}
-              <div>
+              {/* Assigned To — autocomplete */}
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Assigned To:
                 </label>
-                <input
-                  type="text"
-                  name="assignedTo"
-                  value={formData.assignedTo}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  placeholder="e.g., John Doe"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="assignedTo"
+                    value={formData.assignedTo}
+                    onChange={handleNameChange}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                    onFocus={() => nameSuggestions.length > 0 && setShowSuggestions(true)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    placeholder="Type name to search..."
+                    autoComplete="off"
+                  />
+                  {nameSearchLoading && (
+                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  )}
+                </div>
+
+                {/* Dropdown suggestions */}
+                {showSuggestions && nameSuggestions.length > 0 && (
+                  <ul className="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-[#1e2d4a] border border-gray-200 dark:border-[#1e3a5f] rounded-lg shadow-lg max-h-52 overflow-y-auto">
+                    {nameSuggestions.map(emp => (
+                      <li
+                        key={emp._id ?? emp.employeeId}
+                        onMouseDown={() => handleSelectSuggestion(emp)}
+                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-[#243352] border-b border-gray-100 dark:border-[#1e3a5f] last:border-0"
+                      >
+                        <p className="font-medium text-sm text-gray-900 dark:text-white">{emp.fullName}</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">
+                          {emp.employeeId}
+                          {emp.department ? ` · ${emp.department}` : ''}
+                          {emp.position ? ` · ${emp.position}` : ''}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* ID No. */}

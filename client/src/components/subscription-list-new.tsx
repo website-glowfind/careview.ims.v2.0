@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Plus, Edit2, Trash2, Calendar, DollarSign, Building2, FileText, Download, AlertCircle, CreditCard, X, Key, Eye, FileEdit, Smartphone } from 'lucide-react';
 import { getCompanyBadgeClasses, generateLicenseSubscriptionCode } from '@/utils/device-code';
 import type { Company, ITAsset, FormRecord } from '@/types/inventory';
 import type { Subscription } from '@/types/subscription';
 import { AssetRecordForm } from '@/components/asset-record-form';
+import { employeeServices } from '@/services/employeeServices';
 
 interface SubscriptionListProps {
   company: Company | 'ALL';
@@ -198,6 +199,11 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
   const [deletingSubscription, setDeletingSubscription] = useState<Subscription | null>(null);
   const [showAssetForm, setShowAssetForm] = useState(false);
+  // Employee name autocomplete
+  const [empSuggestions, setEmpSuggestions] = useState<{ _id?: string; fullName: string; employeeId: string; position: string; department: string }[]>([]);
+  const [showEmpSuggestions, setShowEmpSuggestions] = useState(false);
+  const [empNameLoading, setEmpNameLoading] = useState(false);
+  const empTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -272,6 +278,36 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
       deviceId: ''
     });
     setShowAssetForm(false);
+  };
+
+  const handleEmpNameChange = (value: string) => {
+    handleInputChange('employeeName', value);
+    setShowEmpSuggestions(false);
+    setEmpSuggestions([]);
+
+    if (empTimerRef.current) clearTimeout(empTimerRef.current);
+    if (!value.trim() || value.trim().length < 2) return;
+
+    empTimerRef.current = setTimeout(async () => {
+      setEmpNameLoading(true);
+      try {
+        const data = await employeeServices.getEmployees({ search: value.trim(), limit: 8 });
+        const list = data.employees ?? [];
+        setEmpSuggestions(list);
+        setShowEmpSuggestions(list.length > 0);
+      } catch {
+        setEmpSuggestions([]);
+      } finally {
+        setEmpNameLoading(false);
+      }
+    }, 300);
+  };
+
+  const handleSelectEmpSuggestion = (emp: typeof empSuggestions[0]) => {
+    handleInputChange('employeeName', emp.fullName);
+    if (emp.department) handleInputChange('department', emp.department);
+    setShowEmpSuggestions(false);
+    setEmpSuggestions([]);
   };
 
   const handleAddSubscription = () => {
@@ -613,15 +649,41 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
                   </h4>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                    <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
-                      <input
-                        type="text"
-                        value={formData.employeeName}
-                        onChange={(e) => handleInputChange('employeeName', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Enter employee name"
-                      />
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={formData.employeeName}
+                          onChange={(e) => handleEmpNameChange(e.target.value)}
+                          onBlur={() => setTimeout(() => setShowEmpSuggestions(false), 150)}
+                          onFocus={() => empSuggestions.length > 0 && setShowEmpSuggestions(true)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Type name to search..."
+                          autoComplete="off"
+                        />
+                        {empNameLoading && (
+                          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                        )}
+                      </div>
+                      {showEmpSuggestions && empSuggestions.length > 0 && (
+                        <ul className="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-[#1e2d4a] border border-gray-200 dark:border-[#1e3a5f] rounded-lg shadow-lg max-h-52 overflow-y-auto">
+                          {empSuggestions.map(emp => (
+                            <li
+                              key={emp._id ?? emp.employeeId}
+                              onMouseDown={() => handleSelectEmpSuggestion(emp)}
+                              className="px-3 py-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-[#243352] border-b border-gray-100 dark:border-[#1e3a5f] last:border-0"
+                            >
+                              <p className="font-medium text-sm text-gray-900 dark:text-white">{emp.fullName}</p>
+                              <p className="text-xs text-gray-500 dark:text-slate-400">
+                                {emp.employeeId}
+                                {emp.department ? ` · ${emp.department}` : ''}
+                                {emp.position  ? ` · ${emp.position}`  : ''}
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
 
                     <div>

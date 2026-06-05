@@ -3,6 +3,7 @@ import { Search, FileText, X, Download, Printer, Plus, ArrowLeft, Save } from 'l
 import type { ITAsset, FormRecord, Company } from '@/types/inventory';
 import { getCompanyBadgeClasses, getCompanyLogo, getCompanyHexColor, getCompanyBgClass } from '@/utils/device-code';
 import { downloadPDF, printPDF } from '@/utils/pdf';
+import { employeeServices } from '@/services/employeeServices';
 
 interface DisposalFormProps {
   assets: ITAsset[];
@@ -27,6 +28,11 @@ interface BlankFormRow {
 export function DisposalForm({ assets, currentUser, onSaveFormRecord }: DisposalFormProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const previewRef = useRef<HTMLDivElement>(null);
+  // Employee name autocomplete
+  const [empSuggestions, setEmpSuggestions] = useState<{ _id?: string; fullName: string; employeeId: string; position: string; department: string }[]>([]);
+  const [showEmpSuggestions, setShowEmpSuggestions] = useState(false);
+  const [empNameLoading, setEmpNameLoading] = useState(false);
+  const empTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedAssets, setSelectedAssets] = useState<DisposalItem[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [disposalDate, setDisposalDate] = useState(new Date().toISOString().split('T')[0]);
@@ -123,6 +129,38 @@ export function DisposalForm({ assets, currentUser, onSaveFormRecord }: Disposal
       }
       return item;
     }));
+  };
+
+  const handleEmpNameChange = (value: string) => {
+    setEmployeeName(value);
+    setShowEmpSuggestions(false);
+    setEmpSuggestions([]);
+
+    if (empTimerRef.current) clearTimeout(empTimerRef.current);
+    if (!value.trim() || value.trim().length < 2) return;
+
+    empTimerRef.current = setTimeout(async () => {
+      setEmpNameLoading(true);
+      try {
+        const data = await employeeServices.getEmployees({ search: value.trim(), limit: 8 });
+        const list = data.employees ?? [];
+        setEmpSuggestions(list);
+        setShowEmpSuggestions(list.length > 0);
+      } catch {
+        setEmpSuggestions([]);
+      } finally {
+        setEmpNameLoading(false);
+      }
+    }, 300);
+  };
+
+  const handleSelectEmpSuggestion = (emp: typeof empSuggestions[0]) => {
+    setEmployeeName(emp.fullName);
+    setEmployeeId(emp.employeeId || '');
+    setEmployeePosition(emp.position || '');
+    setEmployeeDepartment(emp.department || '');
+    setShowEmpSuggestions(false);
+    setEmpSuggestions([]);
   };
 
   const handleGeneratePreview = () => {
@@ -345,13 +383,42 @@ export function DisposalForm({ assets, currentUser, onSaveFormRecord }: Disposal
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Employee Information</h3>
               <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Employee Name"
-                  value={employeeName}
-                  onChange={(e) => setEmployeeName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
+                {/* Employee Name — autocomplete */}
+                <div className="relative">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Type name to search..."
+                      value={employeeName}
+                      onChange={(e) => handleEmpNameChange(e.target.value)}
+                      onBlur={() => setTimeout(() => setShowEmpSuggestions(false), 150)}
+                      onFocus={() => empSuggestions.length > 0 && setShowEmpSuggestions(true)}
+                      autoComplete="off"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                    {empNameLoading && (
+                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+                    )}
+                  </div>
+                  {showEmpSuggestions && empSuggestions.length > 0 && (
+                    <ul className="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-[#1e2d4a] border border-gray-200 dark:border-[#1e3a5f] rounded-lg shadow-lg max-h-52 overflow-y-auto">
+                      {empSuggestions.map(emp => (
+                        <li
+                          key={emp._id ?? emp.employeeId}
+                          onMouseDown={() => handleSelectEmpSuggestion(emp)}
+                          className="px-3 py-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-[#243352] border-b border-gray-100 dark:border-[#1e3a5f] last:border-0"
+                        >
+                          <p className="font-medium text-sm text-gray-900 dark:text-white">{emp.fullName}</p>
+                          <p className="text-xs text-gray-500 dark:text-slate-400">
+                            {emp.employeeId}
+                            {emp.department ? ` · ${emp.department}` : ''}
+                            {emp.position  ? ` · ${emp.position}`  : ''}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
                 <input
                   type="text"
                   placeholder="Employee ID"
