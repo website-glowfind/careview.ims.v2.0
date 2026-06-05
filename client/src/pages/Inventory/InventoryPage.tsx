@@ -1,13 +1,15 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { LayoutList, LayoutGrid } from 'lucide-react';
 import { InventoryTable } from '@/components/inventory-table';
 import { InventoryCards } from '@/components/inventory-cards';
 import { useAssetStore } from '@/store/assetStore';
 import { useAuthStore } from '@/store/authStore';
-import type { ITAsset, Company, DeviceActivity, HistoryEntry, FieldChange, UserRole, Subscription, FormRecord } from '@/types/inventory';
+import type { ITAsset, Company, DeviceActivity, FieldChange, UserRole, FormRecord } from '@/types/inventory';
 import { useActivityLogStore } from '@/store/activityLogStore';
+import { useFormRecordStore } from '@/store/formRecordStore';
 import { AssetDetails } from '@/components/asset-details';
 import { AssetForm } from '@/components/asset-form';
+import { TransferForm } from '@/components/transfer-form';
 
 export function InventoryPage() {
   const {
@@ -29,6 +31,8 @@ export function InventoryPage() {
   );
   const [viewingAsset, setViewingAsset] = useState<ITAsset | undefined>(undefined);
   const [editingAsset, setEditingAsset] = useState<ITAsset | undefined>(undefined);
+  const [transferringAsset, setTransferringAsset] = useState<ITAsset | undefined>(undefined);
+  const { addFormRecord } = useFormRecordStore();
   const [deviceActivities, setDeviceActivities] = useState<DeviceActivity[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formRecords, setFormRecords] = useState<FormRecord[]>([]);
@@ -53,7 +57,7 @@ export function InventoryPage() {
   };
 
   const handleTransfer = (asset: ITAsset) => {
-    console.log("Opening transfer modal for:", asset.deviceCode);
+    setTransferringAsset(asset);
   };
 
   const handleView = (asset: ITAsset) => {
@@ -85,8 +89,44 @@ export function InventoryPage() {
   };
 
   const handleDelete = async (id: string) => {
-    await deleteAsset(id);
- 
+    const asset = assets.find(a => a._id === id);
+    try {
+      await deleteAsset(id);
+      if (asset) {
+        addHistoryEntry({
+          action: 'deleted',
+          category: 'asset',
+          deviceCode: asset.deviceCode,
+          deviceName: asset.name,
+          company: asset.company,
+          details: `${asset.brand} ${asset.model} — S/N: ${asset.serialNumber}`,
+        });
+      }
+    } catch (err: any) {
+      alert(`Failed to delete asset: ${err.message}`);
+    }
+  };
+
+  const handleConfirmTransfer = async (assetId: string, toCompany: Company) => {
+    const asset = transferringAsset;
+    if (!asset) return;
+    const fromCompany = asset.company;
+    try {
+      await updateAsset(assetId, { ...asset, company: toCompany });
+      addHistoryEntry({
+        action: 'transferred',
+        category: 'asset',
+        deviceCode: asset.deviceCode,
+        deviceName: asset.name,
+        company: toCompany,
+        fromCompany,
+        toCompany,
+        details: `Transferred from ${fromCompany} to ${toCompany}`,
+      });
+    } catch (err) {
+      console.error('Transfer failed:', err);
+    }
+    setTransferringAsset(undefined);
   };
   const handleFormCancel = () => {
     setShowForm(false);
@@ -112,6 +152,16 @@ export function InventoryPage() {
     localStorage.setItem('itInventoryCategories', JSON.stringify(updatedCategories));
   };
   const handleUpdateAsset = async (updatedAsset: ITAsset | Omit<ITAsset, "id" | "deviceCode">) => {
+    const isNew = !updatedAsset._id;
+
+    if (isNew) {
+      // Adding new asset — updateAsset is misnamed here; it's actually addAsset flow from MainLayout
+      // Just close the form; the addAsset in MainLayout handles the API call
+      setShowForm(false);
+      setEditingAsset(undefined);
+      return;
+    }
+
     const oldAsset = assets.find(a => a._id === updatedAsset._id);
     if (!oldAsset || !updatedAsset._id) return;
 
@@ -128,6 +178,7 @@ export function InventoryPage() {
 
     addHistoryEntry({
       action: 'edited',
+      category: 'asset',
       deviceCode: oldAsset.deviceCode,
       deviceName: oldAsset.name,
       company: oldAsset.company,
@@ -270,6 +321,17 @@ export function InventoryPage() {
           onEdit={handleViewEdit}
           onViewActivityLog={() => handleViewActivityLog(viewingAsset)}
           isAdmin={isAdmin}
+        />
+      )}
+
+      {/* Transfer Form */}
+      {transferringAsset && (
+        <TransferForm
+          asset={transferringAsset}
+          onTransfer={handleConfirmTransfer}
+          onCancel={() => setTransferringAsset(undefined)}
+          currentUser={user?.name || 'Admin'}
+          onSaveFormRecord={addFormRecord}
         />
       )}
     </div>

@@ -52,14 +52,14 @@ export function TransferFormViewer({ formData, onClose, isReadOnly = true }: Tra
       ? 'rgb(34, 197, 94)'
       : 'rgb(249, 115, 22)';
 
-  const fromCompanyLogo = COMPANY_LOGOS[formData.fromCompany] ?? null;
-  const toCompanyLogo = COMPANY_LOGOS[formData.toCompany] ?? null;
+  const fromCompanyLogo = getCompanyLogo(formData.fromCompany) ?? null;
+  const toCompanyLogo = getCompanyLogo(formData.toCompany) ?? null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between">
+        <div className="bg-linear-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white bg-opacity-20 rounded-lg">
               <ArrowRightLeft className="w-6 h-6 text-white" />
@@ -95,9 +95,9 @@ export function TransferFormViewer({ formData, onClose, isReadOnly = true }: Tra
             <div className="border-4 border-gray-800 p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
-                  <img src={fromCompanyLogo} alt={formData.fromCompany} className="h-12 w-auto" />
+                  <img src={fromCompanyLogo!} alt={formData.fromCompany} className="h-12 w-auto" />
                   <ArrowRightLeft className="w-8 h-8 text-gray-400" />
-                  <img src={toCompanyLogo} alt={formData.toCompany} className="h-12 w-auto" />
+                  <img src={toCompanyLogo!} alt={formData.toCompany} className="h-12 w-auto" />
                 </div>
                 <div className="text-right">
                   <h1 className="text-2xl font-bold text-gray-900">IT ASSET TRANSFER FORM</h1>

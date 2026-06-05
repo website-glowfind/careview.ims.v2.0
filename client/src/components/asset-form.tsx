@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { X, Hash, Users, Package, FileText, ArrowLeft, FileSignature, Smartphone } from 'lucide-react';
+import { X, Hash, Users, Package, FileText, ArrowLeft, FileSignature, Smartphone, CheckCircle } from 'lucide-react';
 import type { ITAsset, AssetStatus, AssetCategory, Company, FormRecord } from '@/types/inventory';
 import { generateDeviceCode } from '@/utils/device-code';
 import { CategorySelector } from '@/components/category-selector';
 import { IssuanceAgreement } from '@/components/issuance-agreement';
 import { DatePickerInput } from '@/components/ui/date-picker-input';
 import { QRCodeDisplay } from '@/components/qr-code-display';
+import { employeeServices } from '@/services/employeeServices';
 
 interface AssetFormProps {
   asset?: ITAsset;
@@ -45,6 +46,9 @@ export function AssetForm({ asset, assets, categories, onAddCategory, onDeleteCa
   const [previewCode, setPreviewCode] = useState<string>('');
   const [showAgreement, setShowAgreement] = useState(false);
   const [serialError, setSerialError] = useState<string>('');
+  const [empLookupStatus, setEmpLookupStatus] = useState<'idle' | 'found' | 'not-found'>('idle');
+  const [empLookupLoading, setEmpLookupLoading] = useState(false);
+  const [showEmpNotFound, setShowEmpNotFound] = useState(false);
   
   // Subscription form data for phone category
   const [subscriptionData, setSubscriptionData] = useState({
@@ -140,6 +144,40 @@ setFormData({
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEmployeeIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, employeeId: e.target.value } as any));
+    setEmpLookupStatus('idle');
+  };
+
+  const handleEmployeeIdKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+
+    const employeeId = ((formData as any).employeeId || '').trim();
+    if (!employeeId) return;
+
+    setEmpLookupLoading(true);
+    try {
+      const match = await employeeServices.getByEmployeeId(employeeId);
+      if (match) {
+        setFormData(prev => ({
+          ...prev,
+          assignedTo: match.fullName   || prev.assignedTo,
+          position:   match.position   || prev.position,
+          department: match.department || prev.department,
+        } as any));
+        setEmpLookupStatus('found');
+      } else {
+        setEmpLookupStatus('not-found');
+        setShowEmpNotFound(true);
+      }
+    } catch {
+      setEmpLookupStatus('idle');
+    } finally {
+      setEmpLookupLoading(false);
+    }
   };
 
   return (
@@ -251,14 +289,28 @@ setFormData({
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   ID No.:
                 </label>
-                <input
-                  type="text"
-                  name="employeeId"
-                  value={(formData as any).employeeId || ''}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  placeholder="e.g., EMP-12345"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="employeeId"
+                    value={(formData as any).employeeId || ''}
+                    onChange={handleEmployeeIdChange}
+                    onKeyDown={handleEmployeeIdKeyDown}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white pr-9 ${
+                      empLookupStatus === 'found' ? 'border-green-400 focus:ring-green-400' : 'border-gray-300'
+                    }`}
+                    placeholder="Type ID then press Enter"
+                  />
+                  {empLookupLoading && (
+                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  )}
+                  {!empLookupLoading && empLookupStatus === 'found' && (
+                    <CheckCircle className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
+                  )}
+                </div>
+                {empLookupStatus === 'found' && (
+                  <p className="text-xs text-green-600 mt-1">✓ Employee found</p>
+                )}
               </div>
 
               {/* Position */}
@@ -767,6 +819,27 @@ setFormData({
           currentUser={currentUser}
           onSaveFormRecord={onSaveFormRecord}
         />
+      )}
+
+      {/* Employee Not Found Modal */}
+      {showEmpNotFound && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white dark:bg-[#162236] rounded-2xl max-w-sm w-full p-6 shadow-2xl border dark:border-[#1e3a5f] text-center">
+            <div className="w-14 h-14 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <X className="w-7 h-7 text-red-600 dark:text-red-400" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Employee Not Found</h3>
+            <p className="text-sm text-gray-600 dark:text-slate-400 mb-5">
+              Employee ID <span className="font-mono font-bold text-gray-900 dark:text-white">"{(formData as any).employeeId}"</span> does not exist in the employee list.
+            </p>
+            <button
+              onClick={() => setShowEmpNotFound(false)}
+              className="w-full py-2.5 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
+            >
+              OK
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

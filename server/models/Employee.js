@@ -1,39 +1,14 @@
-import { DataTypes } from "sequelize";
-import { sequelize } from "../lib/db.js";
-import { Department } from "./Department.js";
+import mongoose from "mongoose";
 
-export const Employee = sequelize.define("Employee", {
-    id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-    },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    position: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    dept_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: Department,
-            key: 'id',
-        },
-    },
-    salary:{
-        type: DataTypes.DECIMAL,
-        allowNull: false,
-    },
-    job_title: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    }
-}, {
-    tableName: "employees",
-    timestamps: true,
-    }
-);
+const employeeSchema = new mongoose.Schema({
+  fullName:   { type: String, required: true },
+  employeeId: { type: String, required: true, unique: true },
+  department: { type: String, default: '' },
+  position:   { type: String, default: '' },
+  company:    { type: String, enum: ['KHEALTH', 'CAREVIEW', 'GLOWFIND'], required: true },
+}, { timestamps: true });
+
+employeeSchema.index({ company: 1 });
+employeeSchema.index({ department: 1 });
+
+export const Employee = mongoose.model("Employee", employeeSchema);

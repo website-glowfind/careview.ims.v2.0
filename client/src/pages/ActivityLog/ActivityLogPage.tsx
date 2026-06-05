@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Activity, Plus, Edit, Trash2, ArrowRightLeft, Search, RefreshCw, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Activity, Plus, Edit, Trash2, ArrowRightLeft, Search, RefreshCw, CreditCard, User as UserIcon, Monitor } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { HistoryAction, Company } from '@/types/inventory';
+import type { HistoryAction, HistoryCategory, Company } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
 import { useActivityLogStore } from '@/store/activityLogStore';
 import { useAssetStore } from '@/store/assetStore';
@@ -12,6 +12,7 @@ const ACTION_ICON: Record<HistoryAction, LucideIcon> = {
   deleted:     Trash2,
   transferred: ArrowRightLeft,
   disposed:    Trash2,
+  restored:    RefreshCw,
 };
 
 const ACTION_BADGE: Record<HistoryAction, string> = {
@@ -20,14 +21,32 @@ const ACTION_BADGE: Record<HistoryAction, string> = {
   deleted:     'bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-400',
   transferred: 'bg-purple-100 dark:bg-purple-500/20 text-purple-800 dark:text-purple-400',
   disposed:    'bg-orange-100 dark:bg-orange-500/20 text-orange-800 dark:text-orange-400',
+  restored:    'bg-teal-100 dark:bg-teal-500/20 text-teal-800 dark:text-teal-400',
+};
+
+const CATEGORY_ICON: Record<HistoryCategory, LucideIcon> = {
+  asset:        Monitor,
+  subscription: CreditCard,
+  user:         UserIcon,
+};
+
+const CATEGORY_BADGE: Record<HistoryCategory, string> = {
+  asset:        'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300',
+  subscription: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400',
+  user:         'bg-pink-100 dark:bg-pink-500/20 text-pink-700 dark:text-pink-400',
 };
 
 export function ActivityLog() {
-  const { history, clearHistory } = useActivityLogStore();
+  const { history, clearHistory, fetchHistory, isLoading } = useActivityLogStore();
   const { selectedCompany, setSelectedCompany } = useAssetStore();
 
-  const [searchQuery, setSearchQuery]     = useState('');
-  const [actionFilter, setActionFilter]   = useState<HistoryAction | 'all'>('all');
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
+
+  const [searchQuery, setSearchQuery]       = useState('');
+  const [actionFilter, setActionFilter]     = useState<HistoryAction | 'all'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<HistoryCategory | 'all'>('all');
   const [showConfirmClear, setShowConfirmClear] = useState(false);
 
   const COMPANIES: { id: Company | 'all'; label: string }[] = [
@@ -37,24 +56,33 @@ export function ActivityLog() {
     { id: 'GLOWFIND', label: 'GLOWFIND' },
   ];
 
+  const CATEGORIES: { id: HistoryCategory | 'all'; label: string }[] = [
+    { id: 'all',          label: 'All' },
+    { id: 'asset',        label: 'Assets' },
+    { id: 'subscription', label: 'Subscriptions' },
+    { id: 'user',         label: 'Users' },
+  ];
+
   const ACTIONS: { id: HistoryAction | 'all'; label: string }[] = [
     { id: 'all',         label: 'All Actions' },
     { id: 'added',       label: 'Added' },
     { id: 'edited',      label: 'Edited' },
     { id: 'deleted',     label: 'Deleted' },
+    { id: 'restored',    label: 'Restored' },
     { id: 'transferred', label: 'Transferred' },
     { id: 'disposed',    label: 'Disposed' },
   ];
 
   const filtered = history.filter(entry => {
-    const matchesCompany = selectedCompany === 'all' || entry.company === selectedCompany;
-    const matchesAction  = actionFilter === 'all' || entry.action === actionFilter;
+    const matchesCompany   = selectedCompany === 'all' || entry.company === selectedCompany;
+    const matchesAction    = actionFilter === 'all'   || entry.action === actionFilter;
+    const matchesCategory  = categoryFilter === 'all' || entry.category === categoryFilter;
     const q = searchQuery.toLowerCase();
-    const matchesSearch  =
+    const matchesSearch    =
       entry.deviceCode.toLowerCase().includes(q) ||
       entry.deviceName.toLowerCase().includes(q) ||
       (entry.details?.toLowerCase().includes(q) ?? false);
-    return matchesCompany && matchesAction && matchesSearch;
+    return matchesCompany && matchesAction && matchesCategory && matchesSearch;
   });
 
   const formatTimestamp = (ts: string) =>
@@ -97,20 +125,34 @@ export function ActivityLog() {
         </div>
 
         <div className="flex flex-wrap gap-4">
+          {/* Category filter */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Category</p>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIES.map(c => (
+                <button key={c.id} onClick={() => setCategoryFilter(c.id)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+                    categoryFilter === c.id
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-[#1e2d4a] text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-[#243352]'
+                  }`}>
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Company filter */}
           <div>
             <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Company</p>
             <div className="flex flex-wrap gap-2">
               {COMPANIES.map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedCompany(c.id as Company | 'all')}
+                <button key={c.id} onClick={() => setSelectedCompany(c.id as Company | 'all')}
                   className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
                     selectedCompany === c.id
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 dark:bg-[#1e2d4a] text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-[#243352]'
-                  }`}
-                >
+                  }`}>
                   {c.label}
                 </button>
               ))}
@@ -122,15 +164,12 @@ export function ActivityLog() {
             <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Action</p>
             <div className="flex flex-wrap gap-2">
               {ACTIONS.map(a => (
-                <button
-                  key={a.id}
-                  onClick={() => setActionFilter(a.id)}
+                <button key={a.id} onClick={() => setActionFilter(a.id)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
                     actionFilter === a.id
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 dark:bg-[#1e2d4a] text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-[#243352]'
-                  }`}
-                >
+                  }`}>
                   {a.label}
                 </button>
               ))}
@@ -170,6 +209,12 @@ export function ActivityLog() {
                       <span className={`px-2 py-0.5 text-xs font-semibold rounded-full capitalize ${ACTION_BADGE[entry.action]}`}>
                         {entry.action}
                       </span>
+                      {entry.category && (
+                        <span className={`flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full capitalize ${CATEGORY_BADGE[entry.category]}`}>
+                          {(() => { const CatIcon = CATEGORY_ICON[entry.category]; return <CatIcon className="w-3 h-3" />; })()}
+                          {entry.category}
+                        </span>
+                      )}
                       <span className="text-sm text-gray-500 dark:text-slate-400">
                         {formatTimestamp(entry.timestamp)}
                       </span>

@@ -8,6 +8,8 @@ import { fileURLToPath } from "url";
 import userRoutes from "./routes/UserRoute.js";
 import subscriptionRoute from "./routes/SubscriptionRoutes.js";
 import assetRoute from "./routes/AssetRoute.js";
+import activityLogRoute from "./routes/ActivityLogRoute.js";
+import employeeRoute from "./routes/EmployeeRoute.js";
 
 dotenv.config();
 
@@ -23,7 +25,7 @@ const allowedOrigins = process.env.NODE_ENV === "production"
 app.use(cors({
     origin: allowedOrigins,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
@@ -36,6 +38,8 @@ const PORT = process.env.PORT || 3001;
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/subscriptions', subscriptionRoute);
 app.use('/api/v1/assets', assetRoute);
+app.use('/api/v1/activity-log', activityLogRoute);
+app.use('/api/v1/employees',   employeeRoute);
 
 // Serve React build
 import { existsSync } from "fs";

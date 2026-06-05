@@ -587,7 +587,7 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
 
       {/* Add Subscription Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
@@ -1320,7 +1320,7 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && deletingSubscription && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Delete {deletingSubscription.type}?</h3>
             <p className="text-gray-600 mb-6">

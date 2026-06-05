@@ -1,19 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { RefreshCw, Trash2, Search, Filter } from 'lucide-react';
 import { useAssetStore } from '@/store/assetStore';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
 import type { Company } from '@/types/inventory';
 
 export function DeletedDevices() {
-  const { assets, selectedCompany, setSelectedCompany, restoreAsset } = useAssetStore();
+  const { deletedAssets, selectedCompany, setSelectedCompany, restoreAsset, fetchDeletedAssets } = useAssetStore();
 
   const [searchQuery, setSearchQuery]   = useState('');
   const [showFilters, setShowFilters]   = useState(false);
   const [restoringId, setRestoringId]   = useState<string | null>(null);
 
-  const deletedAssets = assets.filter(a => a.isDeleted);
+  useEffect(() => {
+    fetchDeletedAssets();
+  }, [fetchDeletedAssets]);
 
-  const filteredAssets = deletedAssets.filter(asset => {
+  const filteredAssets = (deletedAssets ?? []).filter(asset => {
     const matchesCompany = selectedCompany === 'all' || asset.company === selectedCompany;
     const q = searchQuery.toLowerCase();
     const matchesSearch =

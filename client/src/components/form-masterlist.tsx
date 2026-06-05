@@ -269,8 +269,8 @@ export function FormMasterlist() {
                   <tr key={record.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <FileText className={`w-4 h-4 ${getFormTypeColor(record.formType)}`} />
-                        <span className={`text-sm font-semibold ${getFormTypeColor(record.formType)}`}>
+                        <FileText className={`w-4 h-4 ${getFormTypeColor(record.formType!)}`} />
+                        <span className={`text-sm font-semibold ${getFormTypeColor(record.formType!)}`}>
                           {record.formType}
                         </span>
                       </div>
@@ -351,7 +351,7 @@ export function FormMasterlist() {
                   selectedRecord.formType === 'Subscription Management' ? 'bg-indigo-100' :
                   'bg-red-100'
                 }`}>
-                  <FileText className={`w-6 h-6 ${getFormTypeColor(selectedRecord.formType)}`} />
+                  <FileText className={`w-6 h-6 ${getFormTypeColor(selectedRecord.formType!)}`} />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900">{selectedRecord.formType}</h3>
@@ -370,7 +370,7 @@ export function FormMasterlist() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Form Type:</label>
-                  <p className={`text-sm font-semibold ${getFormTypeColor(selectedRecord.formType)}`}>
+                  <p className={`text-sm font-semibold ${getFormTypeColor(selectedRecord.formType!)}`}>
                     {selectedRecord.formType}
                   </p>
                 </div>

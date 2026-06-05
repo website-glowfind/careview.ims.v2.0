@@ -78,12 +78,15 @@ export interface DisposalRecord {
 }
 
 // Legacy history entry type (for global activity log)
-export type HistoryAction = 'added' | 'edited' | 'deleted' | 'transferred' | 'disposed';
+export type HistoryAction = 'added' | 'edited' | 'deleted' | 'transferred' | 'disposed' | 'restored';
+export type HistoryCategory = 'asset' | 'subscription' | 'user';
 
 export interface HistoryEntry {
   id: string;
   timestamp: string;
   action: HistoryAction;
+  category: HistoryCategory;
+  // asset: deviceCode/deviceName | subscription: referenceCode/name | user: username/fullName
   deviceCode: string;
   deviceName: string;
   company: Company;

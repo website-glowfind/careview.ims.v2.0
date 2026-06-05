@@ -3,17 +3,20 @@ import api from "../services/api";
 import { assetServices } from "@/services/assetServices";
 // I-import lahat ng kailangang types mula sa iyong types file
 import type { ITAsset, Company, LicenseSubscription } from "@/types/inventory";
+import { useActivityLogStore } from "@/store/activityLogStore";
 
 interface AssetState {
   assets: ITAsset[];
+  deletedAssets: ITAsset[];
   setAssets: (assets: ITAsset[]) => void;
-  subscriptions: LicenseSubscription[]; // Gamitin ang detailed interface mo
+  subscriptions: LicenseSubscription[];
   selectedCompany: Company | 'all';
   isLoading: boolean;
   error: string | null;
 
   // Actions
   fetchAssets: () => Promise<void>;
+  fetchDeletedAssets: () => Promise<void>;
   fetchSubscriptions: () => Promise<void>;
   setSelectedCompany: (company: Company | 'all') => void;
   addAsset: (assetData: any, subscriptionData?: any) => Promise<void>;
@@ -28,6 +31,7 @@ interface AssetState {
 
 export const useAssetStore = create<AssetState>((set, get) => ({
   assets: [],
+  deletedAssets: [],
   setAssets: (assets) => set({ assets }),
   subscriptions: [],
   selectedCompany: 'all',
@@ -39,11 +43,19 @@ export const useAssetStore = create<AssetState>((set, get) => ({
   fetchAssets: async () => {
     set({ isLoading: true });
     try {
-      // Endpoint sa backend na kailangan mong gawin
       const response = await api.get("/assets");
       set({ assets: response.data, isLoading: false });
     } catch (err: any) {
       set({ error: err.response?.data?.error || "Failed to fetch assets", isLoading: false });
+    }
+  },
+
+  fetchDeletedAssets: async () => {
+    try {
+      const response = await api.get("/assets/deleted");
+      set({ deletedAssets: response.data });
+    } catch (err: any) {
+      console.error("Failed to fetch deleted assets:", err);
     }
   },
 
@@ -90,24 +102,37 @@ export const useAssetStore = create<AssetState>((set, get) => ({
   deleteAsset: async (id: string) => {
     try {
       await api.patch(`/assets/${id}/delete`);
-      set((state) => ({
-        assets: state.assets.map(asset =>
-          asset._id === id ? { ...asset, isDeleted: true, deletedAt: new Date().toISOString() } : asset
-        )
-      }));
-    } catch (err) {
+      set((state) => {
+        const asset = state.assets.find(a => a._id === id);
+        const deletedAsset = asset ? { ...asset, isDeleted: true, deletedAt: new Date().toISOString() } : null;
+        return {
+          assets: state.assets.filter(a => a._id !== id),
+          deletedAssets: deletedAsset
+            ? [deletedAsset, ...state.deletedAssets]
+            : state.deletedAssets,
+        };
+      });
+    } catch (err: any) {
       console.error("Failed to delete asset:", err);
+      throw new Error(err.response?.data?.error || 'Failed to delete asset');
     }
   },
 
   restoreAsset: async (id: string) => {
     try {
       const response = await api.patch(`/assets/${id}/restore`);
+      const restored = response.data as ITAsset;
       set((state) => ({
-        assets: state.assets.map(asset =>
-          asset._id === id ? { ...response.data, isDeleted: false } : asset
-        )
+        assets: [...state.assets, { ...restored, isDeleted: false }],
+        deletedAssets: state.deletedAssets.filter(a => a._id !== id),
       }));
+      useActivityLogStore.getState().addHistoryEntry({
+        action: 'restored', category: 'asset',
+        deviceCode: restored.deviceCode,
+        deviceName: restored.name,
+        company: restored.company,
+        details: 'Asset restored from deleted devices',
+      });
     } catch (err) {
       console.error("Failed to restore asset:", err);
       throw err;

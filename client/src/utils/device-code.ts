@@ -53,31 +53,30 @@ export function generateDeviceCode(
   return `${companyPrefix}-${categoryPrefix}-${nextNumber}`;
 }
 
-// Generate License or Subscription code with global sequential numbering
+// Generate License or Subscription code — fixed IT prefix, global sequential
+// Format: IT-LIC-0001 / IT-SUB-0001
 export function generateLicenseSubscriptionCode(
   company: Company,
   type: 'License' | 'Subscription',
   existingLicenseSubscriptions: LicenseSubscription[]
 ): string {
-  const companyPrefix = companyPrefixes[company];
-  const typePrefix = type === 'License' ? licenseSubscriptionPrefixes.license : licenseSubscriptionPrefixes.subscription;
-  
-  // Find the highest number across ALL companies for this type (global sequential numbering)
-  const pattern = new RegExp(`^[A-Z]{2}-${typePrefix}-(\\d+)$`);
+  const typePrefix = type === 'License'
+    ? licenseSubscriptionPrefixes.license
+    : licenseSubscriptionPrefixes.subscription;
+
+  const pattern = new RegExp(`^IT-${typePrefix}-(\\d+)$`);
   let maxNumber = 0;
-  
+
   existingLicenseSubscriptions.forEach(item => {
     const match = item.referenceCode.match(pattern);
     if (match) {
       const num = parseInt(match[1], 10);
-      if (num > maxNumber) {
-        maxNumber = num;
-      }
+      if (num > maxNumber) maxNumber = num;
     }
   });
-  
+
   const nextNumber = (maxNumber + 1).toString().padStart(4, '0');
-  return `${companyPrefix}-${typePrefix}-${nextNumber}`;
+  return `IT-${typePrefix}-${nextNumber}`;
 }
 
 export function getCompanyColor(company: Company): string {

@@ -8,12 +8,14 @@ import { useThemeStore } from '@/store/themeStore';
 import { AssetForm } from '@/components/asset-form';
 import { useAssetStore } from '@/store/assetStore';
 import { useFormRecordStore } from '@/store/formRecordStore';
+import { useActivityLogStore } from '@/store/activityLogStore';
 import { FormMasterlistPage } from './Form-Masterlist/FormMasterListPage';
 import { SubscriptionPage } from './Subscripton/SubscriptionPage';
 import { DeletedDevices } from './Deleted-Device/DeletedDevicePage';
 import { ActivityLog } from './ActivityLog/ActivityLogPage';
 import { DisposalFormPage } from './Disposal-form/DisposalFormPage';
 import { UserManagement } from './User-Management/UserManagement';
+import { EmployeeListPage } from './Employee-List/EmployeeListPage';
 
 export default function MainLayout() {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -22,11 +24,21 @@ export default function MainLayout() {
     const { assets, addAsset } = useAssetStore();
     const { addFormRecord } = useFormRecordStore();
     const { isDark, toggleDark } = useThemeStore();
+    const { addHistoryEntry } = useActivityLogStore();
     const handleSaveAsset = async (assetData: any, subscriptionData?: any) => {
       setFormError(null);
       try {
         await addAsset(assetData, subscriptionData);
-        setCurrentView('inventory'); 
+        // Log the new asset — deviceCode comes back from the server via the store
+        addHistoryEntry({
+          action: 'added',
+          category: 'asset',
+          deviceCode: assetData.deviceCode || 'PENDING',
+          deviceName: assetData.name,
+          company: assetData.company,
+          details: `${assetData.brand} ${assetData.model} — ${assetData.category}`,
+        });
+        setCurrentView('inventory');
       } catch (error: any) {
         setFormError(error?.message || 'Failed to save asset.');
       }
@@ -43,6 +55,8 @@ export default function MainLayout() {
         return <DeletedDevices />;
       case 'history':
         return <ActivityLog />;
+      case 'employees':
+        return <EmployeeListPage />;
       case 'form-masterlist':
         return <FormMasterlistPage />;
       case 'disposal':

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import api from '@/services/api';
 import type { Company } from '@/types/inventory';
 import type { Subscription } from '@/types/subscription';
+import { useActivityLogStore } from '@/store/activityLogStore';
 
 interface SubscriptionState {
   subscriptions: Subscription[];
@@ -40,6 +41,12 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       const res = await api.post('/subscriptions', data);
       const created = { ...res.data, id: res.data._id ?? res.data.id };
       set(state => ({ subscriptions: [created, ...state.subscriptions], isLoading: false }));
+      useActivityLogStore.getState().addHistoryEntry({
+        action: 'added', category: 'subscription',
+        deviceCode: created.referenceCode, deviceName: created.name,
+        company: created.company,
+        details: `${created.type}: ${created.provider} — ${created.billingCycle}`,
+      });
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to add subscription';
       set({ error: message, isLoading: false });
@@ -56,6 +63,12 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         subscriptions: state.subscriptions.map(s => s.id === id ? updated : s),
         isLoading: false,
       }));
+      useActivityLogStore.getState().addHistoryEntry({
+        action: 'edited', category: 'subscription',
+        deviceCode: updated.referenceCode, deviceName: updated.name,
+        company: updated.company,
+        details: `Updated ${updated.type} — Status: ${updated.status}`,
+      });
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to update subscription';
       set({ error: message, isLoading: false });
@@ -66,11 +79,20 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   deleteSubscription: async (id) => {
     set({ isLoading: true, error: null });
     try {
+      const existing = get().subscriptions.find(s => s.id === id);
       await api.delete(`/subscriptions/${id}`);
       set(state => ({
         subscriptions: state.subscriptions.filter(s => s.id !== id),
         isLoading: false,
       }));
+      if (existing) {
+        useActivityLogStore.getState().addHistoryEntry({
+          action: 'deleted', category: 'subscription',
+          deviceCode: existing.referenceCode, deviceName: existing.name,
+          company: existing.company,
+          details: `Deleted ${existing.type}`,
+        });
+      }
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to delete subscription';
       set({ error: message, isLoading: false });
