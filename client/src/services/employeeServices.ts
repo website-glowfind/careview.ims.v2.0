@@ -43,6 +43,12 @@ export const employeeServices = {
     return res.data;
   },
 
+  /** Update one employee */
+  updateEmployee: async (id: string, employee: Omit<Employee, '_id'>): Promise<Employee> => {
+    const res = await api.put(`/employees/${id}`, employee);
+    return res.data;
+  },
+
   /** Delete one employee */
   deleteEmployee: async (id: string): Promise<void> => {
     await api.delete(`/employees/${id}`);

@@ -35,6 +35,8 @@ interface EmployeeState {
   setSelectedCompany: (c: Company | 'ALL') => void;
   fetchEmployees:     (search?: string, page?: number) => Promise<void>;
   addEmployee:        (employee: Omit<Employee, '_id'>) => Promise<void>;
+  updateEmployee:     (id: string, employee: Omit<Employee, '_id'>) => Promise<void>;
+  deleteEmployee:     (id: string) => Promise<void>;
   bulkImport:         (employees: Omit<Employee, '_id'>[]) => Promise<ImportResult>;
 }
 
@@ -77,6 +79,34 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
       get().fetchEmployees(undefined, 1);
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to add employee';
+      set({ error: message, isLoading: false });
+      throw new Error(message);
+    }
+  },
+
+  updateEmployee: async (id, employee) => {
+    set({ isLoading: true, error: null });
+    try {
+      await employeeServices.updateEmployee(id, employee);
+      set({ isLoading: false });
+      const { pagination } = get();
+      get().fetchEmployees(undefined, pagination.page);
+    } catch (err: any) {
+      const message = err.response?.data?.error || 'Failed to update employee';
+      set({ error: message, isLoading: false });
+      throw new Error(message);
+    }
+  },
+
+  deleteEmployee: async (id) => {
+    set({ isLoading: true, error: null });
+    try {
+      await employeeServices.deleteEmployee(id);
+      set({ isLoading: false });
+      const { pagination } = get();
+      get().fetchEmployees(undefined, pagination.page);
+    } catch (err: any) {
+      const message = err.response?.data?.error || 'Failed to delete employee';
       set({ error: message, isLoading: false });
       throw new Error(message);
     }

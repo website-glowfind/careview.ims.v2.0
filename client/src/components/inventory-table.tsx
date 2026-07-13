@@ -40,7 +40,7 @@ export function InventoryTable({
 
   const getCategoriesForTab = (tab: CategoryTab): AssetCategory[] => {
     const map: Record<CategoryTab, AssetCategory[]> = {
-      all: ['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'phone', 'tablet', 'other'],
+      all: ['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'mobile', 'mobile + subscription', 'tablet', 'other'],
       laptop: ['laptop'],
       printer: ['printer'],
       desktop: ['desktop'],
@@ -48,7 +48,7 @@ export function InventoryTable({
       mouse: ['mouse'],
       monitor: ['monitor'],
       networking: ['networking', 'server'],
-      mobile: ['phone', 'tablet']
+      mobile: ['mobile', 'mobile + subscription', 'tablet']
     };
     return map[tab];
   };

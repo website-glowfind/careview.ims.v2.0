@@ -1,6 +1,6 @@
 export type AssetStatus = 'active' | 'in-maintenance' | 'in-storage' | 'available' | 'disposed';
 
-export type AssetCategory = 'laptop' | 'desktop' | 'monitor' | 'keyboard' | 'mouse' | 'printer' | 'server' | 'networking' | 'phone' | 'tablet' | 'other';
+export type AssetCategory = 'laptop' | 'desktop' | 'monitor' | 'keyboard' | 'mouse' | 'printer' | 'server' | 'networking' | 'mobile' | 'mobile + subscription' | 'tablet' | 'other';
 
 export type LicenseSubscriptionType = 'license' | 'subscription';
 
@@ -93,6 +93,8 @@ export interface HistoryEntry {
   fromCompany?: Company;
   toCompany?: Company;
   details?: string;
+  performedBy?: string;
+  changes?: Array<{ field: string; oldValue?: string; newValue?: string }>;
 }
 
 // Detailed activity log types (for device-specific activity log)
@@ -119,12 +121,13 @@ export interface DeviceActivity {
 }
 
 // Form Masterlist types
-export type FormType = 
+export type FormType =
   | 'Asset Issuance'
   | 'Inventory Management'
   | 'Subscription Management'
   | 'Asset Transfer'
-  | 'Asset Disposal';
+  | 'Asset Disposal'
+  | 'New User Transfer';
 
 export type FormStatus = 'Active' | 'Returned' | 'Disposed' | 'Completed';
 
@@ -133,23 +136,25 @@ export interface FormRecord {
   formType?: FormType;
   assignedTo?: string;
   position?: string;
-  deviceCode?: string; // For asset-related forms
-  assetTag?: string; // Device code or reference ID
-  referenceId?: string; // For subscriptions or non-asset forms
-  employeeName?: string; // Assigned to
+  deviceCode?: string;
+  assetTag?: string;
+  referenceId?: string;
+  employeeName?: string;
   department?: string;
   company?: Company;
+  fromCompany?: Company;
+  toCompany?: Company;
   location?: string;
   brand?: string;
   category?: AssetCategory;
-  name?: string; // For subscription or license name
+  name?: string;
   dateCreated: string;
   status: FormStatus;
-  details?: string; // Additional context
+  details?: string;
   createdBy: string;
-  relatedAssetId?: string; // Link to ITAsset if applicable
-  relatedSubscriptionId?: string; // Link to subscription if applicable
-  formData?: any; // Store full form data for viewing
+  relatedAssetId?: string;
+  relatedSubscriptionId?: string;
+  formData?: any;
 }
 
 // License and Subscription Management types

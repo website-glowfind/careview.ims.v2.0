@@ -5,6 +5,7 @@ import type { Company, ITAsset, FormRecord } from '@/types/inventory';
 import type { Subscription } from '@/types/subscription';
 import { AssetRecordForm } from '@/components/asset-record-form';
 import { employeeServices } from '@/services/employeeServices';
+import { useAuthStore } from '@/store/authStore';
 
 interface SubscriptionListProps {
   company: Company | 'ALL';
@@ -14,6 +15,8 @@ interface SubscriptionListProps {
   onEditSubscription?: (id: string, subscription: Omit<Subscription, 'id'>) => void;
   onDeleteSubscription?: (id: string) => void;
   onViewSubscription?: (subscription: Subscription) => void;
+  onRequestEdit?: (subscription: Subscription) => void;
+  editRequestSubscription?: Subscription | null;
   assets?: ITAsset[];
   assetCategories?: string[];
   onAddCategory?: (category: string) => void;
@@ -188,7 +191,10 @@ const MOCK_SUBSCRIPTIONS: Subscription[] = [
   },
 ];
 
-export function SubscriptionList({ company, onCompanyChange, subscriptions: propSubscriptions, onAddSubscription, onEditSubscription, onDeleteSubscription, onViewSubscription, assets, assetCategories, onAddCategory, onDeleteCategory, defaultCategories, onSaveFormRecord, currentUser }: SubscriptionListProps) {
+export function SubscriptionList({ company, onCompanyChange, subscriptions: propSubscriptions, onAddSubscription, onEditSubscription, onDeleteSubscription, onViewSubscription, onRequestEdit, editRequestSubscription, assets, assetCategories, onAddCategory, onDeleteCategory, defaultCategories, onSaveFormRecord, currentUser }: SubscriptionListProps) {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'admin';
+
   const [searchQuery, setSearchQuery] = useState('');
   const [subscriptions, setSubscriptions] = useState<Subscription[]>(propSubscriptions || MOCK_SUBSCRIPTIONS);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -395,9 +401,89 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
   const handleDeleteSubscription = () => {
     if (deletingSubscription) {
       setSubscriptions(subscriptions.filter(s => s.id !== deletingSubscription.id));
+      if (onDeleteSubscription) onDeleteSubscription(deletingSubscription.id);
       setShowDeleteModal(false);
       setDeletingSubscription(null);
     }
+  };
+
+  const openEditModal = (sub: Subscription) => {
+    setEditingSubscription(sub);
+    setFormData({
+      type: sub.type,
+      employeeName: sub.employeeName || '',
+      company: sub.company,
+      branch: sub.branch || '',
+      department: sub.department || '',
+      licenseKey: sub.licenseKey || '',
+      numberOfSeats: sub.numberOfSeats?.toString() || '',
+      subscriptionName: sub.subscriptionName || '',
+      accountNumber: sub.accountNumber || '',
+      accountDescription: sub.accountDescription || '',
+      accountName: sub.accountName || '',
+      accountEmail: sub.accountEmail || '',
+      provider: sub.provider,
+      planType: sub.planType || '',
+      category: sub.category || '',
+      status: sub.status as any,
+      billingCycle: sub.billingCycle as any,
+      cost: sub.cost.toString(),
+      currency: sub.currency as '$' | '₱',
+      purchaseDate: sub.purchaseDate || '',
+      renewalDate: sub.renewalDate,
+      notes: sub.notes || '',
+      modeOfPayment: (sub.modeOfPayment as any) || 'Credit Card',
+      modeOfPaymentNote: sub.modeOfPaymentNote || '',
+      deviceId: sub.deviceId || '',
+    });
+    setShowAddModal(true);
+  };
+
+  useEffect(() => {
+    if (editRequestSubscription) openEditModal(editRequestSubscription);
+  }, [editRequestSubscription]);
+
+  const handleEditSubscriptionSubmit = () => {
+    if (!editingSubscription) return;
+    if (!formData.provider?.trim()) { alert('❌ Service Provider is required'); return; }
+    if (!formData.cost || parseFloat(formData.cost) <= 0) { alert('❌ Cost must be greater than 0'); return; }
+    if (!formData.renewalDate) { alert('❌ Renewal Date is required'); return; }
+
+    const updated: Subscription = {
+      ...editingSubscription,
+      type: formData.type,
+      employeeName: formData.employeeName || undefined,
+      company: formData.company,
+      branch: formData.branch || undefined,
+      department: formData.department || undefined,
+      licenseKey: formData.type === 'License' ? formData.licenseKey : undefined,
+      numberOfSeats: formData.type === 'License' && formData.numberOfSeats ? parseInt(formData.numberOfSeats) : undefined,
+      subscriptionName: formData.type === 'Subscription' ? formData.subscriptionName : undefined,
+      accountNumber: formData.type === 'Subscription' ? formData.accountNumber : undefined,
+      accountDescription: formData.type === 'Subscription' ? formData.accountDescription : undefined,
+      accountName: formData.type === 'Subscription' ? formData.accountName : undefined,
+      accountEmail: formData.type === 'Subscription' ? formData.accountEmail : undefined,
+      name: formData.type === 'License' ? `${formData.provider} License` : (formData.subscriptionName || formData.provider),
+      provider: formData.provider,
+      planType: formData.planType || undefined,
+      category: formData.category || undefined,
+      status: formData.status,
+      billingCycle: formData.billingCycle,
+      cost: parseFloat(formData.cost),
+      currency: formData.currency,
+      purchaseDate: formData.purchaseDate || undefined,
+      renewalDate: formData.renewalDate,
+      notes: formData.notes || undefined,
+      modeOfPayment: formData.modeOfPayment,
+      modeOfPaymentNote: formData.modeOfPaymentNote,
+      deviceId: formData.deviceId || undefined,
+    };
+
+    setSubscriptions(subscriptions.map(s => s.id === editingSubscription.id ? updated : s));
+    if (onEditSubscription) onEditSubscription(editingSubscription.id, updated);
+    setShowAddModal(false);
+    setEditingSubscription(null);
+    resetForm();
   };
 
   // Filter subscriptions
@@ -592,24 +678,35 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
                         </span>
                       </td>
                       <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
                           <button
-                            className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded transition-colors"
                             title="View Details"
                             onClick={() => onViewSubscription?.(subscription)}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button
-                            className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                            title="Delete"
-                            onClick={() => {
-                              setDeletingSubscription(subscription);
-                              setShowDeleteModal(true);
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {isAdmin && (
+                            <>
+                              <button
+                                className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10 rounded transition-colors"
+                                title="Edit"
+                                onClick={() => openEditModal(subscription)}
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded transition-colors"
+                                title="Delete"
+                                onClick={() => {
+                                  setDeletingSubscription(subscription);
+                                  setShowDeleteModal(true);
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -627,10 +724,13 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900">Add License/Subscription</h3>
+              <h3 className="text-xl font-bold text-gray-900">
+                {editingSubscription ? 'Edit License/Subscription' : 'Add License/Subscription'}
+              </h3>
               <button
                 onClick={() => {
                   setShowAddModal(false);
+                  setEditingSubscription(null);
                   resetForm();
                 }}
                 className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
@@ -1262,24 +1362,30 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
             {/* Modal Footer */}
             <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">
-                Reference Code will be auto-generated: <span className="font-mono font-semibold">
-                  {formData.company === 'KHEALTH' ? 'KH' : formData.company === 'CAREVIEW' ? 'CV' : 'GF'}-{formData.type === 'License' ? 'LIC' : 'SUB'}-####
-                </span>
+                {editingSubscription ? (
+                  <>Reference Code: <span className="font-mono font-semibold">{editingSubscription.referenceCode}</span></>
+                ) : (
+                  <>Reference Code will be auto-generated: <span className="font-mono font-semibold">
+                    IT-{formData.type === 'License' ? 'LIC' : 'SUB'}-####
+                  </span></>
+                )}
               </div>
               <div className="flex gap-3">
-                {/* Asset Form Button - Secondary action button */}
-                <button
-                  type="button"
-                  onClick={() => setShowAssetForm(true)}
-                  className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium flex items-center gap-2"
-                >
-                  <FileText className="w-4 h-4" />
-                  Asset Form
-                </button>
+                {!editingSubscription && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAssetForm(true)}
+                    className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Asset Form
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
                     setShowAddModal(false);
+                    setEditingSubscription(null);
                     resetForm();
                   }}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -1288,11 +1394,11 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
                 </button>
                 <button
                   type="button"
-                  onClick={handleAddSubscription}
+                  onClick={editingSubscription ? handleEditSubscriptionSubmit : handleAddSubscription}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   disabled={!formData.provider || !formData.renewalDate || !formData.cost}
                 >
-                  Add {formData.type}
+                  {editingSubscription ? 'Save Changes' : `Add ${formData.type}`}
                 </button>
               </div>
             </div>

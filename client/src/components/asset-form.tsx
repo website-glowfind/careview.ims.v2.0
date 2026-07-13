@@ -67,8 +67,8 @@ export function AssetForm({ asset, assets, categories, onAddCategory, onDeleteCa
     notes: ''
   });
 
-  // Check if category is phone
-  const isPhoneCategory = formData.category.toLowerCase() === 'phone';
+  // Subscription section only shows for "Mobile + Subscription" category
+  const isPhoneCategory = formData.category.toLowerCase() === 'mobile + subscription';
 
   useEffect(() => {
     if (asset) {
@@ -755,7 +755,7 @@ setFormData({
 
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-sm text-green-800">
-                  ✓ When you click "Add Asset", this phone will be saved to inventory AND automatically create a linked subscription record.
+                  ✓ When you click "Add Asset", this mobile will be saved to inventory AND automatically create a linked subscription record.
                 </p>
               </div>
             </div>

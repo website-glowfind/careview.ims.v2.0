@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Upload, Search, Users, X, CheckCircle, AlertCircle, UserPlus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Upload, Search, Users, X, CheckCircle, AlertCircle, UserPlus, ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useEmployeeStore, type Employee } from '@/store/employeeStore';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
@@ -42,8 +42,52 @@ export function EmployeeListPage() {
   const [viewingEmployee, setViewingEmployee] = useState<Employee | null>(null);
   const emptyForm = { fullName: '', employeeId: '', department: '', position: '', company: 'KHEALTH' as Company };
   const [addForm, setAddForm]             = useState<Omit<Employee, '_id'>>(emptyForm);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [editForm, setEditForm]           = useState<Omit<Employee, '_id'>>(emptyForm);
+  const [editError, setEditError]         = useState<string | null>(null);
+  const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
+  const [isDeleting, setIsDeleting]       = useState(false);
 
   useEffect(() => { fetchEmployees(); }, [fetchEmployees]);
+
+  const openEditModal = (emp: Employee) => {
+    setEditingEmployee(emp);
+    setEditForm({
+      fullName:   emp.fullName,
+      employeeId: emp.employeeId,
+      department: emp.department,
+      position:   emp.position,
+      company:    emp.company,
+    });
+    setEditError(null);
+    setViewingEmployee(null);
+  };
+
+  const handleUpdateEmployee = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingEmployee?._id) return;
+    setEditError(null);
+    try {
+      await useEmployeeStore.getState().updateEmployee(editingEmployee._id, editForm);
+      setEditingEmployee(null);
+    } catch (err: any) {
+      setEditError(err.message);
+    }
+  };
+
+  const handleDeleteEmployee = async () => {
+    if (!deletingEmployee?._id) return;
+    setIsDeleting(true);
+    try {
+      await useEmployeeStore.getState().deleteEmployee(deletingEmployee._id);
+      setDeletingEmployee(null);
+      setViewingEmployee(null);
+    } catch (err: any) {
+      alert(`❌ ${err.message}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleAddEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -408,10 +452,24 @@ export function EmployeeListPage() {
               ))}
             </div>
 
-            <div className="px-6 pb-5">
+            <div className="px-6 pb-5 flex gap-3">
+              <button
+                onClick={() => setDeletingEmployee(viewingEmployee)}
+                className="flex-1 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+              <button
+                onClick={() => openEditModal(viewingEmployee)}
+                className="flex-1 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <Pencil className="w-4 h-4" />
+                Update
+              </button>
               <button
                 onClick={() => setViewingEmployee(null)}
-                className="w-full py-2 bg-gray-100 dark:bg-[#1e2d4a] text-gray-700 dark:text-slate-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-[#243352] transition-colors"
+                className="flex-1 py-2 bg-gray-100 dark:bg-[#1e2d4a] text-gray-700 dark:text-slate-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-[#243352] transition-colors"
               >
                 Close
               </button>
@@ -524,6 +582,149 @@ export function EmployeeListPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Employee Modal */}
+      {editingEmployee && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-[#162236] rounded-2xl max-w-md w-full shadow-2xl border dark:border-[#1e3a5f]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-[#1e3a5f]">
+              <div className="flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-blue-600" />
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Update Employee</h3>
+              </div>
+              <button onClick={() => setEditingEmployee(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateEmployee} className="p-6 space-y-4">
+              {editError && (
+                <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg text-sm text-red-700 dark:text-red-400">
+                  ⚠️ {editError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.fullName}
+                  onChange={e => setEditForm(p => ({ ...p, fullName: e.target.value }))}
+                  placeholder="e.g., Dela Cruz, Juan M."
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                  Employee ID <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.employeeId}
+                  onChange={e => setEditForm(p => ({ ...p, employeeId: e.target.value }))}
+                  placeholder="e.g., 2024010101"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                  Company <span className="text-red-500">*</span>
+                </label>
+                <select
+                  required
+                  value={editForm.company}
+                  onChange={e => setEditForm(p => ({ ...p, company: e.target.value as Company }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  <option value="KHEALTH">KHEALTH</option>
+                  <option value="CAREVIEW">CAREVIEW</option>
+                  <option value="GLOWFIND">GLOWFIND</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Department</label>
+                <input
+                  type="text"
+                  value={editForm.department}
+                  onChange={e => setEditForm(p => ({ ...p, department: e.target.value }))}
+                  placeholder="e.g., Admin-Accounting"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Position</label>
+                <input
+                  type="text"
+                  value={editForm.position}
+                  onChange={e => setEditForm(p => ({ ...p, position: e.target.value }))}
+                  placeholder="e.g., Accounting Supervisor"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingEmployee(null)}
+                  className="flex-1 py-2 bg-gray-100 dark:bg-[#1e2d4a] text-gray-700 dark:text-slate-300 rounded-xl font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingEmployee && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white dark:bg-[#162236] rounded-2xl max-w-md w-full shadow-2xl border dark:border-[#1e3a5f] p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Delete Employee</h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-slate-400 mb-5">
+              Are you sure you want to delete <strong className="text-gray-900 dark:text-white">{deletingEmployee.fullName}</strong>{' '}
+              (<span className="font-mono">{deletingEmployee.employeeId}</span>)? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeletingEmployee(null)}
+                disabled={isDeleting}
+                className="flex-1 py-2 bg-gray-100 dark:bg-[#1e2d4a] text-gray-700 dark:text-slate-300 rounded-xl font-semibold disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteEmployee}
+                disabled={isDeleting}
+                className="flex-1 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}

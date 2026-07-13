@@ -10,6 +10,7 @@ import subscriptionRoute from "./routes/SubscriptionRoutes.js";
 import assetRoute from "./routes/AssetRoute.js";
 import activityLogRoute from "./routes/ActivityLogRoute.js";
 import employeeRoute from "./routes/EmployeeRoute.js";
+import formRecordRoute from "./routes/FormRecordRoute.js";
 
 dotenv.config();
 
@@ -40,6 +41,7 @@ app.use('/api/v1/subscriptions', subscriptionRoute);
 app.use('/api/v1/assets', assetRoute);
 app.use('/api/v1/activity-log', activityLogRoute);
 app.use('/api/v1/employees',   employeeRoute);
+app.use('/api/v1/form-records', formRecordRoute);
 
 // Serve React build
 import { existsSync } from "fs";

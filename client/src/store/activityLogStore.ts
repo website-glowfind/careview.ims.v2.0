@@ -15,21 +15,36 @@ function mapLog(doc: any): HistoryEntry {
     fromCompany: doc.fromCompany as Company | undefined,
     toCompany:   doc.toCompany   as Company | undefined,
     details:     doc.details,
+    performedBy: doc.performedBy,
+    changes:     doc.changes,
   };
 }
 
 interface ActivityLogState {
   history: HistoryEntry[];
+  deviceHistory: HistoryEntry[];
   isLoading: boolean;
 
-  fetchHistory:    () => Promise<void>;
-  addHistoryEntry: (entry: Omit<HistoryEntry, 'id' | 'timestamp'>) => Promise<void>;
-  clearHistory:    () => Promise<void>;
+  fetchHistory:          () => Promise<void>;
+  fetchHistoryByDevice:  (deviceCode: string) => Promise<void>;
+  addHistoryEntry:       (entry: Omit<HistoryEntry, 'id' | 'timestamp'>) => Promise<void>;
+  clearHistory:          () => Promise<void>;
 }
 
 export const useActivityLogStore = create<ActivityLogState>((set) => ({
-  history:   [],
-  isLoading: false,
+  history:       [],
+  deviceHistory: [],
+  isLoading:     false,
+
+  fetchHistoryByDevice: async (deviceCode: string) => {
+    set({ isLoading: true });
+    try {
+      const res = await api.get(`/activity-log?deviceCode=${encodeURIComponent(deviceCode)}`);
+      set({ deviceHistory: res.data.map(mapLog), isLoading: false });
+    } catch {
+      set({ isLoading: false });
+    }
+  },
 
   fetchHistory: async () => {
     set({ isLoading: true });

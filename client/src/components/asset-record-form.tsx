@@ -227,7 +227,7 @@ export function AssetRecordForm({
                     {/* Row 1: Assigned to & ID No. */}
                     <tr>
                       <td className="border border-gray-300 px-4 py-2 font-semibold text-gray-700 bg-gray-100 w-1/4">
-                        Assigned To:
+                        Assigned Name:
                       </td>
                       <td className="border border-gray-300 px-4 py-2 text-gray-900 w-1/4">
                         {isViewMode ? (
@@ -403,7 +403,7 @@ export function AssetRecordForm({
                     </tr>
                     <tr>
                       <td className="border border-gray-300 px-4 py-2 font-semibold text-gray-700 bg-gray-50">
-                        Serial Number:
+                        Serial No.:
                       </td>
                       <td className="border border-gray-300 px-4 py-2 text-gray-900 font-mono" colSpan={3}>
                         {isViewMode ? (

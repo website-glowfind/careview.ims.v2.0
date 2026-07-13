@@ -15,7 +15,8 @@ const categoryPrefixes: Record<AssetCategory, string> = {
   printer: 'PR',
   server: 'SV',
   networking: 'NW',
-  phone: 'PH',
+  mobile: 'MB',
+  'mobile + subscription': 'MB',
   tablet: 'TB',
   other: 'OT',
 };

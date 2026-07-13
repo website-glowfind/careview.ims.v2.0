@@ -21,11 +21,14 @@ export function IssuanceAgreement({ asset, assetData, onClose, currentUser, onSa
 
   if (!data) return null;
 
-  const companyLogo  = getCompanyLogo(data.company) ?? '/logo.png';
-  const companyColor = getCompanyHexColor(data.company);
+  // GLOWFIND uses the same form/branding as CAREVIEW
+  const brandCompany = data.company === 'GLOWFIND' ? 'CAREVIEW' : data.company;
 
-  const companyName = data.company === 'KHEALTH' ? 'KHEALTH CORPORATION' :
-                       data.company === 'CAREVIEW' ? 'CAREVIEW COMMUNICATIONS' :
+  const companyLogo  = getCompanyLogo(brandCompany) ?? '/logo.png';
+  const companyColor = getCompanyHexColor(brandCompany);
+
+  const companyName = brandCompany === 'KHEALTH' ? 'KHEALTH CORPORATION' :
+                       brandCompany === 'CAREVIEW' ? 'CAREVIEW COMMUNICATIONS' :
                        'GLOWFIND';
 
   const generatePDF = async (): Promise<jsPDF | null> => {

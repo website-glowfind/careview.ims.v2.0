@@ -73,10 +73,10 @@ export default function MainLayout() {
             )}
             <AssetForm
               assets={assets}
-              categories={['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'networking', 'phone', 'tablet', 'other']}
+              categories={['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'networking', 'mobile', 'mobile + subscription', 'tablet', 'other']}
               onAddCategory={() => {}} // Opsyonal: logic para sa custom categories
               onDeleteCategory={() => {}}
-              defaultCategories={['laptop', 'desktop', 'monitor', 'phone']}
+              defaultCategories={['laptop', 'desktop', 'monitor', 'mobile', 'mobile + subscription']}
               onSave={handleSaveAsset}
               onCancel={() => { setFormError(null); setCurrentView('dashboard'); }}
               currentUser={user?.name || 'Admin'}

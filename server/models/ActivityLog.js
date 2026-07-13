@@ -10,6 +10,7 @@ const activityLogSchema = new mongoose.Schema({
   toCompany:  { type: String, enum: ['KHEALTH', 'CAREVIEW', 'GLOWFIND'] },
   details:    { type: String },
   performedBy:{ type: String },
+  changes:    [{ field: String, oldValue: String, newValue: String }],
 }, { timestamps: true });
 
 export const ActivityLog = mongoose.model("ActivityLog", activityLogSchema);

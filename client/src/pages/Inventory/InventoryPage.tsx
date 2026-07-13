@@ -4,12 +4,14 @@ import { InventoryTable } from '@/components/inventory-table';
 import { InventoryCards } from '@/components/inventory-cards';
 import { useAssetStore } from '@/store/assetStore';
 import { useAuthStore } from '@/store/authStore';
-import type { ITAsset, Company, DeviceActivity, FieldChange, UserRole, FormRecord } from '@/types/inventory';
+import type { ITAsset, Company, FieldChange } from '@/types/inventory';
 import { useActivityLogStore } from '@/store/activityLogStore';
 import { useFormRecordStore } from '@/store/formRecordStore';
 import { AssetDetails } from '@/components/asset-details';
 import { AssetForm } from '@/components/asset-form';
 import { TransferForm } from '@/components/transfer-form';
+import { NewTransferModal } from '@/components/new-transfer-modal';
+import { AssetActivityLogModal } from '@/components/asset-activity-log-modal';
 
 export function InventoryPage() {
   const {
@@ -33,12 +35,11 @@ export function InventoryPage() {
   const [editingAsset, setEditingAsset] = useState<ITAsset | undefined>(undefined);
   const [transferringAsset, setTransferringAsset] = useState<ITAsset | undefined>(undefined);
   const { addFormRecord } = useFormRecordStore();
-  const [deviceActivities, setDeviceActivities] = useState<DeviceActivity[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [formRecords, setFormRecords] = useState<FormRecord[]>([]);
   const { addHistoryEntry } = useActivityLogStore();
   const [viewingActivityLog, setViewingActivityLog] = useState<ITAsset | undefined>(undefined);
-  const defaultCategories = ['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'phone', 'tablet', 'other'];
+  const [showNewTransfer, setShowNewTransfer] = useState(false);
+  const defaultCategories = ['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'mobile', 'mobile + subscription', 'tablet', 'other'];
   const [categories, setCategories] = useState<string[]>(() => {
     const saved = localStorage.getItem('itInventoryCategories');
     return saved ? JSON.parse(saved) : defaultCategories;
@@ -75,15 +76,6 @@ export function InventoryPage() {
       setViewingAsset(undefined);
     }
   };
-  const addDeviceActivity = (activity: Omit<DeviceActivity, 'id' | 'timestamp'>) => {
-    const newActivity: DeviceActivity = {
-      ...activity,
-      id: Date.now().toString() + Math.random(),
-      timestamp: new Date().toISOString(),
-    };
-    setDeviceActivities([...deviceActivities, newActivity]);
-  };
-
   const handleViewActivityLog = (asset: ITAsset) => {
     setViewingActivityLog(asset);
   };
@@ -100,6 +92,7 @@ export function InventoryPage() {
           deviceName: asset.name,
           company: asset.company,
           details: `${asset.brand} ${asset.model} — S/N: ${asset.serialNumber}`,
+          performedBy: user?.name,
         });
       }
     } catch (err: any) {
@@ -107,26 +100,25 @@ export function InventoryPage() {
     }
   };
 
-  const handleConfirmTransfer = async (assetId: string, toCompany: Company) => {
-    const asset = transferringAsset;
-    if (!asset) return;
-    const fromCompany = asset.company;
-    try {
-      await updateAsset(assetId, { ...asset, company: toCompany });
+  const handleConfirmTransfer = async (assetId: string, toCompany: Company, fromName?: string, toName?: string) => {
+    const asset = assets.find(a => a._id === assetId) ?? transferringAsset;
+    if (asset) {
+      const from = fromName?.trim() || 'Unassigned';
+      const to   = toName?.trim()   || 'Unassigned';
       addHistoryEntry({
         action: 'transferred',
         category: 'asset',
         deviceCode: asset.deviceCode,
         deviceName: asset.name,
         company: toCompany,
-        fromCompany,
+        fromCompany: asset.company,
         toCompany,
-        details: `Transferred from ${fromCompany} to ${toCompany}`,
+        details: `Transferred from ${from} to ${to}`,
+        performedBy: user?.name,
       });
-    } catch (err) {
-      console.error('Transfer failed:', err);
     }
     setTransferringAsset(undefined);
+    setShowNewTransfer(false);
   };
   const handleFormCancel = () => {
     setShowForm(false);
@@ -176,68 +168,39 @@ export function InventoryPage() {
     setEditingAsset(undefined);
     setViewingAsset(undefined);
 
+    // Compute field-level changes
+    const fieldChanges: FieldChange[] = [];
+    const fields: Array<keyof ITAsset> = ['name', 'brand', 'model', 'serialNumber', 'status', 'location', 'assignedTo', 'warrantyExpiry', 'notes', 'department', 'position', 'employeeId'];
+    fields.forEach(field => {
+      const oldValue = oldAsset[field]?.toString() || '';
+      const newValue = (updatedAsset as ITAsset)[field]?.toString() || '';
+      if (oldValue !== newValue) fieldChanges.push({ field: field as string, oldValue: oldValue || undefined, newValue: newValue || undefined });
+    });
+
+    const hadAssignment = !!oldAsset.assignedTo?.trim();
+    const hasAssignment = !!(updatedAsset as ITAsset).assignedTo?.trim();
+
+    let actionDetail = 'Updated asset information';
+    if (!hadAssignment && hasAssignment) {
+      actionDetail = `Assigned device to ${(updatedAsset as ITAsset).assignedTo}`;
+    } else if (hadAssignment && !hasAssignment) {
+      actionDetail = `Unassigned device from ${oldAsset.assignedTo}`;
+    } else if (fieldChanges.length > 0) {
+      actionDetail = `Updated ${fieldChanges.length} field${fieldChanges.length !== 1 ? 's' : ''}`;
+    }
+
     addHistoryEntry({
       action: 'edited',
       category: 'asset',
       deviceCode: oldAsset.deviceCode,
       deviceName: oldAsset.name,
       company: oldAsset.company,
-      details: 'Updated asset information',
+      details: actionDetail,
+      performedBy: user?.name,
+      changes: fieldChanges.length > 0 ? fieldChanges : undefined,
     });
-
-    // Track changes for activity log
-    const changes: FieldChange[] = [];
-    const fields: Array<keyof ITAsset> = ['name', 'brand', 'model', 'serialNumber', 'status', 'location', 'assignedTo', 'warrantyExpiry', 'notes'];
-    fields.forEach(field => {
-      const oldValue = oldAsset[field]?.toString();
-      const newValue = updatedAsset[field as keyof typeof updatedAsset]?.toString();
-      if (oldValue !== newValue) changes.push({ field, oldValue, newValue });
-    });
-
-    const hadAssignment = oldAsset.assignedTo?.trim() !== '';
-    const hasAssignment = (updatedAsset as ITAsset).assignedTo?.trim() !== '';
-
-    if (!hadAssignment && hasAssignment) {
-      addDeviceActivity({
-        deviceId: updatedAsset._id || '',
-        user: user?.name || 'System',
-        userRole: (user?.role as UserRole) || 'admin',
-        actionType: 'assign',
-        description: `Assigned device to ${(updatedAsset as ITAsset).assignedTo}`,
-        changes: [{ field: 'assignedTo', oldValue: undefined, newValue: (updatedAsset as ITAsset).assignedTo }],
-        source: 'web',
-      });
-    } else if (hadAssignment && !hasAssignment) {
-      addDeviceActivity({
-        deviceId: updatedAsset._id || '',
-        user: user?.name || 'System',
-        userRole: (user?.role as UserRole) || 'admin',
-        actionType: 'unassign',
-        description: `Unassigned device from ${oldAsset.assignedTo}`,
-        changes: [{ field: 'assignedTo', oldValue: oldAsset.assignedTo, newValue: undefined }],
-        source: 'web',
-      });
-    } else if (changes.length > 0) {
-      addDeviceActivity({
-        deviceId: updatedAsset._id || '',
-        user: user?.name || 'System',
-        userRole: (user?.role as UserRole) || 'admin',
-        actionType: 'update',
-        description: `Updated ${changes.length} field${changes.length !== 1 ? 's' : ''}`,
-        changes,
-        source: 'web',
-      });
-    }
   };
 
-  const handleSaveFormRecord = (recordData: Omit<FormRecord, 'id' | 'dateCreated'>) => {
-    const newRecord: FormRecord = {
-      ...recordData,
-      id: Date.now().toString() + Math.random(),
-      dateCreated: new Date().toISOString(),
-    };
-    setFormRecords([...formRecords, newRecord]);
-  };
 
 
   const handleViewModeChange = (mode: 'table' | 'cards') => {
@@ -263,30 +226,32 @@ export function InventoryPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Inventory Management</h1>
           <p className="text-gray-600 dark:text-slate-400 mt-1">Manage and track all IT assets across companies</p>
         </div>
-        {/* View toggle */}
-        <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-[#1e2d4a] rounded-xl">
-          <button
-            onClick={() => handleViewModeChange('table')}
-            title="Table view"
-            className={`p-2 rounded-lg transition-colors ${
-              viewMode === 'table'
-                ? 'bg-white dark:bg-[#162236] text-blue-600 shadow-sm'
-                : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
-            }`}
-          >
-            <LayoutList className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => handleViewModeChange('cards')}
-            title="Card view"
-            className={`p-2 rounded-lg transition-colors ${
-              viewMode === 'cards'
-                ? 'bg-white dark:bg-[#162236] text-blue-600 shadow-sm'
-                : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
-            }`}
-          >
-            <LayoutGrid className="w-5 h-5" />
-          </button>
+        <div className="flex items-center gap-3">
+          {/* View toggle */}
+          <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-[#1e2d4a] rounded-xl">
+            <button
+              onClick={() => handleViewModeChange('table')}
+              title="Table view"
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'table'
+                  ? 'bg-white dark:bg-[#162236] text-blue-600 shadow-sm'
+                  : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <LayoutList className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => handleViewModeChange('cards')}
+              title="Card view"
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'cards'
+                  ? 'bg-white dark:bg-[#162236] text-blue-600 shadow-sm'
+                  : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <LayoutGrid className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -303,7 +268,7 @@ export function InventoryPage() {
         <AssetForm
           asset={editingAsset}
           assets={assets}
-          categories={['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'phone', 'tablet', 'other']}
+          categories={['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'mobile', 'mobile + subscription', 'tablet', 'other']}
           onAddCategory={handleAddCategory}
           onDeleteCategory={handleDeleteCategory}
           defaultCategories={defaultCategories}
@@ -311,7 +276,7 @@ export function InventoryPage() {
           onCancel={handleFormCancel}
           onBack={editingAsset ? handleFormBack : undefined}
           currentUser={user?.name}
-          onSaveFormRecord={handleSaveFormRecord}
+          onSaveFormRecord={addFormRecord}
         />
       )}
       {viewingAsset && (
@@ -324,13 +289,34 @@ export function InventoryPage() {
         />
       )}
 
-      {/* Transfer Form */}
+      {viewingActivityLog && (
+        <AssetActivityLogModal
+          asset={viewingActivityLog}
+          onClose={() => setViewingActivityLog(undefined)}
+        />
+      )}
+
+      {/* Transfer Form (from row action) */}
       {transferringAsset && (
         <TransferForm
           asset={transferringAsset}
           onTransfer={handleConfirmTransfer}
           onCancel={() => setTransferringAsset(undefined)}
           currentUser={user?.name || 'Admin'}
+          onSaveFormRecord={addFormRecord}
+          onNewForm={() => {
+            setTransferringAsset(undefined);
+            setShowNewTransfer(true);
+          }}
+        />
+      )}
+
+      {/* New Transfer Form (from toolbar button — picks asset first) */}
+      {showNewTransfer && isAdmin && (
+        <NewTransferModal
+          currentUser={user?.name || 'Admin'}
+          onClose={() => setShowNewTransfer(false)}
+          onTransfer={handleConfirmTransfer}
           onSaveFormRecord={addFormRecord}
         />
       )}

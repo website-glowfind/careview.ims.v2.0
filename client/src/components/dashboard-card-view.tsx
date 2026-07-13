@@ -8,6 +8,8 @@ import type { ITAsset, AssetStatus, AssetCategory, Company } from '@/types/inven
 import { useAssetStore } from '@/store/assetStore';
 import { useAuthStore } from '@/store/authStore';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
+import { AssetDetails } from './asset-details';
+import { AssetActivityLogModal } from './asset-activity-log-modal';
 
 // ── helpers ───────────────────────────────────────────────────────────────
 type CategoryFilter = 'all' | AssetCategory;
@@ -46,7 +48,8 @@ const CATEGORY_TABS: { id: CategoryFilter; label: string }[] = [
   { id: 'monitor',    label: 'Monitor' },
   { id: 'printer',    label: 'Printer' },
   { id: 'networking', label: 'Network' },
-  { id: 'phone',      label: 'Phone' },
+  { id: 'mobile',     label: 'Mobile' },
+  { id: 'mobile + subscription', label: 'Mobile + Subscription' },
   { id: 'tablet',     label: 'Tablet' },
   { id: 'other',      label: 'Other' },
 ];
@@ -73,6 +76,10 @@ export function DashboardCardView({ onEdit, onDelete, onViewDetails }: Dashboard
   const [openMenu, setOpenMenu]       = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [assetToDelete, setAssetToDelete]     = useState<ITAsset | null>(null);
+  const [editingAsset, setEditingAsset] = useState<ITAsset | undefined>(undefined);
+  const [viewingAsset, setViewingAsset] = useState<ITAsset | undefined>(undefined);
+  const [showForm, setShowForm] = useState(false);
+  const [viewingActivityLog, setViewingActivityLog] = useState<ITAsset | undefined>(undefined);
 
   useEffect(() => {
     fetchAssets();
@@ -107,6 +114,27 @@ export function DashboardCardView({ onEdit, onDelete, onViewDetails }: Dashboard
     { id: 'CAREVIEW', label: 'CAREVIEW', dot: 'bg-green-500' },
     { id: 'GLOWFIND', label: 'GLOWFIND', dot: 'bg-orange-500' },
   ];
+
+  const handleView = (asset: ITAsset) => {
+    setViewingAsset(asset);
+  };
+
+  const handleViewClose = () => {
+    setViewingAsset(undefined);
+  };
+
+  const handleViewEdit = () => {
+    if (viewingAsset) {
+      setEditingAsset(viewingAsset);
+      setShowForm(true);
+      setViewingAsset(undefined);
+    }
+  };
+
+  const handleViewActivityLog = (asset: ITAsset) => {
+    setViewingActivityLog(asset);
+  };
+
 
   const handleDelete = async (id: string) => {
     if (onDelete) {
@@ -366,7 +394,7 @@ export function DashboardCardView({ onEdit, onDelete, onViewDetails }: Dashboard
                       </button>
                       {openMenu === asset._id && (
                         <div className="absolute right-0 bottom-8 z-10 w-40 bg-white dark:bg-[#1e2d4a] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg overflow-hidden">
-                          <button onClick={() => { onViewDetails?.(asset); setOpenMenu(null); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-[#243352]">
+                          <button onClick={() => handleView(asset)} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-[#243352]">
                             <Eye className="w-4 h-4" /> View Details
                           </button>
                           {onEdit && (
@@ -374,12 +402,6 @@ export function DashboardCardView({ onEdit, onDelete, onViewDetails }: Dashboard
                               <Edit className="w-4 h-4" /> Edit
                             </button>
                           )}
-                          <button
-                            onClick={() => { setAssetToDelete(asset); setShowDeleteModal(true); setOpenMenu(null); }}
-                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                          >
-                            <Trash2 className="w-4 h-4" /> Delete
-                          </button>
                         </div>
                       )}
                     </div>
@@ -415,6 +437,22 @@ export function DashboardCardView({ onEdit, onDelete, onViewDetails }: Dashboard
           </div>
         </div>
       )}
+      {viewingAsset && (
+        <AssetDetails
+          asset={viewingAsset}
+          onClose={handleViewClose}
+          onEdit={handleViewEdit}
+          onViewActivityLog={() => handleViewActivityLog(viewingAsset)}
+          isAdmin={isAdmin}
+        />
+      )}
+      {viewingActivityLog && (
+        <AssetActivityLogModal
+          asset={viewingActivityLog}
+          onClose={() => setViewingActivityLog(undefined)}
+        />
+      )}
     </div>
+    
   );
 }

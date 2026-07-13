@@ -1,13 +1,16 @@
-import { X, Calendar, DollarSign, Building2, User, FileText, CreditCard, Key, AlertTriangle, Package, Hash, Smartphone, FileEdit } from 'lucide-react';
+import { X, Calendar, DollarSign, Building2, User, FileText, CreditCard, Key, AlertTriangle, Package, Hash, Smartphone, FileEdit, Pencil, Clock } from 'lucide-react';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
 import type { ITAsset, FormRecord } from '@/types/inventory';
 import { LicenseSubscriptionFormViewer } from '@/components/license-subscription-form-viewer';
+import { AssetActivityLogModal } from '@/components/asset-activity-log-modal';
 import { useState } from 'react';
 import type { Subscription } from '@/types/subscription';
 
 interface SubscriptionDetailsProps {
   subscription: Subscription;
   onClose: () => void;
+  onEdit?: () => void;
+  isAdmin?: boolean;
   assets?: ITAsset[];
   categories?: string[];
   onAddCategory?: (category: string) => void;
@@ -17,7 +20,7 @@ interface SubscriptionDetailsProps {
   currentUser?: string;
 }
 
-export function SubscriptionDetails({ subscription, onClose, assets, categories, onAddCategory, onDeleteCategory, defaultCategories, onSaveFormRecord, currentUser }: SubscriptionDetailsProps) {
+export function SubscriptionDetails({ subscription, onClose, onEdit, isAdmin, assets, categories, onAddCategory, onDeleteCategory, defaultCategories, onSaveFormRecord, currentUser }: SubscriptionDetailsProps) {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'Active': return 'bg-green-100 text-green-800 border-green-200';
@@ -41,6 +44,7 @@ export function SubscriptionDetails({ subscription, onClose, assets, categories,
     : null;
 
   const [isEditing, setIsEditing] = useState(false);
+  const [showActivityLog, setShowActivityLog] = useState(false);
   const [formRecord, setFormRecord] = useState<Partial<ITAsset>>(linkedAsset ?? {});
 
   const handleSave = (record: Partial<ITAsset>) => {
@@ -92,24 +96,12 @@ export function SubscriptionDetails({ subscription, onClose, assets, categories,
               <p className="text-sm text-gray-600 font-mono mt-1">{subscription.referenceCode}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            {/* View Asset Form Button */}
-            {linkedAsset && categories && onAddCategory && onDeleteCategory && defaultCategories && onSaveFormRecord && currentUser && (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
-              >
-                <FileEdit className="w-4 h-4" />
-                View Asset Form
-              </button>
-            )}
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
         </div>
 
         {/* Content */}
@@ -622,36 +614,57 @@ export function SubscriptionDetails({ subscription, onClose, assets, categories,
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 p-6 border-t border-gray-200 bg-gray-50">
-          {/* Asset Form Button - Left Side */}
-          {linkedAsset && categories && onAddCategory && onDeleteCategory && defaultCategories && onSaveFormRecord && currentUser ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 shadow-sm"
-            >
-              <FileEdit className="w-5 h-5" />
-              Asset Form
-            </button>
-          ) : (
-            <div></div>
-          )}
-          
-          {/* Close Button - Right Side */}
+        <div className="flex gap-3 p-4 border-t border-gray-200 dark:border-[#1e3a5f]">
+          <button
+            onClick={() => setShowActivityLog(true)}
+            className="flex-1 px-3 py-1.5 border border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors flex items-center justify-center gap-1.5 text-sm"
+          >
+            <Clock className="w-3.5 h-3.5" />
+            Activity Log
+          </button>
+          <button
+            onClick={() => setIsEditing(true)}
+            className="flex-1 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5 text-sm"
+          >
+            <FileEdit className="w-3.5 h-3.5" />
+            {linkedAsset ? 'Asset Form' : 'Subscription Form'}
+          </button>
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium"
+            className="flex-1 px-3 py-1.5 border border-gray-300 dark:border-[#1e3a5f] text-gray-700 dark:text-slate-300 rounded hover:bg-gray-50 dark:hover:bg-[#1e2d4a] transition-colors text-sm"
           >
             Close
           </button>
+          {isAdmin && (
+            <button
+              onClick={() => { onClose(); onEdit?.(); }}
+              className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm flex items-center justify-center gap-1.5"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit Subscription
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Asset Record Form Modal */}
-      {isEditing && linkedAsset && categories && onAddCategory && onDeleteCategory && defaultCategories && onSaveFormRecord && currentUser && (
+      {/* Subscription / Asset Form Modal */}
+      {isEditing && (
         <LicenseSubscriptionFormViewer
           subscription={subscription}
-          linkedAsset={linkedAsset}
+          linkedAsset={linkedAsset ?? undefined}
           onClose={() => setIsEditing(false)}
+        />
+      )}
+
+      {/* Activity Log Modal */}
+      {showActivityLog && (
+        <AssetActivityLogModal
+          asset={{
+            ...(linkedAsset ?? {}),
+            deviceCode: subscription.referenceCode,
+            name: subscription.name,
+          } as ITAsset}
+          onClose={() => setShowActivityLog(false)}
         />
       )}
     </div>

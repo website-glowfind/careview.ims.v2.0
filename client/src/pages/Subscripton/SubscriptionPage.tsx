@@ -24,6 +24,8 @@ export function SubscriptionPage() {
   const { addFormRecord } = useFormRecordStore();
 
   const [viewingSubscription, setViewingSubscription] = useState<Subscription | null>(null);
+  const [editRequestSubscription, setEditRequestSubscription] = useState<Subscription | null>(null);
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     fetchSubscriptions();
@@ -81,11 +83,12 @@ export function SubscriptionPage() {
         onEditSubscription={handleEdit}
         onDeleteSubscription={handleDelete}
         onViewSubscription={setViewingSubscription}
+        editRequestSubscription={editRequestSubscription}
         assets={assets}
-        assetCategories={['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'phone', 'tablet', 'other']}
+        assetCategories={['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'mobile', 'mobile + subscription', 'tablet', 'other']}
         onAddCategory={() => {}}
         onDeleteCategory={() => {}}
-        defaultCategories={['laptop', 'desktop', 'monitor', 'phone']}
+        defaultCategories={['laptop', 'desktop', 'monitor', 'mobile', 'mobile + subscription']}
         onSaveFormRecord={addFormRecord}
         currentUser={user?.name || 'Admin'}
       />
@@ -94,6 +97,12 @@ export function SubscriptionPage() {
         <SubscriptionDetails
           subscription={viewingSubscription}
           onClose={() => setViewingSubscription(null)}
+          onEdit={() => {
+            setEditRequestSubscription(viewingSubscription);
+            setViewingSubscription(null);
+            setTimeout(() => setEditRequestSubscription(null), 100);
+          }}
+          isAdmin={isAdmin}
           assets={assets}
           onSaveFormRecord={addFormRecord}
           currentUser={user?.name || 'Admin'}

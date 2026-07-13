@@ -5,7 +5,7 @@ const assetSchema = new mongoose.Schema({
     name: { type: String, required: true },
     category: {
         type: String,
-        enum: ['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'phone', 'tablet', 'other'],
+        enum: ['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'mobile', 'mobile + subscription', 'phone', 'tablet', 'other'],
         required: true
     },
     company: { type: String, enum: ['KHEALTH', 'CAREVIEW', 'GLOWFIND'], required: true },
