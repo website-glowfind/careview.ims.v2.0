@@ -1,8 +1,9 @@
 import { Asset } from "../models/Asset.js";
 import { Subscription } from "../models/Subscription.js";
+import { ActivityLog } from "../models/ActivityLog.js";
 
 const COMPANY_PREFIXES = { KHEALTH: 'KH', CAREVIEW: 'CV', GLOWFIND: 'GF' };
-const CATEGORY_PREFIXES = { laptop: 'LT', desktop: 'DT', monitor: 'MN', keyboard: 'KB', mouse: 'MS', printer: 'PR', server: 'SV', networking: 'NW', phone: 'PH', tablet: 'TB', other: 'OT' };
+const CATEGORY_PREFIXES = { laptop: 'LT', desktop: 'DT', monitor: 'MN', keyboard: 'KB', mouse: 'MS', printer: 'PR', server: 'SV', networking: 'NW', mobile: 'MB', 'mobile + subscription': 'MB', phone: 'PH', tablet: 'TB', other: 'OT' };
 const DEVICE_CODE_PATTERN = /^[A-Z]{2}-[A-Z]{2}-(\d+)$/;
 
 async function generateDeviceCode(company, category) {
@@ -128,14 +129,46 @@ export const addAsset = async (req, res) => {
         assetData.deviceCode = await generateDeviceCode(assetData.company, assetData.category);
         const newAsset = await Asset.create(assetData);
 
-        if (assetData.category === 'phone' && subscriptionData) {
-            await Subscription.create({
+        if (assetData.category === 'mobile + subscription' && subscriptionData) {
+            // Generate a global sequential reference code: IT-SUB-####
+            const lastSub = await Subscription
+                .findOne({ referenceCode: /^IT-SUB-\d+$/ })
+                .sort({ referenceCode: -1 })
+                .lean();
+            let nextNum = 1;
+            if (lastSub) {
+                const match = lastSub.referenceCode.match(/^IT-SUB-(\d+)$/);
+                if (match) nextNum = parseInt(match[1], 10) + 1;
+            }
+            const referenceCode = `IT-SUB-${nextNum.toString().padStart(4, '0')}`;
+
+            const newSub = await Subscription.create({
                 ...subscriptionData,
-                name: assetData.name, // Gamitin ang pangalan ng phone
+                referenceCode,
+                type: 'Subscription',
+                name: assetData.name, // Gamitin ang pangalan ng mobile
                 company: assetData.company,
+                employeeName: assetData.assignedTo,
+                department: assetData.department,
+                position: assetData.position,
                 deviceId: newAsset._id, // I-link sa kakagawang asset
                 status: 'Active'
             });
+
+            // Log the auto-created subscription so it shows in its Activity Log
+            try {
+                await ActivityLog.create({
+                    action: 'added',
+                    category: 'subscription',
+                    deviceCode: newSub.referenceCode,
+                    deviceName: newSub.name,
+                    company: newSub.company,
+                    details: `Auto-created from asset ${newAsset.deviceCode} (${assetData.category})`,
+                    performedBy: assetData.assignedTo || undefined,
+                });
+            } catch (logErr) {
+                console.error("Subscription activity log failed:", logErr.message);
+            }
         }
 
         res.status(201).json(newAsset);

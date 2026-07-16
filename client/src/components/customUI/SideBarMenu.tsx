@@ -8,22 +8,26 @@ interface SidebarProps {
 
 export function SidebarMenu({ currentView, onViewChange }: SidebarProps) {
   const { user } = useAuthStore();
-  const isAdmin = user?.role === 'admin';
+  // Normalize any legacy/unknown role to 'employee' so the menu never comes up empty
+  const rawRole = user?.role ?? 'employee';
+  const role = rawRole === 'admin' || rawRole === 'encoder' ? rawRole : 'employee';
+  const isAdmin = role === 'admin';
 
+  // roles: which non-admin roles may see the item (admin always sees everything)
   const allMenuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'inventory', label: 'Inventory', icon: Package },
-    { id: 'add', label: 'Add Asset', icon: Plus, adminOnly: true },
-    { id: 'subscriptions', label: 'Subscription List', icon: CreditCard, adminOnly: true },
-    { id: 'employees', label: 'Employee List', icon: UserCheck },
-    { id: 'disposal', label: 'Disposal Form', icon: FileX, adminOnly: true },
-    { id: 'form-masterlist', label: 'Form Masterlist', icon: ClipboardList, adminOnly: true },
-    { id: 'users', label: 'User Settings', icon: Users, adminOnly: true },
-    { id: 'deleted', label: 'Deleted Devices', icon: Trash2, adminOnly: true },
-    { id: 'history', label: 'Activity Log', icon: Activity },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['encoder', 'employee'] },
+    { id: 'inventory', label: 'Inventory', icon: Package, roles: ['encoder', 'employee'] },
+    { id: 'add', label: 'Add Asset', icon: Plus, roles: ['encoder'] },
+    { id: 'subscriptions', label: 'Subscription List', icon: CreditCard, roles: ['encoder'] },
+    { id: 'employees', label: 'Employee List', icon: UserCheck, roles: ['employee'] },
+    { id: 'disposal', label: 'Disposal Form', icon: FileX, roles: ['encoder'] },
+    { id: 'form-masterlist', label: 'Form Masterlist', icon: ClipboardList, roles: ['encoder'] },
+    { id: 'users', label: 'User Settings', icon: Users, roles: [] },
+    { id: 'deleted', label: 'Deleted Devices', icon: Trash2, roles: ['encoder'] },
+    { id: 'history', label: 'Activity Log', icon: Activity, roles: ['employee'] },
   ];
 
-  const menuItems = allMenuItems.filter(item => !item.adminOnly || isAdmin);
+  const menuItems = allMenuItems.filter(item => isAdmin || item.roles.includes(role));
 
   return (
     <div className="w-64 bg-[#d5e1f1] dark:bg-[#0d1535] border-r border-gray-200 dark:border-[#1e3a5f] min-h-screen p-4 transition-colors duration-300">

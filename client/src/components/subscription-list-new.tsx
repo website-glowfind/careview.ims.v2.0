@@ -194,6 +194,7 @@ const MOCK_SUBSCRIPTIONS: Subscription[] = [
 export function SubscriptionList({ company, onCompanyChange, subscriptions: propSubscriptions, onAddSubscription, onEditSubscription, onDeleteSubscription, onViewSubscription, onRequestEdit, editRequestSubscription, assets, assetCategories, onAddCategory, onDeleteCategory, defaultCategories, onSaveFormRecord, currentUser }: SubscriptionListProps) {
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'admin';
+  const canEdit = user?.role === 'admin' || user?.role === 'encoder';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [subscriptions, setSubscriptions] = useState<Subscription[]>(propSubscriptions || MOCK_SUBSCRIPTIONS);
@@ -538,13 +539,15 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
           />
         </div>
         
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 whitespace-nowrap"
-        >
-          <Plus className="w-5 h-5" />
-          Add Subscription
-        </button>
+        {canEdit && (
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+          >
+            <Plus className="w-5 h-5" />
+            Add Subscription
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -686,26 +689,26 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
                           >
                             <Eye className="w-4 h-4" />
                           </button>
+                          {canEdit && (
+                            <button
+                              className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10 rounded transition-colors"
+                              title="Edit"
+                              onClick={() => openEditModal(subscription)}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          )}
                           {isAdmin && (
-                            <>
-                              <button
-                                className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-500/10 rounded transition-colors"
-                                title="Edit"
-                                onClick={() => openEditModal(subscription)}
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded transition-colors"
-                                title="Delete"
-                                onClick={() => {
-                                  setDeletingSubscription(subscription);
-                                  setShowDeleteModal(true);
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </>
+                            <button
+                              className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded transition-colors"
+                              title="Delete"
+                              onClick={() => {
+                                setDeletingSubscription(subscription);
+                                setShowDeleteModal(true);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           )}
                         </div>
                       </td>

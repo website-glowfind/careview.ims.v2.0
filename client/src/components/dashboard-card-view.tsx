@@ -69,6 +69,7 @@ export function DashboardCardView({ onEdit, onDelete, onViewDetails }: Dashboard
   } = useAssetStore();
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'admin';
+  const allowEdit = isAdmin || user?.role === 'encoder';
 
   const [search, setSearch]           = useState('');
   const [statusFilter, setStatus]     = useState<AssetStatus | 'all'>('all');
@@ -384,7 +385,7 @@ export function DashboardCardView({ onEdit, onDelete, onViewDetails }: Dashboard
                     )}
                   </div>
 
-                  {isAdmin && (
+                  {allowEdit && (
                     <div className="relative">
                       <button
                         onClick={() => setOpenMenu(openMenu === asset._id ? null : asset._id!)}
@@ -444,6 +445,7 @@ export function DashboardCardView({ onEdit, onDelete, onViewDetails }: Dashboard
           onEdit={handleViewEdit}
           onViewActivityLog={() => handleViewActivityLog(viewingAsset)}
           isAdmin={isAdmin}
+          canEdit={allowEdit}
         />
       )}
       {viewingActivityLog && (

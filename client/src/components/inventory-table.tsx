@@ -13,6 +13,7 @@ interface InventoryTableProps {
   onViewDetails: (asset: ITAsset) => void;
   onTransfer: (asset: ITAsset) => void;
   isAdmin: boolean;
+  canEdit?: boolean;
 }
 
 type CategoryTab = 'all' | 'laptop' | 'printer' | 'desktop' | 'keyboard' | 'mouse' | 'monitor' | 'networking' | 'mobile';
@@ -26,7 +27,9 @@ export function InventoryTable({
   onViewDetails,
   onTransfer,
   isAdmin,
+  canEdit,
 }: InventoryTableProps) {
+  const allowEdit = canEdit ?? isAdmin;
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<AssetStatus | 'all'>('all');
   const [categoryTab, setCategoryTab] = useState<CategoryTab>('all');
@@ -218,17 +221,19 @@ export function InventoryTable({
                 <td className="px-6 py-4 text-gray-600">{asset.assignedTo || '-'}</td>
                 <td className="px-6 py-4 text-right space-x-2">
                   <button onClick={() => onViewDetails(asset)} className="p-1 hover:text-blue-600"><Eye size={18}/></button>
-                  {isAdmin && (
+                  {allowEdit && (
                     <>
                       <button onClick={() => onEdit(asset)} className="p-1 hover:text-green-600"><Edit size={18}/></button>
                       <button onClick={() => onTransfer(asset)} className="p-1 hover:text-purple-600"><ArrowRightLeft size={18}/></button>
-                      <button 
-                        onClick={() => { setAssetToDelete(asset); setShowDeleteModal(true); }} 
-                        className="p-1 hover:text-red-600"
-                      >
-                        <Trash2 size={18}/>
-                      </button>
                     </>
+                  )}
+                  {isAdmin && (
+                    <button
+                      onClick={() => { setAssetToDelete(asset); setShowDeleteModal(true); }}
+                      className="p-1 hover:text-red-600"
+                    >
+                      <Trash2 size={18}/>
+                    </button>
                   )}
                 </td>
               </tr>

@@ -15,7 +15,7 @@ export function AddUserModal({ isOpen, onClose, onAdd, editUser }: AddUserModalP
     department: editUser?.department || '',
     username: editUser?.username || '',
     password: editUser?.password || '',
-    role: editUser?.role || 'user',
+    role: editUser?.role || 'employee',
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +35,7 @@ export function AddUserModal({ isOpen, onClose, onAdd, editUser }: AddUserModalP
       department: '',
       username: '',
       password: '',
-      role: 'user',
+      role: 'employee',
     });
   };
 
@@ -147,8 +147,8 @@ export function AddUserModal({ isOpen, onClose, onAdd, editUser }: AddUserModalP
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="user">User - View-only access</option>
-                <option value="editor">Editor - Can view and edit</option>
+                <option value="employee">Employee - View-only access</option>
+                <option value="encoder">Encoder - Can add & edit (no delete)</option>
                 <option value="admin">Admin - Full access to all features</option>
               </select>
             </div>

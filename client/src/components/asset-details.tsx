@@ -11,9 +11,11 @@ interface AssetDetailsProps {
   onEdit: () => void;
   onViewActivityLog: () => void;
   isAdmin: boolean;
+  canEdit?: boolean;
 }
 
-export function AssetDetails({ asset, onClose, onEdit, onViewActivityLog, isAdmin }: AssetDetailsProps) {
+export function AssetDetails({ asset, onClose, onEdit, onViewActivityLog, isAdmin, canEdit }: AssetDetailsProps) {
+  const allowEdit = canEdit ?? isAdmin;
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -65,7 +67,7 @@ export function AssetDetails({ asset, onClose, onEdit, onViewActivityLog, isAdmi
         </div>
 
         <div className="p-6 space-y-6">
-          {!isAdmin && (
+          {!allowEdit && (
             <div className="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/30 rounded-lg p-3">
               <p className="text-yellow-800 dark:text-yellow-400 text-sm">
                 <strong>View-only mode:</strong> Contact an administrator to make changes.
@@ -320,7 +322,7 @@ export function AssetDetails({ asset, onClose, onEdit, onViewActivityLog, isAdmi
             >
               Close
             </button>
-            {isAdmin && (
+            {allowEdit && (
               <button
                 onClick={onEdit}
                 className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"

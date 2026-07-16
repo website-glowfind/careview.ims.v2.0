@@ -16,6 +16,7 @@ interface InventoryCardsProps {
   onViewDetails: (asset: ITAsset) => void;
   onTransfer: (asset: ITAsset) => void;
   isAdmin: boolean;
+  canEdit?: boolean;
 }
 
 type CategoryTab = 'all' | 'laptop' | 'printer' | 'desktop' | 'keyboard' | 'mouse' | 'monitor' | 'networking' | 'mobile';
@@ -65,7 +66,9 @@ export function InventoryCards({
   onViewDetails,
   onTransfer,
   isAdmin,
+  canEdit,
 }: InventoryCardsProps) {
+  const allowEdit = canEdit ?? isAdmin;
   const [searchTerm, setSearchTerm]     = useState('');
   const [statusFilter, setStatusFilter] = useState<AssetStatus | 'all'>('all');
   const [categoryTab, setCategoryTab]   = useState<CategoryTab>('all');
@@ -328,7 +331,7 @@ export function InventoryCards({
                   </div>
 
                   {/* Action menu */}
-                  {isAdmin && (
+                  {allowEdit && (
                     <div className="relative" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => setOpenMenu(openMenu === asset._id ? null : asset._id!)}
@@ -356,12 +359,14 @@ export function InventoryCards({
                           >
                             <ArrowRightLeft className="w-4 h-4" /> Transfer
                           </button>
-                          <button
-                            onClick={() => { setAssetToDelete(asset); setShowDeleteModal(true); setOpenMenu(null); }}
-                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                          >
-                            <Trash2 className="w-4 h-4" /> Delete
-                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => { setAssetToDelete(asset); setShowDeleteModal(true); setOpenMenu(null); }}
+                              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                              <Trash2 className="w-4 h-4" /> Delete
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

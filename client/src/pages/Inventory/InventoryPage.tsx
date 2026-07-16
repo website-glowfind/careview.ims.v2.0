@@ -27,6 +27,7 @@ export function InventoryPage() {
   
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === 'admin';
+  const canEdit = user?.role === 'admin' || user?.role === 'encoder';
 
   const [viewMode, setViewMode] = useState<'table' | 'cards'>(() =>
     (localStorage.getItem('inventoryViewMode') as 'table' | 'cards') ?? 'table'
@@ -217,6 +218,7 @@ export function InventoryPage() {
     onViewDetails: handleView,
     onTransfer: handleTransfer,
     isAdmin,
+    canEdit,
   };
 
   return (
@@ -264,7 +266,7 @@ export function InventoryPage() {
       ) : (
         <InventoryTable {...sharedProps} />
       )}
-      {showForm && isAdmin && (
+      {showForm && canEdit && (
         <AssetForm
           asset={editingAsset}
           assets={assets}
@@ -286,6 +288,7 @@ export function InventoryPage() {
           onEdit={handleViewEdit}
           onViewActivityLog={() => handleViewActivityLog(viewingAsset)}
           isAdmin={isAdmin}
+          canEdit={canEdit}
         />
       )}
 
@@ -312,7 +315,7 @@ export function InventoryPage() {
       )}
 
       {/* New Transfer Form (from toolbar button — picks asset first) */}
-      {showNewTransfer && isAdmin && (
+      {showNewTransfer && canEdit && (
         <NewTransferModal
           currentUser={user?.name || 'Admin'}
           onClose={() => setShowNewTransfer(false)}

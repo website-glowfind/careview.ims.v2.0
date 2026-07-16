@@ -11,6 +11,7 @@ interface SubscriptionDetailsProps {
   onClose: () => void;
   onEdit?: () => void;
   isAdmin?: boolean;
+  canEdit?: boolean;
   assets?: ITAsset[];
   categories?: string[];
   onAddCategory?: (category: string) => void;
@@ -20,7 +21,8 @@ interface SubscriptionDetailsProps {
   currentUser?: string;
 }
 
-export function SubscriptionDetails({ subscription, onClose, onEdit, isAdmin, assets, categories, onAddCategory, onDeleteCategory, defaultCategories, onSaveFormRecord, currentUser }: SubscriptionDetailsProps) {
+export function SubscriptionDetails({ subscription, onClose, onEdit, isAdmin, canEdit, assets, categories, onAddCategory, onDeleteCategory, defaultCategories, onSaveFormRecord, currentUser }: SubscriptionDetailsProps) {
+  const allowEdit = canEdit ?? isAdmin;
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'Active': return 'bg-green-100 text-green-800 border-green-200';
@@ -635,7 +637,7 @@ export function SubscriptionDetails({ subscription, onClose, onEdit, isAdmin, as
           >
             Close
           </button>
-          {isAdmin && (
+          {allowEdit && (
             <button
               onClick={() => { onClose(); onEdit?.(); }}
               className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm flex items-center justify-center gap-1.5"

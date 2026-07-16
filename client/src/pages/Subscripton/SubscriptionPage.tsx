@@ -26,6 +26,7 @@ export function SubscriptionPage() {
   const [viewingSubscription, setViewingSubscription] = useState<Subscription | null>(null);
   const [editRequestSubscription, setEditRequestSubscription] = useState<Subscription | null>(null);
   const isAdmin = user?.role === 'admin';
+  const canEdit = user?.role === 'admin' || user?.role === 'encoder';
 
   useEffect(() => {
     fetchSubscriptions();
@@ -103,6 +104,7 @@ export function SubscriptionPage() {
             setTimeout(() => setEditRequestSubscription(null), 100);
           }}
           isAdmin={isAdmin}
+          canEdit={canEdit}
           assets={assets}
           onSaveFormRecord={addFormRecord}
           currentUser={user?.name || 'Admin'}
