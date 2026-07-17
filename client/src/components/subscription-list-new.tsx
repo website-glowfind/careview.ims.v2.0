@@ -520,12 +520,6 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
 
   return (
     <div className="p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">License & Subscription Management</h2>
-        <p className="text-gray-600">Track and manage software licenses and subscriptions</p>
-      </div>
-
       {/* Controls */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
         <div className="flex-1 relative">
