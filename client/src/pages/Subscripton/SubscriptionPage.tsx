@@ -5,6 +5,7 @@ import { useSubscriptionStore } from '@/store/subscriptionStore';
 import { useAssetStore } from '@/store/assetStore';
 import { useAuthStore } from '@/store/authStore';
 import { useFormRecordStore } from '@/store/formRecordStore';
+import { useCategoryStore } from '@/store/categoryStore';
 import type { Subscription } from '@/types/subscription';
 
 export function SubscriptionPage() {
@@ -20,6 +21,7 @@ export function SubscriptionPage() {
   } = useSubscriptionStore();
 
   const { assets, fetchAssets } = useAssetStore();
+  const { categories, defaultCategories, addCategory, deleteCategory } = useCategoryStore();
   const { user } = useAuthStore();
   const { addFormRecord } = useFormRecordStore();
 
@@ -86,10 +88,10 @@ export function SubscriptionPage() {
         onViewSubscription={setViewingSubscription}
         editRequestSubscription={editRequestSubscription}
         assets={assets}
-        assetCategories={['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'mobile', 'mobile + subscription', 'tablet', 'other']}
-        onAddCategory={() => {}}
-        onDeleteCategory={() => {}}
-        defaultCategories={['laptop', 'desktop', 'monitor', 'mobile', 'mobile + subscription']}
+        assetCategories={categories}
+        onAddCategory={addCategory}
+        onDeleteCategory={deleteCategory}
+        defaultCategories={defaultCategories}
         onSaveFormRecord={addFormRecord}
         currentUser={user?.name || 'Admin'}
       />

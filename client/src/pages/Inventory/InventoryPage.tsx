@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import type { ITAsset, Company, FieldChange } from '@/types/inventory';
 import { useActivityLogStore } from '@/store/activityLogStore';
 import { useFormRecordStore } from '@/store/formRecordStore';
+import { useCategoryStore } from '@/store/categoryStore';
 import { AssetDetails } from '@/components/asset-details';
 import { AssetForm } from '@/components/asset-form';
 import { TransferForm } from '@/components/transfer-form';
@@ -40,11 +41,7 @@ export function InventoryPage() {
   const { addHistoryEntry } = useActivityLogStore();
   const [viewingActivityLog, setViewingActivityLog] = useState<ITAsset | undefined>(undefined);
   const [showNewTransfer, setShowNewTransfer] = useState(false);
-  const defaultCategories = ['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'mobile', 'mobile + subscription', 'tablet', 'other'];
-  const [categories, setCategories] = useState<string[]>(() => {
-    const saved = localStorage.getItem('itInventoryCategories');
-    return saved ? JSON.parse(saved) : defaultCategories;
-  });
+  const { categories, defaultCategories, addCategory: handleAddCategory, deleteCategory: handleDeleteCategory } = useCategoryStore();
   useEffect(() => {
     fetchAssets();
   }, [fetchAssets]);
@@ -134,16 +131,6 @@ export function InventoryPage() {
     }
   };
 
-  const handleAddCategory = (category: string) => {
-    const updatedCategories = [...categories, category];
-    setCategories(updatedCategories);
-    localStorage.setItem('itInventoryCategories', JSON.stringify(updatedCategories));
-  };
-  const handleDeleteCategory = (category: string) => {
-    const updatedCategories = categories.filter(cat => cat !== category);
-    setCategories(updatedCategories);
-    localStorage.setItem('itInventoryCategories', JSON.stringify(updatedCategories));
-  };
   const handleUpdateAsset = async (updatedAsset: ITAsset | Omit<ITAsset, "id" | "deviceCode">) => {
     const isNew = !updatedAsset._id;
 
@@ -270,7 +257,7 @@ export function InventoryPage() {
         <AssetForm
           asset={editingAsset}
           assets={assets}
-          categories={['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'mobile', 'mobile + subscription', 'tablet', 'other']}
+          categories={categories}
           onAddCategory={handleAddCategory}
           onDeleteCategory={handleDeleteCategory}
           defaultCategories={defaultCategories}

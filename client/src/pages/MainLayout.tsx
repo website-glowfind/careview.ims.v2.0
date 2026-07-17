@@ -7,6 +7,7 @@ import { LogOut, Sun, Moon, User } from 'lucide-react';
 import { useThemeStore } from '@/store/themeStore';
 import { AssetForm } from '@/components/asset-form';
 import { useAssetStore } from '@/store/assetStore';
+import { useCategoryStore } from '@/store/categoryStore';
 import { useFormRecordStore } from '@/store/formRecordStore';
 import { useActivityLogStore } from '@/store/activityLogStore';
 import { FormMasterlistPage } from './Form-Masterlist/FormMasterListPage';
@@ -22,6 +23,7 @@ export default function MainLayout() {
   const [formError, setFormError] = useState<string | null>(null);
     const { user, logout } = useAuthStore();
     const { assets, addAsset } = useAssetStore();
+    const { categories, defaultCategories, addCategory, deleteCategory } = useCategoryStore();
     const { addFormRecord } = useFormRecordStore();
     const { isDark, toggleDark } = useThemeStore();
     const { addHistoryEntry } = useActivityLogStore();
@@ -73,10 +75,10 @@ export default function MainLayout() {
             )}
             <AssetForm
               assets={assets}
-              categories={['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'networking', 'mobile', 'mobile + subscription', 'tablet', 'other']}
-              onAddCategory={() => {}} // Opsyonal: logic para sa custom categories
-              onDeleteCategory={() => {}}
-              defaultCategories={['laptop', 'desktop', 'monitor', 'mobile', 'mobile + subscription']}
+              categories={categories}
+              onAddCategory={addCategory}
+              onDeleteCategory={deleteCategory}
+              defaultCategories={defaultCategories}
               onSave={handleSaveAsset}
               onCancel={() => { setFormError(null); setCurrentView('dashboard'); }}
               currentUser={user?.name || 'Admin'}
