@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from "path";
+import os from "os";
 import { fileURLToPath } from "url";
 import userRoutes from "./routes/UserRoute.js";
 import subscriptionRoute from "./routes/SubscriptionRoutes.js";
@@ -58,9 +59,21 @@ mongoose
   .then(() => {
     console.log("✅ MongoDB Connected");
 
-    const server = app.listen(PORT, () =>
-      console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`)
-    );
+    // Bind to 0.0.0.0 so the app is reachable from other PCs on the LAN,
+    // not just from this machine (localhost).
+    const server = app.listen(PORT, "0.0.0.0", () => {
+      console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+      // Print the LAN addresses others can use to reach this server.
+      const nets = os.networkInterfaces();
+      const lanIPs = [];
+      for (const name of Object.keys(nets)) {
+        for (const net of nets[name] || []) {
+          if (net.family === "IPv4" && !net.internal) lanIPs.push(net.address);
+        }
+      }
+      console.log(`   Local:   http://localhost:${PORT}`);
+      lanIPs.forEach(ip => console.log(`   Network: http://${ip}:${PORT}`));
+    });
 
     process.on("SIGTERM", () => {
       console.log("SIGTERM received. Shutting down gracefully...");
