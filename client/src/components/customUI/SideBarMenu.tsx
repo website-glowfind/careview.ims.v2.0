@@ -67,7 +67,7 @@ export function SidebarMenu({ currentView, onViewChange }: SidebarProps) {
       {/* Credit */}
       <div className="mt-auto pt-4 border-t border-gray-300/60 dark:border-[#1e3a5f] text-center">
         <p className="text-[11px] text-gray-500 dark:text-slate-500">
-          Developed by <span className="font-semibold text-gray-600 dark:text-slate-400">JMVillaruel</span>
+          Developed by <span className="font-semibold text-gray-600 dark:text-slate-400">J.M.V</span>
         </p>
       </div>
     </div>
