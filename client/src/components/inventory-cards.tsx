@@ -3,8 +3,9 @@ import {
   Search, MoreVertical, Eye, Edit, Trash2, ArrowRightLeft,
   Monitor, Keyboard, Mouse, Printer, Server, Wifi, Smartphone,
   Laptop, AlertTriangle,
+  Sofa, Refrigerator, Lightbulb, Wrench, Car, Package,
 } from 'lucide-react';
-import type { ITAsset, AssetStatus, AssetCategory, Company } from '@/types/inventory';
+import type { ITAsset, AssetStatus, AssetCategory, Company, AssetType } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
 
 interface InventoryCardsProps {
@@ -17,9 +18,28 @@ interface InventoryCardsProps {
   onTransfer: (asset: ITAsset) => void;
   isAdmin: boolean;
   canEdit?: boolean;
+  assetType?: AssetType;
 }
 
-type CategoryTab = 'all' | 'laptop' | 'printer' | 'desktop' | 'keyboard' | 'mouse' | 'monitor' | 'networking' | 'mobile';
+type CategoryTab = string;
+
+const IT_TABS: { id: CategoryTab; label: string }[] = [
+  { id: 'all',        label: 'All Devices' },
+  { id: 'laptop',     label: 'Laptop' },
+  { id: 'desktop',    label: 'Desktop' },
+  { id: 'monitor',    label: 'Monitor' },
+  { id: 'printer',    label: 'Printer' },
+  { id: 'networking', label: 'Network' },
+  { id: 'mobile',     label: 'Mobile' },
+];
+const GENERAL_TABS: { id: CategoryTab; label: string }[] = [
+  { id: 'all',        label: 'All Assets' },
+  { id: 'furniture',  label: 'Furniture' },
+  { id: 'appliance',  label: 'Appliance' },
+  { id: 'fixture',    label: 'Fixture' },
+  { id: 'equipment',  label: 'Equipment' },
+  { id: 'vehicle',    label: 'Vehicle' },
+];
 
 const CATEGORY_ICON: Record<string, React.ElementType> = {
   laptop:     Laptop,
@@ -32,7 +52,12 @@ const CATEGORY_ICON: Record<string, React.ElementType> = {
   networking: Wifi,
   phone:      Smartphone,
   tablet:     Smartphone,
-  other:      Monitor,
+  other:      Package,
+  furniture:  Sofa,
+  appliance:  Refrigerator,
+  fixture:    Lightbulb,
+  equipment:  Wrench,
+  vehicle:    Car,
 };
 
 const COMPANY_ICON_BG: Record<string, string> = {
@@ -67,6 +92,7 @@ export function InventoryCards({
   onTransfer,
   isAdmin,
   canEdit,
+  assetType = 'IT',
 }: InventoryCardsProps) {
   const allowEdit = canEdit ?? isAdmin;
   const [searchTerm, setSearchTerm]     = useState('');
@@ -77,8 +103,7 @@ export function InventoryCards({
   const [assetToDelete, setAssetToDelete]     = useState<ITAsset | null>(null);
 
   const getCategoriesForTab = (tab: CategoryTab): AssetCategory[] => {
-    const map: Record<CategoryTab, AssetCategory[]> = {
-      all:        ['laptop','desktop','monitor','keyboard','mouse','printer','server','networking','mobile','mobile + subscription','tablet','other'],
+    const itMap: Record<string, AssetCategory[]> = {
       laptop:     ['laptop'],
       printer:    ['printer'],
       desktop:    ['desktop'],
@@ -88,7 +113,15 @@ export function InventoryCards({
       networking: ['networking','server'],
       mobile:     ['mobile','mobile + subscription','tablet'],
     };
-    return map[tab];
+    const generalMap: Record<string, AssetCategory[]> = {
+      furniture:  ['furniture'],
+      appliance:  ['appliance'],
+      fixture:    ['fixture'],
+      equipment:  ['equipment'],
+      vehicle:    ['vehicle'],
+    };
+    const map = assetType === 'General' ? generalMap : itMap;
+    return map[tab] ?? [];
   };
 
   const nonDeleted  = assets.filter(a => !a.isDeleted);
@@ -103,22 +136,14 @@ export function InventoryCards({
       a.serialNumber.toLowerCase().includes(q) ||
       (a.assignedTo?.toLowerCase().includes(q) ?? false);
     const matchStatus   = statusFilter === 'all' || a.status === statusFilter;
-    const matchCategory = getCategoriesForTab(categoryTab).includes(a.category);
+    const matchCategory = categoryTab === 'all' || getCategoriesForTab(categoryTab).includes(a.category);
     return matchSearch && matchStatus && matchCategory;
   }).sort((a, b) => a.deviceCode.localeCompare(b.deviceCode));
 
   // Stats
   const countFor = (company: Company) => nonDeleted.filter(a => a.company === company);
 
-  const tabs: { id: CategoryTab; label: string }[] = [
-    { id: 'all',        label: 'All Devices' },
-    { id: 'laptop',     label: 'Laptop' },
-    { id: 'desktop',    label: 'Desktop' },
-    { id: 'monitor',    label: 'Monitor' },
-    { id: 'printer',    label: 'Printer' },
-    { id: 'networking', label: 'Network' },
-    { id: 'mobile',     label: 'Mobile' },
-  ];
+  const tabs = assetType === 'General' ? GENERAL_TABS : IT_TABS;
 
   const companies: { id: Company | 'all'; label: string; dot?: string }[] = [
     { id: 'all',      label: 'All Companies' },

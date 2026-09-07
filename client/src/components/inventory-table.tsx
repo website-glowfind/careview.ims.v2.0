@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, Filter, Edit, Trash2, Eye, AlertTriangle, ArrowRightLeft, Download, FileSpreadsheet } from 'lucide-react';
-import type { ITAsset, AssetStatus, AssetCategory, Company } from '@/types/inventory';
+import type { ITAsset, AssetStatus, AssetCategory, Company, AssetType } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
 import { exportToCSV, exportDetailedDevicesPDF } from '@/utils/exportUtils';
 
@@ -14,20 +14,40 @@ interface InventoryTableProps {
   onTransfer: (asset: ITAsset) => void;
   isAdmin: boolean;
   canEdit?: boolean;
+  assetType?: AssetType;
 }
 
-type CategoryTab = 'all' | 'laptop' | 'printer' | 'desktop' | 'keyboard' | 'mouse' | 'monitor' | 'networking' | 'mobile';
+type CategoryTab = string;
 
-export function InventoryTable({ 
-  assets, 
+const IT_TABS: { id: CategoryTab; label: string }[] = [
+  { id: 'all', label: 'All Devices' },
+  { id: 'laptop', label: 'Laptop' },
+  { id: 'printer', label: 'Printer' },
+  { id: 'desktop', label: 'Desktop' },
+  { id: 'monitor', label: 'Monitor' },
+  { id: 'networking', label: 'Network' },
+  { id: 'mobile', label: 'Mobile' },
+];
+const GENERAL_TABS: { id: CategoryTab; label: string }[] = [
+  { id: 'all', label: 'All Assets' },
+  { id: 'furniture', label: 'Furniture' },
+  { id: 'appliance', label: 'Appliance' },
+  { id: 'fixture', label: 'Fixture' },
+  { id: 'equipment', label: 'Equipment' },
+  { id: 'vehicle', label: 'Vehicle' },
+];
+
+export function InventoryTable({
+  assets,
   selectedCompany,
   onCompanyChange,
-  onEdit, 
-  onDelete, 
+  onEdit,
+  onDelete,
   onViewDetails,
   onTransfer,
   isAdmin,
   canEdit,
+  assetType = 'IT',
 }: InventoryTableProps) {
   const allowEdit = canEdit ?? isAdmin;
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,8 +62,7 @@ export function InventoryTable({
     : assets.filter(a => a.company === selectedCompany && !a.isDeleted);
 
   const getCategoriesForTab = (tab: CategoryTab): AssetCategory[] => {
-    const map: Record<CategoryTab, AssetCategory[]> = {
-      all: ['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'mobile', 'mobile + subscription', 'tablet', 'other'],
+    const itMap: Record<string, AssetCategory[]> = {
       laptop: ['laptop'],
       printer: ['printer'],
       desktop: ['desktop'],
@@ -51,9 +70,17 @@ export function InventoryTable({
       mouse: ['mouse'],
       monitor: ['monitor'],
       networking: ['networking', 'server'],
-      mobile: ['mobile', 'mobile + subscription', 'tablet']
+      mobile: ['mobile', 'mobile + subscription', 'tablet'],
     };
-    return map[tab];
+    const generalMap: Record<string, AssetCategory[]> = {
+      furniture: ['furniture'],
+      appliance: ['appliance'],
+      fixture: ['fixture'],
+      equipment: ['equipment'],
+      vehicle: ['vehicle'],
+    };
+    const map = assetType === 'General' ? generalMap : itMap;
+    return map[tab] ?? [];
   };
 
   const filteredAssets = companyFilteredAssets
@@ -62,13 +89,14 @@ export function InventoryTable({
       const matchesSearch =
         asset.deviceCode.toLowerCase().includes(searchLower) ||
         asset.name.toLowerCase().includes(searchLower) ||
-        asset.brand.toLowerCase().includes(searchLower) ||
-        asset.serialNumber.toLowerCase().includes(searchLower) ||
+        (asset.brand || '').toLowerCase().includes(searchLower) ||
+        (asset.serialNumber || '').toLowerCase().includes(searchLower) ||
         (asset.assignedTo && asset.assignedTo.toLowerCase().includes(searchLower));
-      
+
       const matchesStatus = statusFilter === 'all' || asset.status === statusFilter;
-      const matchesCategory = getCategoriesForTab(categoryTab).includes(asset.category);
-      
+      // 'all' shows every category; a specific tab filters to its categories
+      const matchesCategory = categoryTab === 'all' || getCategoriesForTab(categoryTab).includes(asset.category);
+
       return matchesSearch && matchesStatus && matchesCategory;
     })
     .sort((a, b) => a.deviceCode.localeCompare(b.deviceCode));
@@ -84,15 +112,7 @@ export function InventoryTable({
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  const tabs: { id: CategoryTab; label: string }[] = [
-    { id: 'all', label: 'All Devices' },
-    { id: 'laptop', label: 'Laptop' },
-    { id: 'printer', label: 'Printer' },
-    { id: 'desktop', label: 'Desktop' },
-    { id: 'monitor', label: 'Monitor' },
-    { id: 'networking', label: 'Network' },
-    { id: 'mobile', label: 'Mobile' },
-  ];
+  const tabs = assetType === 'General' ? GENERAL_TABS : IT_TABS;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

@@ -1,6 +1,9 @@
 export type AssetStatus = 'active' | 'in-maintenance' | 'in-storage' | 'available' | 'disposed';
 
-export type AssetCategory = 'laptop' | 'desktop' | 'monitor' | 'keyboard' | 'mouse' | 'printer' | 'server' | 'networking' | 'mobile' | 'mobile + subscription' | 'tablet' | 'other';
+export type AssetCategory = 'laptop' | 'desktop' | 'monitor' | 'keyboard' | 'mouse' | 'printer' | 'server' | 'networking' | 'mobile' | 'mobile + subscription' | 'tablet' | 'other'
+  | 'furniture' | 'appliance' | 'fixture' | 'equipment' | 'vehicle';
+
+export type AssetType = 'IT' | 'General';
 
 export type LicenseSubscriptionType = 'license' | 'subscription';
 
@@ -25,6 +28,7 @@ export interface ITAsset {
   deviceCode: string;
   name: string;
   category: AssetCategory;
+  assetType?: AssetType;
   company: Company;
   companyId: string;
   brand: string;

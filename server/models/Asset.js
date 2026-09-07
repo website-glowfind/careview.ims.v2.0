@@ -5,9 +5,12 @@ const assetSchema = new mongoose.Schema({
     name: { type: String, required: true },
     category: {
         type: String,
-        enum: ['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'mobile', 'mobile + subscription', 'phone', 'tablet', 'other'],
+        enum: ['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'mobile', 'mobile + subscription', 'phone', 'tablet', 'other',
+               'furniture', 'appliance', 'fixture', 'equipment', 'vehicle'],
         required: true
     },
+    // 'IT' = IT Inventory (default); 'General' = Asset List (appliances, furniture, etc.)
+    assetType: { type: String, enum: ['IT', 'General'], default: 'IT' },
     company: { type: String, enum: ['KHEALTH', 'CAREVIEW', 'GLOWFIND'], required: true },
     companyId: { type: String },
     brand: { type: String, required: true },

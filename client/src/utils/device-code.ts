@@ -19,6 +19,11 @@ const categoryPrefixes: Record<AssetCategory, string> = {
   'mobile + subscription': 'MB',
   tablet: 'TB',
   other: 'OT',
+  furniture: 'FN',
+  appliance: 'AP',
+  fixture: 'FX',
+  equipment: 'EQ',
+  vehicle: 'VH',
 };
 
 // Prefixes for License and Subscription

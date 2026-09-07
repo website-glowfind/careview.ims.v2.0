@@ -3,7 +3,7 @@ import { Subscription } from "../models/Subscription.js";
 import { ActivityLog } from "../models/ActivityLog.js";
 
 const COMPANY_PREFIXES = { KHEALTH: 'KH', CAREVIEW: 'CV', GLOWFIND: 'GF' };
-const CATEGORY_PREFIXES = { laptop: 'LT', desktop: 'DT', monitor: 'MN', keyboard: 'KB', mouse: 'MS', printer: 'PR', server: 'SV', networking: 'NW', mobile: 'MB', 'mobile + subscription': 'MB', phone: 'PH', tablet: 'TB', other: 'OT' };
+const CATEGORY_PREFIXES = { laptop: 'LT', desktop: 'DT', monitor: 'MN', keyboard: 'KB', mouse: 'MS', printer: 'PR', server: 'SV', networking: 'NW', mobile: 'MB', 'mobile + subscription': 'MB', phone: 'PH', tablet: 'TB', other: 'OT', furniture: 'FN', appliance: 'AP', fixture: 'FX', equipment: 'EQ', vehicle: 'VH' };
 const DEVICE_CODE_PATTERN = /^[A-Z]{2}-[A-Z]{2}-(\d+)$/;
 
 async function generateDeviceCode(company, category) {

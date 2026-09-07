@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, Plus, Activity, Users, Trash2, FileX, CreditCard, ClipboardList, UserCheck } from 'lucide-react';
+import { LayoutDashboard, Package, Boxes, Activity, Users, Trash2, FileX, CreditCard, ClipboardList, UserCheck } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
 interface SidebarProps {
@@ -17,7 +17,7 @@ export function SidebarMenu({ currentView, onViewChange }: SidebarProps) {
   const allMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['encoder', 'employee'] },
     { id: 'inventory', label: 'Inventory', icon: Package, roles: ['encoder', 'employee'] },
-    { id: 'add', label: 'Add Asset', icon: Plus, roles: ['encoder'] },
+    { id: 'asset-list', label: 'Asset List', icon: Boxes, roles: ['encoder', 'employee'] },
     { id: 'subscriptions', label: 'Subscription List', icon: CreditCard, roles: ['encoder'] },
     { id: 'employees', label: 'Employee List', icon: UserCheck, roles: ['employee'] },
     { id: 'disposal', label: 'Disposal Form', icon: FileX, roles: ['encoder'] },

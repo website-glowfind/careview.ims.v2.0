@@ -5,11 +5,6 @@ import { InventoryPage } from '@/pages/Inventory/InventoryPage'; // Yung ginawa 
 import { useAuthStore } from '@/store/authStore';
 import { LogOut, Sun, Moon, User } from 'lucide-react';
 import { useThemeStore } from '@/store/themeStore';
-import { AssetForm } from '@/components/asset-form';
-import { useAssetStore } from '@/store/assetStore';
-import { useCategoryStore } from '@/store/categoryStore';
-import { useFormRecordStore } from '@/store/formRecordStore';
-import { useActivityLogStore } from '@/store/activityLogStore';
 import { FormMasterlistPage } from './Form-Masterlist/FormMasterListPage';
 import { SubscriptionPage } from './Subscripton/SubscriptionPage';
 import { DeletedDevices } from './Deleted-Device/DeletedDevicePage';
@@ -20,37 +15,16 @@ import { EmployeeListPage } from './Employee-List/EmployeeListPage';
 
 export default function MainLayout() {
   const [currentView, setCurrentView] = useState('dashboard');
-  const [formError, setFormError] = useState<string | null>(null);
     const { user, logout } = useAuthStore();
-    const { assets, addAsset } = useAssetStore();
-    const { categories, defaultCategories, addCategory, deleteCategory } = useCategoryStore();
-    const { addFormRecord } = useFormRecordStore();
     const { isDark, toggleDark } = useThemeStore();
-    const { addHistoryEntry } = useActivityLogStore();
-    const handleSaveAsset = async (assetData: any, subscriptionData?: any) => {
-      setFormError(null);
-      try {
-        await addAsset(assetData, subscriptionData);
-        // Log the new asset — deviceCode comes back from the server via the store
-        addHistoryEntry({
-          action: 'added',
-          category: 'asset',
-          deviceCode: assetData.deviceCode || 'PENDING',
-          deviceName: assetData.name,
-          company: assetData.company,
-          details: `${assetData.brand} ${assetData.model} — ${assetData.category}`,
-        });
-        setCurrentView('inventory');
-      } catch (error: any) {
-        setFormError(error?.message || 'Failed to save asset.');
-      }
-    };
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
         return <Dashboard />;
       case 'inventory':
-        return <InventoryPage />;
+        return <InventoryPage assetType="IT" />;
+      case 'asset-list':
+        return <InventoryPage assetType="General" />;
       case 'subscriptions':
         return <SubscriptionPage />;
       case 'deleted':
@@ -65,27 +39,6 @@ export default function MainLayout() {
         return <DisposalFormPage />;
       case 'users':
         return <UserManagement />;
-      case 'add':
-        return (
-          <div className="max-w-4xl mx-auto">
-            {formError && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-300 rounded-lg text-red-700 text-sm font-medium">
-                ⚠️ {formError}
-              </div>
-            )}
-            <AssetForm
-              assets={assets}
-              categories={categories}
-              onAddCategory={addCategory}
-              onDeleteCategory={deleteCategory}
-              defaultCategories={defaultCategories}
-              onSave={handleSaveAsset}
-              onCancel={() => { setFormError(null); setCurrentView('dashboard'); }}
-              currentUser={user?.name || 'Admin'}
-              onSaveFormRecord={addFormRecord}
-            />
-          </div>
-        );
       default:
         return <Dashboard />;
     }
