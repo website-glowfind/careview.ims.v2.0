@@ -30,7 +30,7 @@ export function SidebarMenu({ currentView, onViewChange }: SidebarProps) {
   const menuItems = allMenuItems.filter(item => isAdmin || item.roles.includes(role));
 
   return (
-    <div className="w-64 bg-[#d5e1f1] dark:bg-[#0d1535] border-r border-gray-200 dark:border-[#1e3a5f] min-h-screen p-4 transition-colors duration-300">
+    <div className="w-64 bg-[#d5e1f1] dark:bg-[#0d1535] border-r border-gray-200 dark:border-[#1e3a5f] min-h-screen p-4 transition-colors duration-300 flex flex-col">
       <div className="mb-8">
         <div className="flex justify-center items-center gap-3 mb-3">
           <img
@@ -63,6 +63,13 @@ export function SidebarMenu({ currentView, onViewChange }: SidebarProps) {
           ))}
         </ul>
       </nav>
+
+      {/* Credit */}
+      <div className="mt-auto pt-4 border-t border-gray-300/60 dark:border-[#1e3a5f] text-center">
+        <p className="text-[11px] text-gray-500 dark:text-slate-500">
+          Developed by <span className="font-semibold text-gray-600 dark:text-slate-400">JMVillaruel</span>
+        </p>
+      </div>
     </div>
   );
 }
