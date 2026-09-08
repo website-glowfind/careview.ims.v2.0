@@ -2,7 +2,6 @@ import { useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Download, QrCode } from 'lucide-react';
 import type { ITAsset } from '@/types/inventory';
-import { getCompanyLogo } from '@/utils/device-code';
 
 interface QRCodeDisplayProps {
   asset?: ITAsset;
@@ -23,10 +22,6 @@ export function QRCodeDisplay({
 }: QRCodeDisplayProps) {
   const qrRef = useRef<HTMLDivElement>(null);
   const code = asset?.deviceCode ?? deviceCode ?? '';
-
-  // Center logo (company brand) — makes the QR look "designed" like the sample.
-  const logo = asset?.company ? getCompanyLogo(asset.company) : undefined;
-  const logoSize = Math.round(size * 0.24);
 
   const getQRCodeValue = () => {
     const dc = asset?.deviceCode ?? code;
@@ -82,24 +77,7 @@ export function QRCodeDisplay({
       // Draw the QR code
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Draw the center logo on top (same-origin image, so canvas stays untainted)
-      if (logo) {
-        const lImg = new Image();
-        lImg.onload = () => {
-          const ls = canvas.width * 0.24;
-          const lx = (canvas.width - ls) / 2;
-          const ly = (canvas.height - ls) / 2;
-          const pad = ls * 0.12;
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(lx - pad, ly - pad, ls + pad * 2, ls + pad * 2);
-          ctx.drawImage(lImg, lx, ly, ls, ls);
-          exportPng();
-        };
-        lImg.onerror = exportPng;
-        lImg.src = logo;
-      } else {
-        exportPng();
-      }
+      exportPng();
     };
 
     img.src = url;
@@ -128,7 +106,6 @@ export function QRCodeDisplay({
           includeMargin={false}
           bgColor="#FFFFFF"
           fgColor="#000000"
-          imageSettings={logo ? { src: logo, height: logoSize, width: logoSize, excavate: true } : undefined}
         />
       </div>
 
