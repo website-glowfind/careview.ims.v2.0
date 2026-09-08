@@ -15,7 +15,7 @@ const assetSchema = new mongoose.Schema({
     companyId: { type: String },
     brand: { type: String },
     model: { type: String },
-    serialNumber: { type: String, required: true, unique: true },
+    serialNumber: { type: String },
     specifications: { type: String },
     status: {
         type: String,

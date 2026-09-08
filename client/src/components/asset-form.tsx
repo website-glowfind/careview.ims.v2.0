@@ -53,7 +53,6 @@ export function AssetForm({ asset, assets, categories, onAddCategory, onDeleteCa
 
   const [previewCode, setPreviewCode] = useState<string>('');
   const [showAgreement, setShowAgreement] = useState(false);
-  const [serialError, setSerialError] = useState<string>('');
   const [empLookupStatus, setEmpLookupStatus] = useState<'idle' | 'found' | 'not-found'>('idle');
   const [empLookupLoading, setEmpLookupLoading] = useState(false);
   const [showEmpNotFound, setShowEmpNotFound] = useState(false);
@@ -138,22 +137,6 @@ setFormData({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSerialError('');
-
-    // Check for duplicate serial number (exclude self when editing).
-    // Skip when the serial is blank — General assets may leave it empty.
-    const serialTrimmed = formData.serialNumber.trim();
-    if (serialTrimmed) {
-      const duplicate = assets.find(
-        (a) =>
-          (a.serialNumber || '').trim().toLowerCase() === serialTrimmed.toLowerCase() &&
-          a._id !== asset?._id
-      );
-      if (duplicate) {
-        setSerialError(`Serial number "${formData.serialNumber}" is already used by asset ${duplicate.deviceCode} (${duplicate.name}).`);
-        return;
-      }
-    }
 
     if (!asset && isPhoneCategory) {
       if (!subscriptionData.provider || !subscriptionData.planType || !subscriptionData.cost || !subscriptionData.renewalDate) {
@@ -559,20 +542,16 @@ setFormData({
               {/* Serial Number / Tag */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {isGeneral ? 'Serial / Tag No.' : 'Serial Number'} {!isGeneral && <span className="text-red-500">*</span>}
+                  {isGeneral ? 'Serial / Tag No.' : 'Serial Number'}
                 </label>
                 <input
                   type="text"
                   name="serialNumber"
                   value={formData.serialNumber}
-                  onChange={(e) => { setSerialError(''); handleChange(e); }}
-                  required={!isGeneral}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 bg-white ${serialError ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'}`}
-                  placeholder={isGeneral ? 'Optional — auto-uses the asset code if blank' : 'e.g., SN123456789'}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  placeholder={isGeneral ? 'Optional' : 'e.g., SN123456789'}
                 />
-                {serialError && (
-                  <p className="mt-1 text-xs text-red-600">{serialError}</p>
-                )}
               </div>
 
               {/* Specifications */}

@@ -156,8 +156,17 @@ if (existsSync(clientDist)) {
 
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => {
+  .then(async () => {
     console.log("✅ MongoDB Connected");
+
+    // Serial numbers no longer require uniqueness — drop the legacy unique
+    // index if it still exists on the collection (safe to run every startup).
+    try {
+      await Asset.collection.dropIndex("serialNumber_1");
+      console.log("🧹 Dropped legacy unique index on serialNumber");
+    } catch (e) {
+      // Index not present (already dropped or fresh DB) — nothing to do.
+    }
 
     // Bind to 0.0.0.0 so the app is reachable from other PCs on the LAN,
     // not just from this machine (localhost).
