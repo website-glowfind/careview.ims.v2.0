@@ -46,7 +46,7 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle }: Inv
   // Category source depends on asset type (both hooks called unconditionally)
   const itCats = useCategoryStore();
   const genCats = useGeneralCategoryStore();
-  const { categories, defaultCategories, addCategory: handleAddCategory, deleteCategory: handleDeleteCategory } =
+  const { categories, defaultCategories, addCategory: handleAddCategory, deleteCategory: handleDeleteCategory, fetchCategories } =
     assetType === 'General' ? genCats : itCats;
 
   const [viewMode, setViewMode] = useState<'table' | 'cards'>(() =>
@@ -64,6 +64,10 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle }: Inv
   useEffect(() => {
     fetchAssets();
   }, [fetchAssets]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   // Only show assets that belong to this page's type (legacy assets w/o a type are IT)
   const visibleAssets = assets.filter(a => (a.assetType ?? 'IT') === assetType);

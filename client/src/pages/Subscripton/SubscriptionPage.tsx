@@ -21,7 +21,7 @@ export function SubscriptionPage() {
   } = useSubscriptionStore();
 
   const { assets, fetchAssets } = useAssetStore();
-  const { categories, defaultCategories, addCategory, deleteCategory } = useCategoryStore();
+  const { categories, defaultCategories, addCategory, deleteCategory, fetchCategories } = useCategoryStore();
   const { user } = useAuthStore();
   const { addFormRecord } = useFormRecordStore();
 
@@ -33,7 +33,8 @@ export function SubscriptionPage() {
   useEffect(() => {
     fetchSubscriptions();
     fetchAssets();
-  }, [fetchSubscriptions, fetchAssets]);
+    fetchCategories();
+  }, [fetchSubscriptions, fetchAssets, fetchCategories]);
 
   const handleAdd = async (data: Omit<Subscription, 'id'>) => {
     try {

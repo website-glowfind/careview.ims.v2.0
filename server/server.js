@@ -13,7 +13,9 @@ import activityLogRoute from "./routes/ActivityLogRoute.js";
 import employeeRoute from "./routes/EmployeeRoute.js";
 import formRecordRoute from "./routes/FormRecordRoute.js";
 import uploadRoute from "./routes/UploadRoute.js";
+import categoryRoute from "./routes/CategoryRoute.js";
 import { Asset } from "./models/Asset.js";
+import { seedCategories } from "./controllers/CategoryController.js";
 
 dotenv.config();
 
@@ -46,6 +48,7 @@ app.use('/api/v1/activity-log', activityLogRoute);
 app.use('/api/v1/employees',   employeeRoute);
 app.use('/api/v1/form-records', formRecordRoute);
 app.use('/api/v1/uploads', uploadRoute);
+app.use('/api/v1/categories', categoryRoute);
 
 // Serve uploaded files (images, PDFs, etc.)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -167,6 +170,9 @@ mongoose
     } catch (e) {
       // Index not present (already dropped or fresh DB) — nothing to do.
     }
+
+    // Seed built-in categories on first run
+    await seedCategories();
 
     // Bind to 0.0.0.0 so the app is reachable from other PCs on the LAN,
     // not just from this machine (localhost).

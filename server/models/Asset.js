@@ -3,12 +3,9 @@ import mongoose from "mongoose";
 const assetSchema = new mongoose.Schema({
     deviceCode: { type: String, required: true, unique: true },
     name: { type: String, required: true },
-    category: {
-        type: String,
-        enum: ['laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer', 'server', 'networking', 'mobile', 'mobile + subscription', 'phone', 'tablet', 'other',
-               'furniture', 'appliance', 'fixture', 'equipment', 'vehicle'],
-        required: true
-    },
+    // Free-form category — managed via the Category collection (no fixed enum,
+    // so custom categories added by users don't fail validation)
+    category: { type: String, required: true },
     // 'IT' = IT Inventory (default); 'General' = Asset List (appliances, furniture, etc.)
     assetType: { type: String, enum: ['IT', 'General'], default: 'IT' },
     company: { type: String, enum: ['KHEALTH', 'CAREVIEW', 'GLOWFIND'], required: true },
