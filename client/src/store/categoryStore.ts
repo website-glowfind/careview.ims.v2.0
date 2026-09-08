@@ -6,7 +6,7 @@ const STORAGE_KEY = 'itInventoryCategories_v2';
 // Canonical built-in categories (fallback + manage-modal reference)
 export const DEFAULT_CATEGORIES = [
   'laptop', 'desktop', 'monitor', 'keyboard', 'mouse', 'printer',
-  'server', 'networking', 'mobile', 'mobile + subscription', 'tablet', 'other',
+  'server', 'networking', 'mobile', 'mobile + subscription', 'tablet', 'other', 'mini pc',
 ];
 
 interface CatItem { _id?: string; name: string; }

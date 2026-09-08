@@ -1,16 +1,24 @@
 import { Category, DEFAULT_IT_CATEGORIES, DEFAULT_GENERAL_CATEGORIES } from "../models/Category.js";
 
-// Seed built-in categories once (called on server startup)
+// Ensure built-in categories exist (called on server startup). Idempotent —
+// inserts only the defaults that are missing, so newly added defaults (e.g.
+// "mini pc") get created without duplicating existing rows.
 export const seedCategories = async () => {
   try {
-    const count = await Category.estimatedDocumentCount();
-    if (count > 0) return;
-    const docs = [
-      ...DEFAULT_IT_CATEGORIES.map((name) => ({ name, assetType: 'IT', isDefault: true })),
-      ...DEFAULT_GENERAL_CATEGORIES.map((name) => ({ name, assetType: 'General', isDefault: true })),
+    const defaults = [
+      ...DEFAULT_IT_CATEGORIES.map((name) => ({ name, assetType: 'IT' })),
+      ...DEFAULT_GENERAL_CATEGORIES.map((name) => ({ name, assetType: 'General' })),
     ];
-    await Category.insertMany(docs, { ordered: false });
-    console.log("🌱 Seeded default categories");
+    const ops = defaults.map((d) => ({
+      updateOne: {
+        filter: { name: d.name, assetType: d.assetType },
+        update: { $setOnInsert: { name: d.name, assetType: d.assetType, isDefault: true } },
+        upsert: true,
+      },
+    }));
+    const res = await Category.bulkWrite(ops, { ordered: false });
+    const added = res.upsertedCount || 0;
+    if (added > 0) console.log(`🌱 Seeded ${added} default categor${added === 1 ? 'y' : 'ies'}`);
   } catch (e) {
     console.error("Category seed skipped:", e.message);
   }
