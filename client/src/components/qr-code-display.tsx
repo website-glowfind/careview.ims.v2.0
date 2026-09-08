@@ -27,9 +27,13 @@ export function QRCodeDisplay({
     const dc = asset?.deviceCode ?? code;
     if (!dc) return code;
     // Encode a short link to the public asset-view page. Keeps the QR simple
-    // (low density) while scanning reveals the full details served by the app.
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    return `${origin}/asset/${encodeURIComponent(dc)}`;
+    // (low density) while scanning reveals the full details.
+    //   VITE_PUBLIC_QR_BASE = your public app URL (e.g. https://app.onrender.com)
+    //   -> QR is scannable from ANY network.
+    //   If unset, falls back to the current address (LAN-only).
+    const publicBase = ((import.meta.env.VITE_PUBLIC_QR_BASE as string) || '').replace(/\/+$/, '');
+    const base = publicBase || (typeof window !== 'undefined' ? window.location.origin : '');
+    return `${base}/asset/${encodeURIComponent(dc)}`;
   };
 
   // Download QR code as PNG
