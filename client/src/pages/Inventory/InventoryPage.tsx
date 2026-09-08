@@ -321,6 +321,7 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle }: Inv
           onBack={editingAsset ? handleFormBack : undefined}
           currentUser={user?.name}
           onSaveFormRecord={addFormRecord}
+          assetType={assetType}
         />
       )}
       {viewingAsset && (

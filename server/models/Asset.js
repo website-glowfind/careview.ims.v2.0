@@ -13,8 +13,8 @@ const assetSchema = new mongoose.Schema({
     assetType: { type: String, enum: ['IT', 'General'], default: 'IT' },
     company: { type: String, enum: ['KHEALTH', 'CAREVIEW', 'GLOWFIND'], required: true },
     companyId: { type: String },
-    brand: { type: String, required: true },
-    model: { type: String, required: true },
+    brand: { type: String },
+    model: { type: String },
     serialNumber: { type: String, required: true, unique: true },
     specifications: { type: String },
     status: {

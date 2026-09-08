@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Hash, Users, Package, FileText, ArrowLeft, FileSignature, Smartphone, CheckCircle } from 'lucide-react';
-import type { ITAsset, AssetStatus, AssetCategory, Company, FormRecord } from '@/types/inventory';
+import type { ITAsset, AssetStatus, AssetCategory, Company, FormRecord, AssetType } from '@/types/inventory';
 import { generateDeviceCode } from '@/utils/device-code';
 import { CategorySelector } from '@/components/category-selector';
 import { IssuanceAgreement } from '@/components/issuance-agreement';
@@ -20,13 +20,15 @@ interface AssetFormProps {
   onBack?: () => void;
   currentUser: string;
   onSaveFormRecord: (record: Omit<FormRecord, 'id' | 'dateCreated'>) => void;
+  assetType?: AssetType;
 }
 
-export function AssetForm({ asset, assets, categories, onAddCategory, onDeleteCategory, defaultCategories, onSave, onCancel, onBack, currentUser, onSaveFormRecord }: AssetFormProps) {
+export function AssetForm({ asset, assets, categories, onAddCategory, onDeleteCategory, defaultCategories, onSave, onCancel, onBack, currentUser, onSaveFormRecord, assetType = 'IT' }: AssetFormProps) {
+  const isGeneral = assetType === 'General';
   const [formData, setFormData] = useState<Omit<ITAsset, 'id' | 'deviceCode'>>(({
     _id: '',
     name: '',
-    category: 'laptop',
+    category: (categories[0] as AssetCategory) ?? 'laptop',
     company: 'KHEALTH',
     companyId: '',
     brand: '',
@@ -111,15 +113,19 @@ setFormData({
     e.preventDefault();
     setSerialError('');
 
-    // Check for duplicate serial number (exclude self when editing)
-    const duplicate = assets.find(
-      (a) =>
-        a.serialNumber.trim().toLowerCase() === formData.serialNumber.trim().toLowerCase() &&
-        a._id !== asset?._id
-    );
-    if (duplicate) {
-      setSerialError(`Serial number "${formData.serialNumber}" is already used by asset ${duplicate.deviceCode} (${duplicate.name}).`);
-      return;
+    // Check for duplicate serial number (exclude self when editing).
+    // Skip when the serial is blank — General assets may leave it empty.
+    const serialTrimmed = formData.serialNumber.trim();
+    if (serialTrimmed) {
+      const duplicate = assets.find(
+        (a) =>
+          (a.serialNumber || '').trim().toLowerCase() === serialTrimmed.toLowerCase() &&
+          a._id !== asset?._id
+      );
+      if (duplicate) {
+        setSerialError(`Serial number "${formData.serialNumber}" is already used by asset ${duplicate.deviceCode} (${duplicate.name}).`);
+        return;
+      }
     }
 
     if (!asset && isPhoneCategory) {
@@ -457,7 +463,7 @@ setFormData({
           <div className="border border-gray-200 rounded-lg p-5 bg-gray-50">
             <div className="flex items-center gap-2 mb-4">
               <Package className="w-5 h-5 text-gray-700" />
-              <h3 className="text-base font-semibold text-gray-900">Device Specification</h3>
+              <h3 className="text-base font-semibold text-gray-900">{isGeneral ? 'Asset Details' : 'Device Specification'}</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Asset Name */}
@@ -479,16 +485,16 @@ setFormData({
               {/* Brand */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Brand <span className="text-red-500">*</span>
+                  Brand {!isGeneral && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="text"
                   name="brand"
                   value={formData.brand}
                   onChange={handleChange}
-                  required
+                  required={!isGeneral}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  placeholder="e.g., Apple, Dell, HP"
+                  placeholder={isGeneral ? 'e.g., Uratex, Samsung (optional)' : 'e.g., Apple, Dell, HP'}
                 />
               </div>
 
@@ -511,32 +517,32 @@ setFormData({
               {/* Model */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Model <span className="text-red-500">*</span>
+                  Model {!isGeneral && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="text"
                   name="model"
                   value={formData.model}
                   onChange={handleChange}
-                  required
+                  required={!isGeneral}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  placeholder="e.g., M3 Pro"
+                  placeholder={isGeneral ? 'e.g., 3-Seater (optional)' : 'e.g., M3 Pro'}
                 />
               </div>
 
-              {/* Serial Number */}
+              {/* Serial Number / Tag */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Serial Number <span className="text-red-500">*</span>
+                  {isGeneral ? 'Serial / Tag No.' : 'Serial Number'} {!isGeneral && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="text"
                   name="serialNumber"
                   value={formData.serialNumber}
                   onChange={(e) => { setSerialError(''); handleChange(e); }}
-                  required
+                  required={!isGeneral}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 bg-white ${serialError ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'}`}
-                  placeholder="e.g., SN123456789"
+                  placeholder={isGeneral ? 'Optional — auto-uses the asset code if blank' : 'e.g., SN123456789'}
                 />
                 {serialError && (
                   <p className="mt-1 text-xs text-red-600">{serialError}</p>

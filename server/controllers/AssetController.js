@@ -127,6 +127,10 @@ export const addAsset = async (req, res) => {
         const { assetData, subscriptionData } = req.body;
 
         assetData.deviceCode = await generateDeviceCode(assetData.company, assetData.category);
+        // General assets may have no serial — fall back to the (unique) asset code
+        if (!assetData.serialNumber || !String(assetData.serialNumber).trim()) {
+            assetData.serialNumber = assetData.deviceCode;
+        }
         const newAsset = await Asset.create(assetData);
 
         if (assetData.category === 'mobile + subscription' && subscriptionData) {
