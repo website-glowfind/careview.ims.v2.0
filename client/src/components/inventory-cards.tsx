@@ -149,7 +149,6 @@ export function InventoryCards({
     { id: 'all',      label: 'All Companies' },
     { id: 'KHEALTH',  label: 'KHEALTH',  dot: 'bg-blue-500' },
     { id: 'CAREVIEW', label: 'CAREVIEW', dot: 'bg-green-500' },
-    { id: 'GLOWFIND', label: 'GLOWFIND', dot: 'bg-orange-500' },
   ];
 
   return (
@@ -177,7 +176,7 @@ export function InventoryCards({
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {(['KHEALTH','CAREVIEW','GLOWFIND'] as Company[]).map(c => {
+        {(['KHEALTH','CAREVIEW'] as Company[]).map(c => {
           const count  = countFor(c);
           const active = count.filter(a => a.status === 'active').length;
           const colors: Record<Company, string> = {

@@ -556,7 +556,6 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
             <option value="ALL">All Companies</option>
             <option value="KHEALTH">KHEALTH</option>
             <option value="CAREVIEW">CAREVIEW</option>
-            <option value="GLOWFIND">GLOWFIND</option>
           </select>
         </div>
 
@@ -792,7 +791,6 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
                       >
                         <option value="KHEALTH">KHEALTH</option>
                         <option value="CAREVIEW">CAREVIEW</option>
-                        <option value="GLOWFIND">GLOWFIND</option>
                       </select>
                     </div>
 

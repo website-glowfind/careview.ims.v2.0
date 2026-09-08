@@ -135,7 +135,6 @@ export function IssuanceAgreement({ asset, assetData, onClose, currentUser, onSa
               <img src={companyLogo} alt="Company Logo" className="h-16 w-auto" />
               <div className="flex flex-col items-center gap-1">
                 <QRCodeDisplay asset={data as ITAsset} size={90} showDownload={false} showLabel={false} />
-                <span className="text-xs text-gray-500">Scan to view asset details</span>
               </div>
             </div>
             <h2 className="text-center text-base font-bold mt-4 mb-1">IT ASSET ISSUANCE AGREEMENT</h2>
@@ -229,37 +228,25 @@ export function IssuanceAgreement({ asset, assetData, onClose, currentUser, onSa
             <div className="grid grid-cols-2 gap-6 text-xs">
               <div>
                 <div className="bg-blue-900 text-white text-center font-bold py-1 px-3 mb-3">Issuance Approval:</div>
-                <div className="flex flex-row gap-1 mb-2">
-                  <span>- Supervisor Signature: __________________</span>
-                  <span className="text-gray-600">Date: _______</span>
-                </div>
-                <div className="flex flex-row gap-1 mb-2">
-                  <span>- IT Personnel Signature: ________________</span>
-                  <span className="text-gray-600">Date: _______</span>
-                </div>
-                <div className="flex flex-row gap-1 mb-2">
-                  <span>- Admin Manager Signature: ______________</span>
-                  <span className="text-gray-600">Date: _______</span>
-                </div>
-                <div className="flex flex-row gap-1 mb-2">
-                  <span>- Employee Signature: ____________________</span>
-                  <span className="text-gray-600">Date: _______</span>
-                </div>
+                {['Supervisor Signature', 'IT Personnel Signature', 'Admin Manager Signature', 'Employee Signature'].map((role) => (
+                  <div key={role} className="flex items-end gap-2 mb-2.5">
+                    <span className="whitespace-nowrap">- {role}:</span>
+                    <span className="flex-1 border-b border-gray-500" />
+                    <span className="text-gray-600 whitespace-nowrap">Date:</span>
+                    <span className="w-12 border-b border-gray-500" />
+                  </div>
+                ))}
               </div>
               <div>
                 <div className="bg-blue-900 text-white text-center font-bold py-1 px-3 mb-3">Return Clearance:</div>
-                <div className="flex flex-row gap-1 mb-2">
-                  <span>- Employee Signature: ____________________</span>
-                  <span className="text-gray-600">Date: _______</span>
-                </div>
-                <div className="flex flex-row gap-1 mb-2">
-                  <span>- IT Personnel Signature: ________________</span>
-                  <span className="text-gray-600">Date: _______</span>
-                </div>
-                <div className="flex flex-row gap-1 mb-2">
-                  <span>- Admin Manager Signature: ______________</span>
-                  <span className="text-gray-600">Date: _______</span>
-                </div>
+                {['Employee Signature', 'IT Personnel Signature', 'Admin Manager Signature'].map((role) => (
+                  <div key={role} className="flex items-end gap-2 mb-2.5">
+                    <span className="whitespace-nowrap">- {role}:</span>
+                    <span className="flex-1 border-b border-gray-500" />
+                    <span className="text-gray-600 whitespace-nowrap">Date:</span>
+                    <span className="w-12 border-b border-gray-500" />
+                  </div>
+                ))}
                 <div className="italic font-bold mt-1">(Review and Confirmation)</div>
               </div>
             </div>

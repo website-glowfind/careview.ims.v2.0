@@ -1,6 +1,7 @@
 import { X, Calendar, MapPin, User, Package, FileText, AlertTriangle, Building2, Clock, Hash, Users, Briefcase, FileSignature } from 'lucide-react';
 import type { ITAsset } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
+import { resolveFileUrl } from '@/utils/fileUrl';
 import { IssuanceAgreement } from '@/components/issuance-agreement';
 import { QRCodeDisplay } from '@/components/qr-code-display';
 import { useState } from 'react';
@@ -297,6 +298,38 @@ export function AssetDetails({ asset, onClose, onEdit, onViewActivityLog, isAdmi
                 <div className="text-gray-600 mb-2 text-sm">Notes</div>
                 <p className="text-gray-800 whitespace-pre-wrap">{asset.notes || 'No notes available'}</p>
               </div>
+
+              {/* Attachments */}
+              {asset.attachments && asset.attachments.length > 0 && (
+                <div className="md:col-span-2 bg-white p-4 rounded-lg border border-gray-200">
+                  <div className="text-gray-600 mb-3 text-sm">Attachments ({asset.attachments.length})</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {asset.attachments.map((att, idx) => {
+                      const isImg = (att.type || '').startsWith('image/');
+                      const href = resolveFileUrl(att.url);
+                      return (
+                        <a
+                          key={idx}
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                          title={att.name}
+                        >
+                          {isImg ? (
+                            <img src={href} alt={att.name} className="w-10 h-10 object-cover rounded flex-shrink-0" />
+                          ) : (
+                            <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
+                              <FileText className="w-5 h-5 text-gray-500" />
+                            </div>
+                          )}
+                          <span className="text-xs text-blue-700 truncate">{att.name}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

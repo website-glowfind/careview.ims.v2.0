@@ -49,7 +49,6 @@ export function DashboardStats({ assets, selectedCompany }: DashboardStatsProps)
   const companyBreakdown = selectedCompany === 'all' ? {
     KHEALTH: assets.filter(a => a.company === 'KHEALTH' && !a.isDeleted).length,
     CAREVIEW: assets.filter(a => a.company === 'CAREVIEW' && !a.isDeleted).length,
-    GLOWFIND: assets.filter(a => a.company === 'GLOWFIND' && !a.isDeleted).length,
   } : null;
 
   return (
@@ -77,7 +76,7 @@ export function DashboardStats({ assets, selectedCompany }: DashboardStatsProps)
             <Building2 className="w-5 h-5 text-gray-600 dark:text-slate-400" />
             <h3 className="text-lg font-semibold dark:text-white">Company Distribution</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className={`px-3 py-1 text-sm font-semibold rounded-full border ${getCompanyBadgeClasses('KHEALTH')}`}>
@@ -98,15 +97,6 @@ export function DashboardStats({ assets, selectedCompany }: DashboardStatsProps)
               <p className="text-sm text-green-600 dark:text-green-400/70 mt-1">devices</p>
             </div>
 
-            <div className="bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/30 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className={`px-3 py-1 text-sm font-semibold rounded-full border ${getCompanyBadgeClasses('GLOWFIND')}`}>
-                  GLOWFIND
-                </span>
-              </div>
-              <p className="text-3xl font-bold text-orange-700 dark:text-orange-400">{companyBreakdown.GLOWFIND}</p>
-              <p className="text-sm text-orange-600 dark:text-orange-400/70 mt-1">devices</p>
-            </div>
           </div>
         </div>
       )}

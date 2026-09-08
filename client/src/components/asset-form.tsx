@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Hash, Users, Package, FileText, ArrowLeft, FileSignature, Smartphone, CheckCircle } from 'lucide-react';
+import { X, Hash, Users, Package, FileText, ArrowLeft, FileSignature, Smartphone, CheckCircle, Paperclip, Trash2, Image as ImageIcon } from 'lucide-react';
+import { assetServices } from '@/services/assetServices';
+import { resolveFileUrl } from '@/utils/fileUrl';
 import type { ITAsset, AssetStatus, AssetCategory, Company, FormRecord, AssetType } from '@/types/inventory';
 import { generateDeviceCode } from '@/utils/device-code';
 import { CategorySelector } from '@/components/category-selector';
@@ -43,7 +45,11 @@ export function AssetForm({ asset, assets, categories, onAddCategory, onDeleteCa
     warrantyExpiry: '',
     location: '',
     notes: '',
+    attachments: [],
   }));
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string>('');
 
   const [previewCode, setPreviewCode] = useState<string>('');
   const [showAgreement, setShowAgreement] = useState(false);
@@ -92,6 +98,7 @@ setFormData({
         warrantyExpiry: asset.warrantyExpiry ? asset.warrantyExpiry.split('T')[0] : '',
         location: asset.location,
         notes: asset.notes || '',
+        attachments: asset.attachments || [],
       });
       setPreviewCode(asset.deviceCode);
     } else {
@@ -108,6 +115,26 @@ setFormData({
       setPreviewCode(code);
     }
   }, [formData.company, formData.category, assets, asset]);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setUploadError('');
+    setIsUploading(true);
+    try {
+      const uploaded = await assetServices.uploadFiles(files);
+      setFormData((prev) => ({ ...prev, attachments: [...(prev.attachments || []), ...uploaded] }));
+    } catch (err: any) {
+      setUploadError(err?.message || 'Upload failed');
+    } finally {
+      setIsUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const removeAttachment = (idx: number) => {
+    setFormData((prev) => ({ ...prev, attachments: (prev.attachments || []).filter((_, i) => i !== idx) }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -419,7 +446,6 @@ setFormData({
                 >
                   <option value="KHEALTH">KHEALTH</option>
                   <option value="CAREVIEW">CAREVIEW</option>
-                  <option value="GLOWFIND">GLOWFIND</option>
                 </select>
                 {asset && (
                   <p className="text-xs text-gray-500 mt-1">✓ Company is permanent. Use Transfer for company changes.</p>
@@ -564,6 +590,53 @@ setFormData({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Attachments Section */}
+          <div className="border border-gray-200 rounded-lg p-5 bg-gray-50">
+            <div className="flex items-center gap-2 mb-4">
+              <Paperclip className="w-5 h-5 text-gray-700" />
+              <h3 className="text-base font-semibold text-gray-900">Attachments</h3>
+              <span className="text-xs text-gray-500">(images, PDF, docs — max 15MB each)</span>
+            </div>
+
+            <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-blue-400 hover:bg-blue-50/40 transition-colors">
+              <input
+                type="file"
+                multiple
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                onChange={handleFileSelect}
+                className="hidden"
+                disabled={isUploading}
+              />
+              <ImageIcon className="w-6 h-6 text-gray-400" />
+              <span className="text-sm text-gray-600">{isUploading ? 'Uploading…' : 'Click to upload files (image, PDF, etc.)'}</span>
+            </label>
+            {uploadError && <p className="mt-2 text-xs text-red-600">{uploadError}</p>}
+
+            {formData.attachments && formData.attachments.length > 0 && (
+              <ul className="mt-4 space-y-2">
+                {formData.attachments.map((att, idx) => {
+                  const isImg = (att.type || '').startsWith('image/');
+                  return (
+                    <li key={idx} className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg p-2 pr-3">
+                      {isImg ? (
+                        <img src={resolveFileUrl(att.url)} alt={att.name} className="w-10 h-10 object-cover rounded flex-shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-5 h-5 text-gray-500" />
+                        </div>
+                      )}
+                      <a href={resolveFileUrl(att.url)} target="_blank" rel="noopener noreferrer" className="flex-1 text-sm text-blue-700 hover:underline truncate">{att.name}</a>
+                      {att.size ? <span className="text-xs text-gray-400 whitespace-nowrap">{(att.size / 1024).toFixed(0)} KB</span> : null}
+                      <button type="button" onClick={() => removeAttachment(idx)} className="p-1.5 text-red-500 hover:bg-red-50 rounded" title="Remove">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
 
           {/* Conditional Subscription Form Section - Only for PHONE category */}

@@ -292,7 +292,6 @@ export function AssetRecordForm({
                           >
                             <option value="KHEALTH">KHEALTH</option>
                             <option value="CAREVIEW">CAREVIEW</option>
-                            <option value="GLOWFIND">GLOWFIND</option>
                           </select>
                         )}
                       </td>

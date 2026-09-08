@@ -47,6 +47,14 @@ export interface ITAsset {
   isDeleted?: boolean;
   deletedAt?: string;
   disposalId?: string;
+  attachments?: AssetAttachment[];
+}
+
+export interface AssetAttachment {
+  name: string;
+  url: string;
+  type?: string;
+  size?: number;
 }
 
 export interface Subscription {

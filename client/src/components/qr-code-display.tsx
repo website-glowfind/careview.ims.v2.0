@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Download, QrCode } from 'lucide-react';
 import type { ITAsset } from '@/types/inventory';
+import { getCompanyLogo } from '@/utils/device-code';
 
 interface QRCodeDisplayProps {
   asset?: ITAsset;
@@ -23,36 +24,17 @@ export function QRCodeDisplay({
   const qrRef = useRef<HTMLDivElement>(null);
   const code = asset?.deviceCode ?? deviceCode ?? '';
 
+  // Center logo (company brand) — makes the QR look "designed" like the sample.
+  const logo = asset?.company ? getCompanyLogo(asset.company) : undefined;
+  const logoSize = Math.round(size * 0.24);
+
   const getQRCodeValue = () => {
-    if (!asset) return code;
-
-    const employeeLines: string[] = [];
-    if (asset.assignedTo) employeeLines.push(`Name: ${asset.assignedTo}`);
-    if (asset.employeeId) employeeLines.push(`ID No.: ${asset.employeeId}`);
-    if (asset.position) employeeLines.push(`Position: ${asset.position}`);
-    if (asset.department) employeeLines.push(`Department: ${asset.department}`);
-    if (asset.company) employeeLines.push(`Company: ${asset.company}`);
-    if (asset.location) employeeLines.push(`Location: ${asset.location}`);
-
-    const deviceLines: string[] = [
-      `Asset/Tag Number: ${asset.deviceCode}`,
-      `Item Description: ${asset.name}`,
-      `Brand/Model: ${asset.brand} / ${asset.model}`,
-      `Serial Number: ${asset.serialNumber}`,
-    ];
-    if (asset.specifications) deviceLines.push(`Device Specs: ${asset.specifications}`);
-    if (asset.notes) deviceLines.push(`Remarks: ${asset.notes}`);
-
-    const sections: string[] = [];
-    if (employeeLines.length > 0) {
-      sections.push('EMPLOYEE INFORMATION');
-      sections.push(...employeeLines);
-      sections.push('');
-    }
-    sections.push('DEVICE INFORMATION');
-    sections.push(...deviceLines);
-
-    return sections.join('\n');
+    const dc = asset?.deviceCode ?? code;
+    if (!dc) return code;
+    // Encode a short link to the public asset-view page. Keeps the QR simple
+    // (low density) while scanning reveals the full details served by the app.
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${origin}/asset/${encodeURIComponent(dc)}`;
   };
 
   // Download QR code as PNG
@@ -76,15 +58,7 @@ export function QRCodeDisplay({
     const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(svgBlob);
 
-    img.onload = () => {
-      // Fill white background
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw the QR code
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      
-      // Convert to PNG and download
+    const exportPng = () => {
       canvas.toBlob((blob) => {
         if (blob) {
           const downloadUrl = URL.createObjectURL(blob);
@@ -97,8 +71,35 @@ export function QRCodeDisplay({
           URL.revokeObjectURL(downloadUrl);
         }
       }, 'image/png');
-      
       URL.revokeObjectURL(url);
+    };
+
+    img.onload = () => {
+      // Fill white background
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw the QR code
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      // Draw the center logo on top (same-origin image, so canvas stays untainted)
+      if (logo) {
+        const lImg = new Image();
+        lImg.onload = () => {
+          const ls = canvas.width * 0.24;
+          const lx = (canvas.width - ls) / 2;
+          const ly = (canvas.height - ls) / 2;
+          const pad = ls * 0.12;
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(lx - pad, ly - pad, ls + pad * 2, ls + pad * 2);
+          ctx.drawImage(lImg, lx, ly, ls, ls);
+          exportPng();
+        };
+        lImg.onerror = exportPng;
+        lImg.src = logo;
+      } else {
+        exportPng();
+      }
     };
 
     img.src = url;
@@ -127,6 +128,7 @@ export function QRCodeDisplay({
           includeMargin={false}
           bgColor="#FFFFFF"
           fgColor="#000000"
+          imageSettings={logo ? { src: logo, height: logoSize, width: logoSize, excavate: true } : undefined}
         />
       </div>
 

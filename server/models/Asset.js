@@ -30,6 +30,13 @@ const assetSchema = new mongoose.Schema({
     warrantyExpiry: { type: Date },
     location: { type: String, required: true },
     notes: { type: String },
+    // Uploaded files (images, PDFs, docs) attached to this asset
+    attachments: [{
+        name: { type: String },
+        url:  { type: String },
+        type: { type: String },
+        size: { type: Number },
+    }],
     isDeleted: { type: Boolean, default: false },
     deletedAt: { type: Date },
     disposalId: { type: String },

@@ -44,7 +44,6 @@ export function DeletedDevices() {
     { id: 'all',      label: 'All Companies' },
     { id: 'KHEALTH',  label: 'KHEALTH' },
     { id: 'CAREVIEW', label: 'CAREVIEW' },
-    { id: 'GLOWFIND', label: 'GLOWFIND' },
   ];
 
   const companyBtnClass = (id: Company | 'all') => {

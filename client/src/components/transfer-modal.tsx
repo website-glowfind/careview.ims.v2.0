@@ -19,7 +19,7 @@ export function TransferModal({ asset, onTransfer, onCancel }: TransferModalProp
     }
   };
 
-  const companies: Company[] = ['KHEALTH', 'CAREVIEW', 'GLOWFIND'];
+  const companies: Company[] = ['KHEALTH', 'CAREVIEW'];
   const availableCompanies = companies.filter(c => c !== asset.company);
 
   return (

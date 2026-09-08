@@ -131,16 +131,6 @@ export function FormMasterlist() {
         >
           CAREVIEW
         </button>
-        <button
-          onClick={() => onCompanyChange('GLOWFIND')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-colors border ${
-            selectedCompany === 'GLOWFIND'
-              ? 'bg-orange-600 text-white border-orange-600'
-              : 'bg-white text-orange-600 border-orange-600 hover:bg-orange-50'
-          }`}
-        >
-          GLOWFIND
-        </button>
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200">

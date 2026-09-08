@@ -264,7 +264,6 @@ export function TransferForm({ asset, onTransfer, onCancel, currentUser, onSaveF
                       >
                         <option value="KHEALTH">KHEALTH</option>
                         <option value="CAREVIEW">CAREVIEW</option>
-                        <option value="GLOWFIND">GLOWFIND</option>
                       </select>
                     </td>
                   </tr>

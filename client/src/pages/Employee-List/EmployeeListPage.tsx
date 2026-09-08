@@ -185,7 +185,6 @@ export function EmployeeListPage() {
     { id: 'ALL',      label: 'All Companies' },
     { id: 'KHEALTH',  label: 'KHEALTH' },
     { id: 'CAREVIEW', label: 'CAREVIEW' },
-    { id: 'GLOWFIND', label: 'GLOWFIND' },
   ];
 
   // Preview grouped by company
@@ -539,7 +538,6 @@ export function EmployeeListPage() {
                 >
                   <option value="KHEALTH">KHEALTH</option>
                   <option value="CAREVIEW">CAREVIEW</option>
-                  <option value="GLOWFIND">GLOWFIND</option>
                 </select>
               </div>
 
@@ -647,7 +645,6 @@ export function EmployeeListPage() {
                 >
                   <option value="KHEALTH">KHEALTH</option>
                   <option value="CAREVIEW">CAREVIEW</option>
-                  <option value="GLOWFIND">GLOWFIND</option>
                 </select>
               </div>
 

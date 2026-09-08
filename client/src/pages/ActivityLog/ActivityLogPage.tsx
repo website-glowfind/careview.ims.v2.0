@@ -53,7 +53,6 @@ export function ActivityLog() {
     { id: 'all',      label: 'All' },
     { id: 'KHEALTH',  label: 'KHEALTH' },
     { id: 'CAREVIEW', label: 'CAREVIEW' },
-    { id: 'GLOWFIND', label: 'GLOWFIND' },
   ];
 
   const CATEGORIES: { id: HistoryCategory | 'all'; label: string }[] = [

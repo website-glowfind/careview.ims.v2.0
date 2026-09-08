@@ -1,6 +1,6 @@
 import api from "./api";
 import axios from "axios";
-import type { ITAsset } from "@/types/inventory";
+import type { ITAsset, AssetAttachment } from "@/types/inventory";
 
 const handleAxiosError = (error: any) => {
     if (axios.isAxiosError(error)) {
@@ -55,5 +55,19 @@ export const assetServices = {
         } catch (error) {
             throw handleAxiosError(error);
         }
-    }
+    },
+
+    // 5. Upload attachments (images, PDFs, docs) — returns stored file metadata
+    uploadFiles: async (files: File[]): Promise<AssetAttachment[]> => {
+        try {
+            const fd = new FormData();
+            files.forEach((f) => fd.append("files", f));
+            const response = await api.post("/uploads", fd, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            return response.data.files as AssetAttachment[];
+        } catch (error) {
+            throw handleAxiosError(error);
+        }
+    },
 };

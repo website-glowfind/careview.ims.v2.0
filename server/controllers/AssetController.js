@@ -6,6 +6,12 @@ const COMPANY_PREFIXES = { KHEALTH: 'KH', CAREVIEW: 'CV', GLOWFIND: 'GF' };
 const CATEGORY_PREFIXES = { laptop: 'LT', desktop: 'DT', monitor: 'MN', keyboard: 'KB', mouse: 'MS', printer: 'PR', server: 'SV', networking: 'NW', mobile: 'MB', 'mobile + subscription': 'MB', phone: 'PH', tablet: 'TB', other: 'OT', furniture: 'FN', appliance: 'AP', fixture: 'FX', equipment: 'EQ', vehicle: 'VH' };
 const DEVICE_CODE_PATTERN = /^[A-Z]{2}-[A-Z]{2}-(\d+)$/;
 
+// Derive a 2-letter prefix for a custom/unknown category (matches the client)
+function deriveCategoryPrefix(category) {
+  const letters = String(category || '').replace(/[^a-zA-Z]/g, '');
+  return letters.slice(0, 2).toUpperCase() || 'OT';
+}
+
 async function generateDeviceCode(company, category) {
   const allAssets = await Asset.find({}, 'deviceCode');
   let maxNumber = 0;
@@ -17,7 +23,7 @@ async function generateDeviceCode(company, category) {
     }
   });
   const companyPrefix = COMPANY_PREFIXES[company] || 'XX';
-  const categoryPrefix = CATEGORY_PREFIXES[category] || 'OT';
+  const categoryPrefix = CATEGORY_PREFIXES[category] || deriveCategoryPrefix(category);
   return `${companyPrefix}-${categoryPrefix}-${(maxNumber + 1).toString().padStart(3, '0')}`;
 }
 export const getAssetById = async (req, res) => {

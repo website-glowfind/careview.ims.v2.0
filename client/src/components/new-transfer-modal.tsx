@@ -77,7 +77,6 @@ export function NewTransferModal({ currentUser, onClose, onTransfer, onSaveFormR
     { id: 'all',      label: 'All' },
     { id: 'KHEALTH',  label: 'KHEALTH',  dot: 'bg-blue-500' },
     { id: 'CAREVIEW', label: 'CAREVIEW', dot: 'bg-green-500' },
-    { id: 'GLOWFIND', label: 'GLOWFIND', dot: 'bg-orange-500' },
   ];
 
   return (

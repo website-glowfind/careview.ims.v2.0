@@ -320,16 +320,6 @@ export function DisposalForm({ assets, currentUser, onSaveFormRecord }: Disposal
                 >
                   CAREVIEW
                 </button>
-                <button
-                  onClick={() => setCompanyFilter('GLOWFIND')}
-                  className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors border ${
-                    companyFilter === 'GLOWFIND'
-                      ? 'bg-orange-600 text-white border-orange-600'
-                      : 'bg-white text-orange-600 border-orange-600 hover:bg-orange-50'
-                  }`}
-                >
-                  GLOWFIND
-                </button>
               </div>
             </div>
 

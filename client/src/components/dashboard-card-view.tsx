@@ -113,7 +113,6 @@ export function DashboardCardView({ onEdit, onDelete, onViewDetails }: Dashboard
     { id: 'all',      label: 'All Companies' },
     { id: 'KHEALTH',  label: 'KHEALTH',  dot: 'bg-blue-500' },
     { id: 'CAREVIEW', label: 'CAREVIEW', dot: 'bg-green-500' },
-    { id: 'GLOWFIND', label: 'GLOWFIND', dot: 'bg-orange-500' },
   ];
 
   const handleView = (asset: ITAsset) => {
@@ -213,7 +212,7 @@ export function DashboardCardView({ onEdit, onDelete, onViewDetails }: Dashboard
 
       {/* ── Stat Cards ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {(['KHEALTH', 'CAREVIEW', 'GLOWFIND'] as Company[]).map(c => {
+        {(['KHEALTH', 'CAREVIEW'] as Company[]).map(c => {
           const list   = countFor(c);
           const active = list.filter(a => a.status === 'active').length;
           const color  = c === 'KHEALTH' ? 'text-blue-400' : c === 'CAREVIEW' ? 'text-green-400' : 'text-orange-400';

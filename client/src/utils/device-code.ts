@@ -32,13 +32,19 @@ const licenseSubscriptionPrefixes = {
   subscription: 'SUB',
 };
 
+// Derive a 2-letter prefix for a custom/unknown category (e.g. "projector" -> "PR")
+export function deriveCategoryPrefix(category: string): string {
+  const letters = (category || '').replace(/[^a-zA-Z]/g, '');
+  return letters.slice(0, 2).toUpperCase() || 'OT';
+}
+
 export function generateDeviceCode(
   company: Company,
   category: AssetCategory,
   existingAssets: ITAsset[]
 ): string {
   const companyPrefix = companyPrefixes[company];
-  const categoryPrefix = categoryPrefixes[category];
+  const categoryPrefix = categoryPrefixes[category] ?? deriveCategoryPrefix(category);
   
   // Find the highest number across ALL companies AND ALL categories (truly global sequential numbering)
   // Pattern matches: XX-YY-### where XX is company, YY is category, ### is the global number

@@ -151,17 +151,6 @@ export function InventoryTable({
             <span className={`w-3 h-3 rounded-full bg-green-500`}></span>
             CAREVIEW
           </button>
-          <button
-            onClick={() => onCompanyChange('GLOWFIND')}
-            className={`px-4 py-2 font-medium border-b-2 transition-colors flex items-center gap-2 ${
-              selectedCompany === 'GLOWFIND'
-                ? 'border-orange-500 text-orange-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <span className={`w-3 h-3 rounded-full bg-orange-500`}></span>
-            GLOWFIND
-          </button>
         </div>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
