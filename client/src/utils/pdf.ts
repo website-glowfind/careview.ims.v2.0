@@ -27,11 +27,21 @@ export async function generatePDFFromRef(
     const pageHeight = 297;
     const imgHeight  = (canvas.height * pageWidth) / canvas.width;
 
-    let y = 0;
-    while (y < imgHeight) {
-      if (y > 0) pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, -y, pageWidth, imgHeight);
-      y += pageHeight;
+    if (imgHeight <= pageHeight * 1.15) {
+      // Fits (or nearly fits) one page — scale onto a single page so content
+      // isn't split across the page boundary.
+      const h = Math.min(imgHeight, pageHeight);
+      const w = pageWidth * (h / imgHeight);
+      const x = (pageWidth - w) / 2;
+      pdf.addImage(imgData, 'PNG', x, 0, w, h);
+    } else {
+      // Genuinely multi-page content — slice across pages.
+      let y = 0;
+      while (y < imgHeight) {
+        if (y > 0) pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, -y, pageWidth, imgHeight);
+        y += pageHeight;
+      }
     }
 
     return pdf;

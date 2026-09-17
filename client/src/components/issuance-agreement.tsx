@@ -54,11 +54,21 @@ export function IssuanceAgreement({ asset, assetData, onClose, currentUser, onSa
       const pageHeight = 297;
       const imgHeight = (canvas.height * pageWidth) / canvas.width;
 
-      let y = 0;
-      while (y < imgHeight) {
-        if (y > 0) pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, -y, pageWidth, imgHeight);
-        y += pageHeight;
+      if (imgHeight <= pageHeight * 1.15) {
+        // The form fits (or nearly fits) one page — scale it onto a single page
+        // so nothing gets split across the page boundary (e.g. the Asset Code footer).
+        const h = Math.min(imgHeight, pageHeight);
+        const w = pageWidth * (h / imgHeight);
+        const x = (pageWidth - w) / 2;
+        pdf.addImage(imgData, 'PNG', x, 0, w, h);
+      } else {
+        // Genuinely multi-page content — slice across pages.
+        let y = 0;
+        while (y < imgHeight) {
+          if (y > 0) pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, -y, pageWidth, imgHeight);
+          y += pageHeight;
+        }
       }
 
       return pdf;
@@ -128,17 +138,19 @@ export function IssuanceAgreement({ asset, assetData, onClose, currentUser, onSa
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div ref={contentRef} className="bg-white p-8">
-            {/* Header Section */}
-            <div className="flex justify-between items-start pb-4 mb-2" style={{ borderBottom: `2px solid ${companyColor}` }}>
-              <img src={companyLogo} alt="Company Logo" className="h-16 w-auto" />
-              <div className="flex flex-col items-center gap-1">
+        <div className="flex-1 overflow-y-auto px-6 pt-2 pb-6">
+          <div ref={contentRef} className="bg-white px-8 pt-3 pb-8">
+            {/* Header Section — logo, title, and QR aligned on one row */}
+            <div className="flex justify-between items-center gap-4 pb-4 mb-6" style={{ borderBottom: `2px solid ${companyColor}` }}>
+              <img src={companyLogo} alt="Company Logo" className="h-16 w-auto flex-shrink-0" />
+              <div className="text-center">
+                <h2 className="text-base font-bold leading-tight">IT ASSET ISSUANCE AGREEMENT</h2>
+                <p className="text-xs text-gray-500 mt-1">Acknowledgement Form</p>
+              </div>
+              <div className="flex flex-col items-center gap-1 flex-shrink-0">
                 <QRCodeDisplay asset={data as ITAsset} size={90} showDownload={false} showLabel={false} />
               </div>
             </div>
-            <h2 className="text-center text-base font-bold mt-4 mb-1">IT ASSET ISSUANCE AGREEMENT</h2>
-            <p className="text-center text-xs text-gray-500 mb-6">Acknowledgement Form</p>
 
             {/* 1. Employee Information */}
             <h3 className="text-sm font-bold mb-3 pb-1" style={{ borderBottom: `2px solid ${companyColor}` }}>

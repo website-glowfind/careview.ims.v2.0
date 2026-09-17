@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Filter, FileText, Calendar, User, FileEdit, Eye } from 'lucide-react';
 import type { FormType, FormStatus, Company, FormRecord } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
@@ -6,8 +6,13 @@ import { FormViewer } from '@/components/form-viewer';
 import { useFormRecordStore } from '@/store/formRecordStore';
 
 export function FormMasterlist() {
-  const { formRecords, selectedCompany, setSelectedCompany } = useFormRecordStore();
+  const { formRecords, selectedCompany, setSelectedCompany, fetchFormRecords } = useFormRecordStore();
   const onCompanyChange = setSelectedCompany;
+
+  // Load records from the backend on mount so they persist across refreshes
+  useEffect(() => {
+    fetchFormRecords();
+  }, [fetchFormRecords]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [formTypeFilter, setFormTypeFilter] = useState<FormType | 'all'>('all');
