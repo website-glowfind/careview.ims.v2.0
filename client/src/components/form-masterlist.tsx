@@ -1,20 +1,38 @@
 import { useEffect, useState } from 'react';
-import { Search, Filter, FileText, Calendar, User, FileEdit, Eye } from 'lucide-react';
+import { Search, Filter, FileText, Calendar, User, FileEdit, Eye, Trash2 } from 'lucide-react';
 import type { FormType, FormStatus, Company, FormRecord } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
 import { FormViewer } from '@/components/form-viewer';
 import { useFormRecordStore } from '@/store/formRecordStore';
+import { useAuthStore } from '@/store/authStore';
 import { usePagination } from '@/hooks/usePagination';
 import { Pagination } from '@/components/ui/Pagination';
 
 export function FormMasterlist() {
-  const { formRecords, selectedCompany, setSelectedCompany, fetchFormRecords } = useFormRecordStore();
+  const { formRecords, selectedCompany, setSelectedCompany, fetchFormRecords, deleteFormRecord } = useFormRecordStore();
+  const isAdmin = useAuthStore((s) => s.user?.role === 'admin');
   const onCompanyChange = setSelectedCompany;
+
+  const [deletingRecord, setDeletingRecord] = useState<FormRecord | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load records from the backend on mount so they persist across refreshes
   useEffect(() => {
     fetchFormRecords();
   }, [fetchFormRecords]);
+
+  const handleDelete = async () => {
+    if (!deletingRecord?.id) return;
+    setIsDeleting(true);
+    try {
+      await deleteFormRecord(deletingRecord.id);
+      setDeletingRecord(null);
+    } catch (err: any) {
+      alert(`Failed to delete: ${err?.message ?? 'error'}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [formTypeFilter, setFormTypeFilter] = useState<FormType | 'all'>('all');
@@ -320,6 +338,15 @@ export function FormMasterlist() {
                             <Eye className="w-4 h-4" />
                           </button>
                         )}
+                        {isAdmin && (
+                          <button
+                            onClick={() => setDeletingRecord(record)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete record"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -444,7 +471,7 @@ export function FormMasterlist() {
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
                 <p className="text-sm text-yellow-800">
-                  <strong>Note:</strong> Form records are view-only and cannot be edited or deleted to ensure data integrity and audit compliance.
+                  <strong>Note:</strong> Form records are view-only and cannot be edited. Only administrators can delete records (e.g. to remove duplicates).
                 </p>
               </div>
             </div>
@@ -479,6 +506,42 @@ export function FormMasterlist() {
           formRecord={viewingForm}
           onClose={() => setViewingForm(null)}
         />
+      )}
+
+      {/* Delete Confirmation */}
+      {deletingRecord && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Delete Form Record</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-5">
+              Delete this <strong>{deletingRecord.formType}</strong> record
+              {deletingRecord.assetTag ? <> for <span className="font-mono font-semibold">{deletingRecord.assetTag}</span></> : null}
+              {deletingRecord.employeeName ? <> ({deletingRecord.employeeName})</> : null}? This cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeletingRecord(null)}
+                disabled={isDeleting}
+                className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-xl font-semibold disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

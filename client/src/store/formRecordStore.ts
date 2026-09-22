@@ -41,7 +41,12 @@ export const useFormRecordStore = create<FormRecordState>((set, get) => ({
     try {
       const res = await api.post('/form-records', record);
       const saved = mapRecord(res.data);
-      set((state) => ({ formRecords: [saved, ...state.formRecords] }));
+      // If the backend returned an existing record (duplicate), don't add it twice
+      set((state) =>
+        state.formRecords.some((r) => r.id === saved.id)
+          ? state
+          : { formRecords: [saved, ...state.formRecords] },
+      );
       return saved;
     } catch (err) {
       console.error('Failed to save form record:', err);

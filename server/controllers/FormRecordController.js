@@ -16,7 +16,20 @@ export const getFormRecords = async (req, res) => {
 
 export const createFormRecord = async (req, res) => {
   try {
-    const record = new FormRecord(req.body);
+    const data = req.body;
+
+    // Prevent duplicates: if a record for the same form type + asset tag +
+    // employee already exists, return it instead of adding another.
+    if (data.formType && data.assetTag) {
+      const existing = await FormRecord.findOne({
+        formType: data.formType,
+        assetTag: data.assetTag,
+        employeeName: data.employeeName ?? null,
+      });
+      if (existing) return res.status(200).json(existing);
+    }
+
+    const record = new FormRecord(data);
     const saved = await record.save();
     res.status(201).json(saved);
   } catch (err) {
