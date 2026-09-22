@@ -5,6 +5,8 @@ import type { HistoryAction, HistoryCategory, Company } from '@/types/inventory'
 import { getCompanyBadgeClasses } from '@/utils/device-code';
 import { useActivityLogStore } from '@/store/activityLogStore';
 import { useAssetStore } from '@/store/assetStore';
+import { usePagination } from '@/hooks/usePagination';
+import { Pagination } from '@/components/ui/Pagination';
 
 const ACTION_ICON: Record<HistoryAction, LucideIcon> = {
   added:       Plus,
@@ -83,6 +85,8 @@ export function ActivityLog() {
       (entry.details?.toLowerCase().includes(q) ?? false);
     return matchesCompany && matchesAction && matchesCategory && matchesSearch;
   });
+
+  const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filtered, 15);
 
   const formatTimestamp = (ts: string) =>
     new Date(ts).toLocaleString('en-US', {
@@ -194,7 +198,7 @@ export function ActivityLog() {
             </p>
           </div>
         ) : (
-          filtered.map(entry => {
+          pageItems.map(entry => {
             const ActionIcon = ACTION_ICON[entry.action] ?? Plus;
             return (
               <div key={entry.id} className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-[#1e2d4a] transition-colors">
@@ -253,6 +257,17 @@ export function ActivityLog() {
           })
         )}
       </div>
+
+      {filtered.length > 0 && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          label="entries"
+        />
+      )}
 
       {/* Clear confirm modal */}
       {showConfirmClear && (

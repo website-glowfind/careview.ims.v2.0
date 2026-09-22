@@ -4,6 +4,8 @@ import type { FormType, FormStatus, Company, FormRecord } from '@/types/inventor
 import { getCompanyBadgeClasses } from '@/utils/device-code';
 import { FormViewer } from '@/components/form-viewer';
 import { useFormRecordStore } from '@/store/formRecordStore';
+import { usePagination } from '@/hooks/usePagination';
+import { Pagination } from '@/components/ui/Pagination';
 
 export function FormMasterlist() {
   const { formRecords, selectedCompany, setSelectedCompany, fetchFormRecords } = useFormRecordStore();
@@ -44,9 +46,11 @@ export function FormMasterlist() {
   });
 
   // Sort by date created (newest first)
-  const sortedRecords = [...filteredRecords].sort((a, b) => 
+  const sortedRecords = [...filteredRecords].sort((a, b) =>
     new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime()
   );
+
+  const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(sortedRecords, 10);
 
   const getStatusBadgeClasses = (status: FormStatus) => {
     switch (status) {
@@ -260,7 +264,7 @@ export function FormMasterlist() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {sortedRecords.map((record) => (
+                {pageItems.map((record) => (
                   <tr key={record.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
@@ -325,12 +329,16 @@ export function FormMasterlist() {
           )}
         </div>
 
-        {/* Results count */}
+        {/* Pagination */}
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <p className="text-sm text-gray-600">
-            Showing {sortedRecords.length} of {companyFilteredRecords.length} records
-            {selectedCompany !== 'all' && ` for ${selectedCompany}`}
-          </p>
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            label="records"
+          />
         </div>
       </div>
 

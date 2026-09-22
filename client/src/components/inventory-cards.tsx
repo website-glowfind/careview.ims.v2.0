@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import type { ITAsset, AssetStatus, AssetCategory, Company, AssetType } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
+import { usePagination } from '@/hooks/usePagination';
+import { Pagination } from '@/components/ui/Pagination';
 
 interface InventoryCardsProps {
   assets: ITAsset[];
@@ -140,6 +142,8 @@ export function InventoryCards({
     return matchSearch && matchStatus && matchCategory;
   }).sort((a, b) => a.deviceCode.localeCompare(b.deviceCode));
 
+  const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filtered, 9);
+
   // Stats
   const countFor = (company: Company) => nonDeleted.filter(a => a.company === company);
 
@@ -264,11 +268,6 @@ export function InventoryCards({
         )}
       </div>
 
-      {/* Asset Count */}
-      <p className="text-sm text-gray-500 dark:text-slate-400">
-        Showing <span className="font-semibold text-gray-700 dark:text-slate-300">{filtered.length}</span> assets
-      </p>
-
       {/* Cards Grid */}
       {filtered.length === 0 ? (
         <div className="text-center py-20 text-gray-400 dark:text-slate-500">
@@ -277,7 +276,7 @@ export function InventoryCards({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map(asset => {
+          {pageItems.map(asset => {
             const Icon      = CATEGORY_ICON[asset.category] ?? Monitor;
             const iconBg    = COMPANY_ICON_BG[asset.company] ?? 'bg-gray-500/20 text-gray-400';
             const statusCls = STATUS_COLORS[asset.status] ?? 'bg-gray-500/20 text-gray-400';
@@ -400,6 +399,17 @@ export function InventoryCards({
             );
           })}
         </div>
+      )}
+
+      {filtered.length > 0 && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          label="assets"
+        />
       )}
 
       {/* Delete Modal */}

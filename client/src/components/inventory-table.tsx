@@ -3,6 +3,8 @@ import { Search, Filter, Edit, Trash2, Eye, AlertTriangle, ArrowRightLeft, Downl
 import type { ITAsset, AssetStatus, AssetCategory, Company, AssetType } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
 import { exportToCSV, exportDetailedDevicesPDF } from '@/utils/exportUtils';
+import { usePagination } from '@/hooks/usePagination';
+import { Pagination } from '@/components/ui/Pagination';
 
 interface InventoryTableProps {
   assets: ITAsset[];
@@ -100,6 +102,8 @@ export function InventoryTable({
       return matchesSearch && matchesStatus && matchesCategory;
     })
     .sort((a, b) => a.deviceCode.localeCompare(b.deviceCode));
+
+  const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filteredAssets, 10);
 
   const getStatusBadgeColor = (status: AssetStatus) => {
     const colors: Record<AssetStatus, string> = {
@@ -209,7 +213,7 @@ export function InventoryTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {filteredAssets.map((asset) => (
+            {pageItems.map((asset) => (
               <tr key={asset._id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 font-mono font-bold text-blue-700">{asset.deviceCode}</td>
                 <td className="px-6 py-4">
@@ -251,10 +255,17 @@ export function InventoryTable({
         </table>
       </div>
 
-      {/* Footer / Pagination Placeholder */}
-      <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center text-xs text-gray-500">
-        <span>Showing {filteredAssets.length} assets</span>
-        <div className="flex gap-2">
+      {/* Footer: pagination + export */}
+      <div className="p-4 bg-gray-50 border-t border-gray-200 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          label="assets"
+        />
+        <div className="flex gap-2 text-xs text-gray-500">
            <button onClick={() => exportToCSV(filteredAssets, 'inventory')} className="flex items-center gap-1 hover:text-blue-600">
              <Download size={14}/> CSV
            </button>

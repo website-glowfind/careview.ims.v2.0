@@ -3,6 +3,8 @@ import { RefreshCw, Trash2, Search, Filter } from 'lucide-react';
 import { useAssetStore } from '@/store/assetStore';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
 import type { Company } from '@/types/inventory';
+import { usePagination } from '@/hooks/usePagination';
+import { Pagination } from '@/components/ui/Pagination';
 
 export function DeletedDevices() {
   const { deletedAssets, selectedCompany, setSelectedCompany, restoreAsset, fetchDeletedAssets } = useAssetStore();
@@ -25,6 +27,8 @@ export function DeletedDevices() {
       asset.brand.toLowerCase().includes(q);
     return matchesCompany && matchesSearch;
   });
+
+  const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filteredAssets, 10);
 
   const handleRestore = async (id: string) => {
     setRestoringId(id);
@@ -141,7 +145,7 @@ export function DeletedDevices() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-[#1e3a5f]">
-                {filteredAssets.map(asset => (
+                {pageItems.map(asset => (
                   <tr key={asset._id} className="hover:bg-gray-50 dark:hover:bg-[#1e2d4a] transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="font-mono text-sm font-semibold text-gray-900 dark:text-slate-200">
@@ -181,6 +185,19 @@ export function DeletedDevices() {
             </table>
           )}
         </div>
+
+        {filteredAssets.length > 0 && (
+          <div className="p-4 border-t border-gray-200 dark:border-[#1e3a5f]">
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              total={total}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              label="devices"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

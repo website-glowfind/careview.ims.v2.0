@@ -6,6 +6,8 @@ import type { Subscription } from '@/types/subscription';
 import { AssetRecordForm } from '@/components/asset-record-form';
 import { employeeServices } from '@/services/employeeServices';
 import { useAuthStore } from '@/store/authStore';
+import { usePagination } from '@/hooks/usePagination';
+import { Pagination } from '@/components/ui/Pagination';
 
 interface SubscriptionListProps {
   company: Company | 'ALL';
@@ -499,6 +501,8 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
     return matchesSearch && matchesCompany && matchesCategory && matchesStatus;
   });
 
+  const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filteredSubscriptions, 10);
+
   // Get unique categories
   const categories = ['All', ...Array.from(new Set(subscriptions.map(s => s.category).filter(Boolean)))];
   const statuses = ['All', 'Active', 'Expired', 'Pending', 'Cancelled'];
@@ -612,7 +616,7 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
                   </td>
                 </tr>
               ) : (
-                filteredSubscriptions.map((subscription) => {
+                pageItems.map((subscription) => {
                   const isExpiringSoon = new Date(subscription.renewalDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
                   const daysUntilRenewal = Math.ceil((new Date(subscription.renewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                   
@@ -712,6 +716,18 @@ export function SubscriptionList({ company, onCompanyChange, subscriptions: prop
             </tbody>
           </table>
         </div>
+        {filteredSubscriptions.length > 0 && (
+          <div className="px-6 py-4 border-t border-gray-200">
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              total={total}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              label="subscriptions"
+            />
+          </div>
+        )}
       </div>
 
       {/* Add Subscription Modal */}
