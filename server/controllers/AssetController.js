@@ -12,8 +12,24 @@ function deriveCategoryPrefix(category) {
   return letters.slice(0, 2).toUpperCase() || 'OT';
 }
 
-async function generateDeviceCode(company, category) {
+async function generateDeviceCode(company, category, assetType) {
+  const companyPrefix = COMPANY_PREFIXES[company] || 'XX';
   const allAssets = await Asset.find({}, 'deviceCode');
+
+  // General asset registers (Furniture, etc.) use a fixed 'FN' prefix with its
+  // own 4-digit sequence shared across companies — independent of the global IT
+  // numbering. Keeps furniture codes clean (KH-FN-0007 / CV-FN-0008 …).
+  if (assetType === 'General') {
+    const fnPattern = /^[A-Z]{2}-FN-(\d+)$/;
+    let maxFn = 0;
+    allAssets.forEach(a => {
+      const m = a.deviceCode?.match(fnPattern);
+      if (m) { const n = parseInt(m[1], 10); if (n > maxFn) maxFn = n; }
+    });
+    return `${companyPrefix}-FN-${(maxFn + 1).toString().padStart(4, '0')}`;
+  }
+
+  // IT assets: global sequential numbering across all company/category prefixes.
   let maxNumber = 0;
   allAssets.forEach(asset => {
     const match = asset.deviceCode?.match(DEVICE_CODE_PATTERN);
@@ -22,7 +38,6 @@ async function generateDeviceCode(company, category) {
       if (num > maxNumber) maxNumber = num;
     }
   });
-  const companyPrefix = COMPANY_PREFIXES[company] || 'XX';
   const categoryPrefix = CATEGORY_PREFIXES[category] || deriveCategoryPrefix(category);
   return `${companyPrefix}-${categoryPrefix}-${(maxNumber + 1).toString().padStart(3, '0')}`;
 }
@@ -51,7 +66,7 @@ export const getAssets = async (req, res) => {
 export const createAsset = async (req, res) => {
     try {
         const assetData = req.body;
-        assetData.deviceCode = await generateDeviceCode(assetData.company, assetData.category);
+        assetData.deviceCode = await generateDeviceCode(assetData.company, assetData.category, assetData.assetType);
         const newAsset = await Asset.create(assetData);
         res.status(201).json(newAsset);
     } catch (error) {
@@ -132,7 +147,7 @@ export const addAsset = async (req, res) => {
     try {
         const { assetData, subscriptionData } = req.body;
 
-        assetData.deviceCode = await generateDeviceCode(assetData.company, assetData.category);
+        assetData.deviceCode = await generateDeviceCode(assetData.company, assetData.category, assetData.assetType);
         const newAsset = await Asset.create(assetData);
 
         if (assetData.category === 'mobile + subscription' && subscriptionData) {

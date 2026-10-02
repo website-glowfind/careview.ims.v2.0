@@ -3,6 +3,8 @@ import { LayoutList, LayoutGrid, Plus } from 'lucide-react';
 import { InventoryTable } from '@/components/inventory-table';
 import { InventoryCards } from '@/components/inventory-cards';
 import { FurnitureInventory } from '@/components/furniture-inventory';
+import { FurnitureForm } from '@/components/furniture-form';
+import { FurnitureDetails } from '@/components/furniture-details';
 import type { FurnitureImportRow, ImportResult } from '@/components/furniture-upload-modal';
 import { useAssetStore } from '@/store/assetStore';
 import { useAuthStore } from '@/store/authStore';
@@ -103,6 +105,13 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embed
       setShowForm(true);
       setViewingAsset(undefined);
     }
+  };
+
+  // Edit from the full-page Furniture detail — keep the detail open underneath so
+  // we return to it (refreshed) after save/cancel instead of the list.
+  const handleFurnitureEdit = (asset: ITAsset) => {
+    setEditingAsset(asset);
+    setShowForm(true);
   };
 
   const handleTransfer = (asset: ITAsset) => {
@@ -224,7 +233,9 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embed
 
     setShowForm(false);
     setEditingAsset(undefined);
-    setViewingAsset(undefined);
+    // For Furniture, keep the detail page open so we return to it (refreshed from
+    // the store) after editing; IT closes its details modal as before.
+    if (assetType !== 'General') setViewingAsset(undefined);
 
     // Compute field-level changes
     const fieldChanges: FieldChange[] = [];
@@ -330,19 +341,29 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embed
   return (
     <div className="space-y-6">
       {assetType === 'General' ? (
-        <FurnitureInventory
-          assets={visibleAssets}
-          selectedCompany={selectedCompany}
-          onCompanyChange={setSelectedCompany}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onViewDetails={handleView}
-          onTransfer={handleTransfer}
-          onAdd={handleAdd}
-          onImport={handleImportFurniture}
-          isAdmin={isAdmin}
-          canEdit={canEdit}
-        />
+        viewingAsset ? (
+          <FurnitureDetails
+            asset={viewingAsset}
+            onClose={handleViewClose}
+            onEdit={handleFurnitureEdit}
+            isAdmin={isAdmin}
+            canEdit={canEdit}
+          />
+        ) : (
+          <FurnitureInventory
+            assets={visibleAssets}
+            selectedCompany={selectedCompany}
+            onCompanyChange={setSelectedCompany}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onViewDetails={handleView}
+            onTransfer={handleTransfer}
+            onAdd={handleAdd}
+            onImport={handleImportFurniture}
+            isAdmin={isAdmin}
+            canEdit={canEdit}
+          />
+        )
       ) : (
       <>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -401,22 +422,34 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embed
       </>
       )}
       {showForm && canEdit && (
-        <AssetForm
-          asset={editingAsset}
-          assets={assets}
-          categories={categories}
-          onAddCategory={handleAddCategory}
-          onDeleteCategory={handleDeleteCategory}
-          defaultCategories={defaultCategories}
-          onSave={handleUpdateAsset}
-          onCancel={handleFormCancel}
-          onBack={editingAsset ? handleFormBack : undefined}
-          currentUser={user?.name}
-          onSaveFormRecord={addFormRecord}
-          assetType={assetType}
-        />
+        assetType === 'General' ? (
+          <FurnitureForm
+            asset={editingAsset}
+            assets={assets}
+            categories={categories}
+            onSave={handleUpdateAsset}
+            onCancel={handleFormCancel}
+            onBack={editingAsset ? handleFormBack : undefined}
+            currentUser={user?.name}
+          />
+        ) : (
+          <AssetForm
+            asset={editingAsset}
+            assets={assets}
+            categories={categories}
+            onAddCategory={handleAddCategory}
+            onDeleteCategory={handleDeleteCategory}
+            defaultCategories={defaultCategories}
+            onSave={handleUpdateAsset}
+            onCancel={handleFormCancel}
+            onBack={editingAsset ? handleFormBack : undefined}
+            currentUser={user?.name}
+            onSaveFormRecord={addFormRecord}
+            assetType={assetType}
+          />
+        )
       )}
-      {viewingAsset && (
+      {viewingAsset && assetType !== 'General' && (
         <AssetDetails
           asset={viewingAsset}
           onClose={handleViewClose}

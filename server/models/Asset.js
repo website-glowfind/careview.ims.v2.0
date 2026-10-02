@@ -20,7 +20,13 @@ const assetSchema = new mongoose.Schema({
         default: 'available'
     },
     // Physical condition (used by Furniture / general asset registers)
-    condition: { type: String, enum: ['New', 'Good', 'Fair', 'Damaged'] },
+    condition: { type: String, enum: ['New', 'Good', 'Fair', 'Poor', 'Damaged'] },
+    // Furniture / general-asset extra details captured by the dedicated wizard
+    // (type, description, material, color, dimensions, quantity, unit, supplier,
+    //  poNumber, invoiceNumber, acquisitionCost, currency, warranty, dateAssigned,
+    //  siteBranch, building, floor, roomArea, specificLocation, conditionRemarks,
+    //  lastInspectionDate, inspectedBy, documentType)
+    furniture: { type: mongoose.Schema.Types.Mixed },
     assignedTo: { type: String },
     employeeId: { type: String },
     position: { type: String },

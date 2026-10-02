@@ -36,7 +36,8 @@ export interface ITAsset {
   serialNumber: string;
   specifications?: string;
   status: AssetStatus;
-  condition?: 'New' | 'Good' | 'Fair' | 'Damaged';
+  condition?: 'New' | 'Good' | 'Fair' | 'Poor' | 'Damaged';
+  furniture?: FurnitureDetails;
   assignedTo?: string;
   employeeId?: string;
   position?: string;
@@ -56,6 +57,33 @@ export interface AssetAttachment {
   url: string;
   type?: string;
   size?: number;
+}
+
+/** Extra details captured by the dedicated Furniture (general asset) wizard. */
+export interface FurnitureDetails {
+  type?: string;
+  description?: string;
+  material?: string;
+  color?: string;
+  dimensions?: string;
+  quantity?: number;
+  unit?: string;
+  supplier?: string;
+  poNumber?: string;
+  invoiceNumber?: string;
+  acquisitionCost?: number;
+  currency?: string;
+  warranty?: boolean;
+  dateAssigned?: string;
+  siteBranch?: string;
+  building?: string;
+  floor?: string;
+  roomArea?: string;
+  specificLocation?: string;
+  conditionRemarks?: string;
+  lastInspectionDate?: string;
+  inspectedBy?: string;
+  documentType?: string;
 }
 
 export interface Subscription {

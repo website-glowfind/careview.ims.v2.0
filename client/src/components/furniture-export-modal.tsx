@@ -133,7 +133,7 @@ export function FurnitureExportModal({ assets, onClose }: Props) {
             </div>
             <div><Label>Condition</Label>
               <select value={condition} onChange={(e) => setCondition(e.target.value)} className={selectCls}>
-                <option value="all">All Conditions</option><option>New</option><option>Good</option><option>Fair</option><option>Damaged</option>
+                <option value="all">All Conditions</option><option>New</option><option>Good</option><option>Fair</option><option>Poor</option><option>Damaged</option>
               </select>
             </div>
             <div><Label>Department</Label>
