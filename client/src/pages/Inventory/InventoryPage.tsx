@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { LayoutList, LayoutGrid, Plus } from 'lucide-react';
 import { InventoryTable } from '@/components/inventory-table';
 import { InventoryCards } from '@/components/inventory-cards';
+import { FurnitureInventory } from '@/components/furniture-inventory';
+import type { FurnitureImportRow, ImportResult } from '@/components/furniture-upload-modal';
 import { useAssetStore } from '@/store/assetStore';
 import { useAuthStore } from '@/store/authStore';
 import type { ITAsset, Company, FieldChange, AssetType } from '@/types/inventory';
@@ -20,9 +22,15 @@ interface InventoryPageProps {
   assetType?: AssetType;
   pageTitle?: string;
   pageSubtitle?: string;
+  /** Rendered inside the IT Assets tabbed module — hides the Add button + view toggle (Add is its own tab) */
+  embedded?: boolean;
+  /** Open the Add Asset form on mount (used by the "Add Assets" tab) */
+  autoOpenForm?: boolean;
+  /** Called when the auto-opened form is closed, so the parent can switch back to the Inventory tab */
+  onRequestCloseForm?: () => void;
 }
 
-export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle }: InventoryPageProps) {
+export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embedded = false, autoOpenForm = false, onRequestCloseForm }: InventoryPageProps) {
   const {
     assets,
     selectedCompany,
@@ -68,6 +76,16 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle }: Inv
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
+
+  // "Add Assets" tab: open the form immediately on mount
+  useEffect(() => {
+    if (autoOpenForm && canEdit) {
+      setEditingAsset(undefined);
+      setViewingAsset(undefined);
+      setShowForm(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenForm]);
 
   // Only show assets that belong to this page's type (legacy assets w/o a type are IT)
   const visibleAssets = assets.filter(a => (a.assetType ?? 'IT') === assetType);
@@ -153,6 +171,7 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle }: Inv
   const handleFormCancel = () => {
     setShowForm(false);
     setEditingAsset(undefined);
+    if (autoOpenForm) onRequestCloseForm?.();
   };
 
   const handleFormBack = () => {
@@ -188,6 +207,7 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle }: Inv
         details: `${updatedAsset.brand} ${updatedAsset.model} — ${updatedAsset.category}`,
         performedBy: user?.name,
       });
+      if (autoOpenForm) onRequestCloseForm?.();
       return;
     }
 
@@ -239,6 +259,56 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle }: Inv
     });
   };
 
+  // Bulk import furniture from Excel/CSV (asset codes auto-generated server-side)
+  const handleImportFurniture = async (rows: FurnitureImportRow[]): Promise<ImportResult> => {
+    const errors: string[] = [];
+    let created = 0;
+    const today = new Date().toISOString().slice(0, 10);
+
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      const line = `Row ${i + 2}`; // +2: header row + 1-based
+      if (!r.name || !r.category || !r.company) {
+        errors.push(`${line}: missing Furniture Name, Category, or Company — skipped`);
+        continue;
+      }
+      try {
+        await addAsset({
+          name: r.name,
+          category: r.category,
+          company: r.company,
+          brand: r.brand || '',
+          model: r.model || '',
+          serialNumber: r.serialNumber || '',
+          status: (r.status as ITAsset['status']) || 'available',
+          condition: r.condition || undefined,
+          assignedTo: r.assignedTo || '',
+          department: r.department || '',
+          location: r.location || 'N/A',
+          purchaseDate: r.purchaseDate || today,
+          notes: r.notes || '',
+          assetType: 'General',
+        });
+        created++;
+      } catch (err: any) {
+        errors.push(`${line} (${r.name}): ${err.message}`);
+      }
+    }
+
+    if (created > 0) {
+      addHistoryEntry({
+        action: 'added',
+        category: 'asset',
+        deviceCode: 'BULK',
+        deviceName: `${created} furniture asset${created !== 1 ? 's' : ''} imported`,
+        company: (rows.find((r) => r.company)?.company as Company) || 'KHEALTH',
+        details: `Excel import — ${created} created${errors.length ? `, ${errors.length} skipped/failed` : ''}`,
+        performedBy: user?.name,
+      });
+    }
+    return { created, failed: rows.length - created, errors };
+  };
+
   const handleViewModeChange = (mode: 'table' | 'cards') => {
     setViewMode(mode);
     localStorage.setItem('inventoryViewMode', mode);
@@ -259,14 +329,30 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle }: Inv
 
   return (
     <div className="space-y-6">
+      {assetType === 'General' ? (
+        <FurnitureInventory
+          assets={visibleAssets}
+          selectedCompany={selectedCompany}
+          onCompanyChange={setSelectedCompany}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onViewDetails={handleView}
+          onTransfer={handleTransfer}
+          onAdd={handleAdd}
+          onImport={handleImportFurniture}
+          isAdmin={isAdmin}
+          canEdit={canEdit}
+        />
+      ) : (
+      <>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
           <p className="text-gray-600 dark:text-slate-400 mt-1">{subtitle}</p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Add Asset */}
-          {canEdit && (
+          {/* Add Asset (hidden in the tabbed module — "Add Assets" is its own tab) */}
+          {canEdit && !embedded && (
             <button
               onClick={handleAdd}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
@@ -276,7 +362,7 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle }: Inv
             </button>
           )}
           {/* View toggle */}
-          <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-[#1e2d4a] rounded-xl">
+          <div className={`items-center gap-1 p-1 bg-gray-100 dark:bg-[#1e2d4a] rounded-xl ${embedded ? 'hidden' : 'flex'}`}>
             <button
               onClick={() => handleViewModeChange('table')}
               title="Table view"
@@ -311,6 +397,8 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle }: Inv
         <InventoryCards {...sharedProps} />
       ) : (
         <InventoryTable {...sharedProps} />
+      )}
+      </>
       )}
       {showForm && canEdit && (
         <AssetForm

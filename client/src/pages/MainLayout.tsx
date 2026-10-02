@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { SidebarMenu } from '@/components/customUI/SideBarMenu';
-import { Dashboard } from './Dashboard'; // Yung current dashboard mo
-import { InventoryPage } from '@/pages/Inventory/InventoryPage'; // Yung ginawa nating table page
-import { useAuthStore } from '@/store/authStore';
-import { LogOut, Sun, Moon, User } from 'lucide-react';
-import { useThemeStore } from '@/store/themeStore';
+import { TopBar } from '@/components/customUI/TopBar';
+import { ModuleHub } from '@/components/ModuleHub';
+import { ModulePageHeader, ModuleSetupPlaceholder } from '@/components/customUI/ModulePageHeader';
+import { getModuleForView } from '@/config/modules';
+import { InventoryPage } from '@/pages/Inventory/InventoryPage';
+import { ITOverviewTab } from '@/pages/Inventory/ITOverviewTab';
+import { ITExportReportsTab } from '@/pages/Inventory/ITExportReportsTab';
 import { FormMasterlistPage } from './Form-Masterlist/FormMasterListPage';
 import { SubscriptionPage } from './Subscripton/SubscriptionPage';
 import { DeletedDevices } from './Deleted-Device/DeletedDevicePage';
@@ -14,70 +15,50 @@ import { UserManagement } from './User-Management/UserManagement';
 import { EmployeeListPage } from './Employee-List/EmployeeListPage';
 
 export default function MainLayout() {
-  const [currentView, setCurrentView] = useState('dashboard');
-    const { user, logout } = useAuthStore();
-    const { isDark, toggleDark } = useThemeStore();
+  const [currentView, setCurrentView] = useState('hub');
+  const goHub = () => setCurrentView('hub');
+
   const renderView = () => {
+    const mod = getModuleForView(currentView);
+    if (mod?.upcoming) return <ModuleSetupPlaceholder view={currentView} />;
+
     switch (currentView) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'inventory':
-        return <InventoryPage assetType="IT" />;
-      case 'asset-list':
-        return <InventoryPage assetType="General" />;
-      case 'subscriptions':
-        return <SubscriptionPage />;
-      case 'deleted':
-        return <DeletedDevices />;
-      case 'history':
-        return <ActivityLog />;
-      case 'employees':
-        return <EmployeeListPage />;
-      case 'form-masterlist':
-        return <FormMasterlistPage />;
-      case 'disposal':
-        return <DisposalFormPage />;
-      case 'users':
-        return <UserManagement />;
-      default:
-        return <Dashboard />;
+      // ── IT Assets module tabs ──────────────────────────────────────
+      case 'inventory':       return <InventoryPage assetType="IT" embedded />;
+      case 'add':             return (
+        <InventoryPage assetType="IT" embedded autoOpenForm onRequestCloseForm={() => setCurrentView('inventory')} />
+      );
+      case 'subscriptions':   return <SubscriptionPage />;
+      case 'dashboard':       return <ITOverviewTab />;
+      case 'export':          return <ITExportReportsTab />;
+      // ───────────────────────────────────────────────────────────────
+      case 'furniture':       return <InventoryPage assetType="General" />;
+      case 'deleted':         return <DeletedDevices />;
+      case 'history':         return <ActivityLog />;
+      case 'employees':       return <EmployeeListPage />;
+      case 'form-masterlist': return <FormMasterlistPage />;
+      case 'disposal':        return <DisposalFormPage />;
+      case 'users':           return <UserManagement />;
+      default:                return null;
     }
   };
 
-  return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-[#0f1729] transition-colors duration-300">
-      <SidebarMenu currentView={currentView} onViewChange={setCurrentView} />
-      <div className="flex-1 overflow-y-auto">
-        <header className="bg-white dark:bg-[#0d1535] shadow-sm px-8 py-4 flex justify-end border-b border-gray-200 dark:border-[#1e3a5f] transition-colors duration-300">
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600 dark:text-slate-300 font-medium">
-              Hello, <span className="text-blue-600 dark:text-blue-400">{user?.name}</span>
-            </span>
-            {/* Dark mode toggle */}
-            <button
-              onClick={toggleDark}
-              className="p-2 rounded-lg text-gray-500 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-[#1e2d4a] transition-colors"
-              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-            <button
-              onClick={() => logout()}
-              className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-2 rounded-lg transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </button>
-          </div>
-        </header>
-        <header className="h-16 bg-white dark:bg-[#0d1535] border-b border-gray-200 dark:border-[#1e3a5f] flex items-center px-8 text-sm font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest transition-colors duration-300">
-          IMS / {currentView}
-        </header>
-
-        <main className="p-8">
-          {renderView()}
-        </main>
+  if (currentView === 'hub') {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0f1729] transition-colors duration-300">
+        <TopBar currentView={currentView} onModulesClick={goHub} />
+        <ModuleHub onOpen={setCurrentView} />
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0f1729] transition-colors duration-300">
+      <TopBar currentView={currentView} onModulesClick={goHub} />
+      <ModulePageHeader view={currentView} onBack={goHub} onSelectTab={setCurrentView} />
+      <main className="max-w-7xl mx-auto px-6 lg:px-10 py-8">
+        {renderView()}
+      </main>
     </div>
   );
 }

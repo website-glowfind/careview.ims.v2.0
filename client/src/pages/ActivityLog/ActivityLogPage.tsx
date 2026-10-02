@@ -7,6 +7,8 @@ import { useActivityLogStore } from '@/store/activityLogStore';
 import { useAssetStore } from '@/store/assetStore';
 import { usePagination } from '@/hooks/usePagination';
 import { Pagination } from '@/components/ui/Pagination';
+import { AssetCategoryBar } from '@/components/ui/AssetCategoryBar';
+import { registerFromDeviceCode, type RegisterId } from '@/utils/assetRegister';
 
 const ACTION_ICON: Record<HistoryAction, LucideIcon> = {
   added:       Plus,
@@ -49,6 +51,7 @@ export function ActivityLog() {
   const [searchQuery, setSearchQuery]       = useState('');
   const [actionFilter, setActionFilter]     = useState<HistoryAction | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<HistoryCategory | 'all'>('all');
+  const [registerFilter, setRegisterFilter] = useState<RegisterId>('all');
   const [showConfirmClear, setShowConfirmClear] = useState(false);
 
   const COMPANIES: { id: Company | 'all'; label: string }[] = [
@@ -83,8 +86,16 @@ export function ActivityLog() {
       entry.deviceCode.toLowerCase().includes(q) ||
       entry.deviceName.toLowerCase().includes(q) ||
       (entry.details?.toLowerCase().includes(q) ?? false);
-    return matchesCompany && matchesAction && matchesCategory && matchesSearch;
+    const matchesRegister = registerFilter === 'all' || registerFromDeviceCode(entry.deviceCode) === registerFilter;
+    return matchesCompany && matchesAction && matchesCategory && matchesSearch && matchesRegister;
   });
+
+  const registerCounts = history.reduce<Record<string, number>>((acc, e) => {
+    const r = registerFromDeviceCode(e.deviceCode);
+    acc[r] = (acc[r] ?? 0) + 1;
+    acc.all = (acc.all ?? 0) + 1;
+    return acc;
+  }, {});
 
   const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filtered, 15);
 
@@ -96,6 +107,8 @@ export function ActivityLog() {
 
   return (
     <div className="space-y-6">
+      <AssetCategoryBar value={registerFilter} onChange={setRegisterFilter} counts={registerCounts} />
+
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>

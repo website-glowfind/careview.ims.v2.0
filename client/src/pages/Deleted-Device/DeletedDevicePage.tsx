@@ -5,6 +5,8 @@ import { getCompanyBadgeClasses } from '@/utils/device-code';
 import type { Company } from '@/types/inventory';
 import { usePagination } from '@/hooks/usePagination';
 import { Pagination } from '@/components/ui/Pagination';
+import { AssetCategoryBar } from '@/components/ui/AssetCategoryBar';
+import { assetRegisterId, type RegisterId } from '@/utils/assetRegister';
 
 export function DeletedDevices() {
   const { deletedAssets, selectedCompany, setSelectedCompany, restoreAsset, fetchDeletedAssets } = useAssetStore();
@@ -12,6 +14,7 @@ export function DeletedDevices() {
   const [searchQuery, setSearchQuery]   = useState('');
   const [showFilters, setShowFilters]   = useState(false);
   const [restoringId, setRestoringId]   = useState<string | null>(null);
+  const [registerFilter, setRegisterFilter] = useState<RegisterId>('all');
 
   useEffect(() => {
     fetchDeletedAssets();
@@ -25,8 +28,16 @@ export function DeletedDevices() {
       asset.deviceCode.toLowerCase().includes(q) ||
       asset.serialNumber.toLowerCase().includes(q) ||
       asset.brand.toLowerCase().includes(q);
-    return matchesCompany && matchesSearch;
+    const matchesRegister = registerFilter === 'all' || assetRegisterId(asset) === registerFilter;
+    return matchesCompany && matchesSearch && matchesRegister;
   });
+
+  const registerCounts = (deletedAssets ?? []).reduce<Record<string, number>>((acc, a) => {
+    const r = assetRegisterId(a);
+    acc[r] = (acc[r] ?? 0) + 1;
+    acc.all = (acc.all ?? 0) + 1;
+    return acc;
+  }, {});
 
   const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filteredAssets, 10);
 
@@ -60,6 +71,8 @@ export function DeletedDevices() {
 
   return (
     <div className="space-y-6">
+      <AssetCategoryBar value={registerFilter} onChange={setRegisterFilter} counts={registerCounts} />
+
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Deleted Devices</h1>
         <p className="text-gray-600 dark:text-slate-400 mt-1">View and restore soft-deleted assets</p>

@@ -36,6 +36,7 @@ export interface ITAsset {
   serialNumber: string;
   specifications?: string;
   status: AssetStatus;
+  condition?: 'New' | 'Good' | 'Fair' | 'Damaged';
   assignedTo?: string;
   employeeId?: string;
   position?: string;

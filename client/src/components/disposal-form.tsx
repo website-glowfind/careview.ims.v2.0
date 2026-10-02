@@ -4,6 +4,8 @@ import type { ITAsset, FormRecord, Company } from '@/types/inventory';
 import { getCompanyBadgeClasses, getCompanyLogo, getCompanyHexColor, getCompanyBgClass } from '@/utils/device-code';
 import { downloadPDF, printPDF } from '@/utils/pdf';
 import { employeeServices } from '@/services/employeeServices';
+import { AssetCategoryBar } from '@/components/ui/AssetCategoryBar';
+import { assetRegisterId, type RegisterId } from '@/utils/assetRegister';
 
 interface DisposalFormProps {
   assets: ITAsset[];
@@ -46,6 +48,7 @@ export function DisposalForm({ assets, currentUser, onSaveFormRecord }: Disposal
   const [employeeLocation, setEmployeeLocation] = useState('');
   const [isBlankForm, setIsBlankForm] = useState(false);
   const [companyFilter, setCompanyFilter] = useState<string>('ALL');
+  const [registerFilter, setRegisterFilter] = useState<RegisterId>('all');
 
   // Blank form editable fields
   const [blankFormData, setBlankFormData] = useState({
@@ -76,8 +79,17 @@ export function DisposalForm({ assets, currentUser, onSaveFormRecord }: Disposal
       asset.assignedTo?.toLowerCase().includes(query)
     );
     const matchesCompany = companyFilter === 'ALL' || asset.company === companyFilter;
-    return matchesSearch && matchesCompany;
+    const matchesRegister = registerFilter === 'all' || assetRegisterId(asset) === registerFilter;
+    return matchesSearch && matchesCompany && matchesRegister;
   });
+
+  // Counts per asset register (for the category bar)
+  const registerCounts = assets.reduce<Record<string, number>>((acc, a) => {
+    const r = assetRegisterId(a);
+    acc[r] = (acc[r] ?? 0) + 1;
+    acc.all = (acc.all ?? 0) + 1;
+    return acc;
+  }, {});
 
   // Auto-update employee information when assets change
   useEffect(() => {
@@ -275,6 +287,13 @@ export function DisposalForm({ assets, currentUser, onSaveFormRecord }: Disposal
 
   return (
     <div>
+      <AssetCategoryBar
+        value={registerFilter}
+        onChange={setRegisterFilter}
+        counts={registerCounts}
+        className="mb-6"
+      />
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Asset Disposal Form</h1>
         <p className="text-gray-600">Create disposal forms for IT assets with proper documentation</p>
@@ -334,7 +353,7 @@ export function DisposalForm({ assets, currentUser, onSaveFormRecord }: Disposal
               />
             </div>
 
-            <div className="space-y-2 max-h-96 overflow-y-auto">
+            <div className="space-y-2 max-h-[calc(100vh-320px)] min-h-[240px] overflow-y-auto pr-1">
               {filteredAssets.map((asset) => (
                 <div
                   key={asset._id}

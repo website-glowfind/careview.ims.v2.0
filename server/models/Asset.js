@@ -19,6 +19,8 @@ const assetSchema = new mongoose.Schema({
         enum: ['active', 'in-maintenance', 'in-storage', 'available', 'disposed'],
         default: 'available'
     },
+    // Physical condition (used by Furniture / general asset registers)
+    condition: { type: String, enum: ['New', 'Good', 'Fair', 'Damaged'] },
     assignedTo: { type: String },
     employeeId: { type: String },
     position: { type: String },

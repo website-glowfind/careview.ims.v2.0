@@ -97,6 +97,7 @@ setFormData({
         warrantyExpiry: asset.warrantyExpiry ? asset.warrantyExpiry.split('T')[0] : '',
         location: asset.location,
         notes: asset.notes || '',
+        condition: asset.condition,
         attachments: asset.attachments || [],
       });
       setPreviewCode(asset.deviceCode);
@@ -553,6 +554,25 @@ setFormData({
                   placeholder={isGeneral ? 'Optional' : 'e.g., SN123456789'}
                 />
               </div>
+
+              {/* Condition (general assets) */}
+              {isGeneral && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Condition</label>
+                  <select
+                    name="condition"
+                    value={formData.condition ?? ''}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">Select condition</option>
+                    <option value="New">New</option>
+                    <option value="Good">Good</option>
+                    <option value="Fair">Fair</option>
+                    <option value="Damaged">Damaged</option>
+                  </select>
+                </div>
+              )}
 
               {/* Specifications */}
               <div className="md:col-span-2">

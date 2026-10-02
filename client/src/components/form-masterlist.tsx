@@ -7,6 +7,8 @@ import { useFormRecordStore } from '@/store/formRecordStore';
 import { useAuthStore } from '@/store/authStore';
 import { usePagination } from '@/hooks/usePagination';
 import { Pagination } from '@/components/ui/Pagination';
+import { AssetCategoryBar } from '@/components/ui/AssetCategoryBar';
+import { assetRegisterId, type RegisterId } from '@/utils/assetRegister';
 
 export function FormMasterlist() {
   const { formRecords, selectedCompany, setSelectedCompany, fetchFormRecords, deleteFormRecord } = useFormRecordStore();
@@ -37,6 +39,7 @@ export function FormMasterlist() {
   const [showFilters, setShowFilters] = useState(false);
   const [formTypeFilter, setFormTypeFilter] = useState<FormType | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<FormStatus | 'all'>('all');
+  const [registerFilter, setRegisterFilter] = useState<RegisterId>('all');
   const [selectedRecord, setSelectedRecord] = useState<FormRecord | null>(null);
   const [viewingForm, setViewingForm] = useState<FormRecord | null>(null);
 
@@ -59,9 +62,17 @@ export function FormMasterlist() {
 
     const matchesFormType = formTypeFilter === 'all' || record.formType === formTypeFilter;
     const matchesStatus = statusFilter === 'all' || record.status === statusFilter;
+    const matchesRegister = registerFilter === 'all' || assetRegisterId(record.formData as any) === registerFilter;
 
-    return matchesSearch && matchesFormType && matchesStatus;
+    return matchesSearch && matchesFormType && matchesStatus && matchesRegister;
   });
+
+  const registerCounts = formRecords.reduce<Record<string, number>>((acc, r) => {
+    const reg = assetRegisterId(r.formData as any);
+    acc[reg] = (acc[reg] ?? 0) + 1;
+    acc.all = (acc.all ?? 0) + 1;
+    return acc;
+  }, {});
 
   // Sort by date created (newest first)
   const sortedRecords = [...filteredRecords].sort((a, b) =>
@@ -121,6 +132,8 @@ export function FormMasterlist() {
 
   return (
     <div>
+      <AssetCategoryBar value={registerFilter} onChange={setRegisterFilter} counts={registerCounts} className="mb-6" />
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Form Masterlist</h1>
         <p className="text-gray-600">Centralized record of all forms generated throughout the IT Asset lifecycle</p>

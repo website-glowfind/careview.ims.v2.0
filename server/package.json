@@ -1,6 +1,6 @@
 {
-  "name": "hris",
-  "version": "1.0.0",
+  "name": "ims",
+  "version": "2.0.0",
   "description": "",
   "type": "module",
   "main": "server.js",
