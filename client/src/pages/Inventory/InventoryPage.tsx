@@ -70,6 +70,22 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embed
   const { addHistoryEntry } = useActivityLogStore();
   const [viewingActivityLog, setViewingActivityLog] = useState<ITAsset | undefined>(undefined);
   const [showNewTransfer, setShowNewTransfer] = useState(false);
+  const [viewIntent, setViewIntent] = useState<{ tab?: string; modal?: 'assign' | 'transfer' | 'maintenance' | 'disposal' | null }>({});
+
+  // Furniture row "…" menu → open the detail page at the right tab / modal
+  const handleFurnitureMenu = (a: ITAsset, action: string) => {
+    switch (action) {
+      case 'edit':        handleEdit(a); break;
+      case 'assign':      setViewIntent({ tab: 'Assignment', modal: 'assign' }); setViewingAsset(a); break;
+      case 'transfer':    setViewIntent({ tab: 'Location', modal: 'transfer' }); setViewingAsset(a); break;
+      case 'maintenance': setViewIntent({ tab: 'Maintenance', modal: 'maintenance' }); setViewingAsset(a); break;
+      case 'disposal':    setViewIntent({ tab: 'Disposal', modal: 'disposal' }); setViewingAsset(a); break;
+      case 'archive':     handleDelete(a._id!); break;
+      case 'view':
+      case 'print':
+      default:            setViewIntent({}); setViewingAsset(a); break;
+    }
+  };
 
   useEffect(() => {
     fetchAssets();
@@ -124,6 +140,7 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embed
 
   const handleViewClose = () => {
     setViewingAsset(undefined);
+    setViewIntent({});
   };
 
   const handleViewEdit = () => {
@@ -348,6 +365,8 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embed
             onEdit={handleFurnitureEdit}
             isAdmin={isAdmin}
             canEdit={canEdit}
+            initialTab={viewIntent.tab}
+            initialModal={viewIntent.modal ?? null}
           />
         ) : (
           <FurnitureInventory
@@ -360,6 +379,7 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embed
             onTransfer={handleTransfer}
             onAdd={handleAdd}
             onImport={handleImportFurniture}
+            onMenuAction={handleFurnitureMenu}
             isAdmin={isAdmin}
             canEdit={canEdit}
           />

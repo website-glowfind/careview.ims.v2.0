@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import {
-  Search, Eye, Edit, Trash2, ArrowRightLeft, Plus, Download, Upload,
+  Search, Eye, Edit, ArrowRightLeft, Plus, Download, Upload,
   Package, UserCheck, CircleCheck, Wrench, Trash,
+  MoreHorizontal, UserPlus, Recycle, Printer, Archive as ArchiveIcon,
 } from 'lucide-react';
 import type { ITAsset, AssetStatus, Company } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
@@ -20,6 +21,7 @@ interface FurnitureInventoryProps {
   onTransfer: (asset: ITAsset) => void;
   onAdd: () => void;
   onImport?: (rows: FurnitureImportRow[]) => Promise<ImportResult>;
+  onMenuAction?: (asset: ITAsset, action: string) => void;
   isAdmin: boolean;
   canEdit?: boolean;
 }
@@ -47,7 +49,7 @@ const CONDITION_PILL: Record<string, string> = {
 };
 
 export function FurnitureInventory({
-  assets, selectedCompany, onCompanyChange, onEdit, onDelete, onViewDetails, onTransfer, onAdd, onImport, isAdmin, canEdit,
+  assets, selectedCompany, onCompanyChange, onEdit, onDelete, onViewDetails, onTransfer, onAdd, onImport, onMenuAction, isAdmin, canEdit,
 }: FurnitureInventoryProps) {
   const allowEdit = canEdit ?? isAdmin;
   const [search, setSearch] = useState('');
@@ -56,6 +58,28 @@ export function FurnitureInventory({
   const [conditionFilter, setConditionFilter] = useState('all');
   const [showUpload, setShowUpload] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+
+  const act = (a: ITAsset, action: string) => {
+    setMenuFor(null);
+    if (onMenuAction) { onMenuAction(a, action); return; }
+    // Fallbacks when no handler is wired
+    if (action === 'view') onViewDetails(a);
+    else if (action === 'edit') onEdit(a);
+    else if (action === 'transfer') onTransfer(a);
+    else if (action === 'archive') onDelete(a._id!);
+    else if (action === 'print') window.print();
+  };
+  const MENU: { key: string; label: string; icon: any; danger?: boolean; admin?: boolean }[] = [
+    { key: 'view', label: 'View Details', icon: Eye },
+    { key: 'edit', label: 'Edit', icon: Edit },
+    { key: 'assign', label: 'Assign', icon: UserPlus },
+    { key: 'transfer', label: 'Transfer', icon: ArrowRightLeft },
+    { key: 'maintenance', label: 'Maintenance', icon: Wrench },
+    { key: 'disposal', label: 'Request Disposal', icon: Recycle },
+    { key: 'print', label: 'Print QR', icon: Printer },
+    { key: 'archive', label: 'Archive', icon: ArchiveIcon, danger: true, admin: true },
+  ];
 
   const nonDeleted = assets.filter((a) => !a.isDeleted);
 
@@ -221,16 +245,21 @@ export function FurnitureInventory({
                   <td className="px-5 py-3 text-gray-600 dark:text-slate-400 max-w-[160px] truncate" title={a.location}>{a.location || '-'}</td>
                   <td className="px-5 py-3">{a.condition ? <span className={`px-2 py-0.5 text-[11px] font-semibold rounded-full ${CONDITION_PILL[a.condition] ?? 'bg-gray-100 text-gray-600'}`}>{a.condition}</span> : <span className="text-gray-400">-</span>}</td>
                   <td className="px-5 py-3"><span className={`px-2 py-0.5 text-[11px] font-semibold rounded-full ${STATUS_PILL[a.status] ?? 'bg-gray-100 text-gray-600'}`}>{STATUS_LABEL[a.status] ?? a.status}</span></td>
-                  <td className="px-5 py-3 text-right whitespace-nowrap">
+                  <td className="px-5 py-3 text-right whitespace-nowrap relative">
                     <button onClick={() => onViewDetails(a)} className="p-1.5 text-gray-400 hover:text-blue-600" title="View"><Eye className="w-4 h-4" /></button>
-                    {allowEdit && (
+                    {allowEdit && <button onClick={() => onEdit(a)} className="p-1.5 text-gray-400 hover:text-green-600" title="Edit"><Edit className="w-4 h-4" /></button>}
+                    <button onClick={() => setMenuFor(menuFor === a._id ? null : a._id!)} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>
+                    {menuFor === a._id && (
                       <>
-                        <button onClick={() => onEdit(a)} className="p-1.5 text-gray-400 hover:text-green-600" title="Edit"><Edit className="w-4 h-4" /></button>
-                        <button onClick={() => onTransfer(a)} className="p-1.5 text-gray-400 hover:text-purple-600" title="Transfer"><ArrowRightLeft className="w-4 h-4" /></button>
+                        <div className="fixed inset-0 z-10" onClick={() => setMenuFor(null)} />
+                        <div className="absolute right-4 top-10 z-20 w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left">
+                          {MENU.filter((m) => (!m.admin || isAdmin) && (m.key === 'view' || m.key === 'print' || allowEdit)).map((m) => (
+                            <button key={m.key} onClick={() => act(a, m.key)} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
+                              <m.icon className="w-4 h-4" /> {m.label}
+                            </button>
+                          ))}
+                        </div>
                       </>
-                    )}
-                    {isAdmin && (
-                      <button onClick={() => onDelete(a._id!)} className="p-1.5 text-gray-400 hover:text-red-600" title="Delete"><Trash2 className="w-4 h-4" /></button>
                     )}
                   </td>
                 </tr>

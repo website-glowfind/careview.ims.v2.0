@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Search, Eye, Edit, MoreHorizontal, Plus, Download, Upload, Package, UserCheck, CircleCheck, Wrench, Trash, SlidersHorizontal } from 'lucide-react';
+import { Search, Eye, Edit, MoreHorizontal, Plus, Download, Upload, Package, UserCheck, CircleCheck, Wrench, Trash, SlidersHorizontal, UserPlus, ArrowRightLeft, Recycle, Printer, Archive as ArchiveIcon } from 'lucide-react';
 import type { ITAsset, Company } from '@/types/inventory';
 import { usePagination } from '@/hooks/usePagination';
 import { Pagination } from '@/components/ui/Pagination';
@@ -14,9 +14,17 @@ interface Props {
   onView: (a: ITAsset) => void;
   onDelete: (id: string) => void;
   onImport?: (rows: FurnitureImportRow[]) => Promise<ImportResult>;
+  onMenuAction?: (asset: ITAsset, action: string) => void;
   isAdmin: boolean;
   canEdit?: boolean;
 }
+
+const MENU: { key: string; label: string; icon: any; danger?: boolean; admin?: boolean }[] = [
+  { key: 'view', label: 'View Details', icon: Eye }, { key: 'edit', label: 'Edit', icon: Edit },
+  { key: 'assign', label: 'Assign', icon: UserPlus }, { key: 'transfer', label: 'Transfer', icon: ArrowRightLeft },
+  { key: 'maintenance', label: 'Maintenance', icon: Wrench }, { key: 'disposal', label: 'Request Disposal', icon: Recycle },
+  { key: 'print', label: 'Print QR', icon: Printer }, { key: 'archive', label: 'Archive', icon: ArchiveIcon, danger: true, admin: true },
+];
 
 const PILL: Record<string, string> = {
   'In Use': 'bg-blue-100 text-blue-700', Available: 'bg-green-100 text-green-700', Assigned: 'bg-blue-100 text-blue-700',
@@ -26,7 +34,7 @@ const statusLabelOf = (a: ITAsset) => (a.staffHouse as any)?.statusLabel
   || ({ active: 'In Use', available: 'Available', 'in-maintenance': 'Under Repair', 'in-storage': 'For Disposal', disposed: 'Disposed' } as any)[a.status]
   || a.status;
 
-export function StaffHouseInventory({ assets, selectedCompany, onCompanyChange, onAdd, onEdit, onView, onDelete, onImport, isAdmin, canEdit }: Props) {
+export function StaffHouseInventory({ assets, selectedCompany, onCompanyChange, onAdd, onEdit, onView, onDelete, onImport, onMenuAction, isAdmin, canEdit }: Props) {
   const allowEdit = canEdit ?? isAdmin;
   const [search, setSearch] = useState('');
   const [houseFilter, setHouseFilter] = useState('all');
@@ -155,14 +163,17 @@ export function StaffHouseInventory({ assets, selectedCompany, onCompanyChange, 
                     <td className="px-5 py-3 text-right whitespace-nowrap relative">
                       <button onClick={() => onView(a)} className="p-1.5 text-gray-400 hover:text-blue-600" title="View"><Eye className="w-4 h-4" /></button>
                       {allowEdit && <button onClick={() => onEdit(a)} className="p-1.5 text-gray-400 hover:text-green-600" title="Edit"><Edit className="w-4 h-4" /></button>}
-                      {isAdmin && (
+                      <button onClick={() => setMenuFor(menuFor === a._id ? null : a._id!)} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>
+                      {menuFor === a._id && (
                         <>
-                          <button onClick={() => setMenuFor(menuFor === a._id ? null : a._id!)} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>
-                          {menuFor === a._id && (
-                            <div className="absolute right-4 top-10 z-10 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-lg shadow-lg py-1">
-                              <button onClick={() => { setMenuFor(null); if (confirm(`Delete ${a.deviceCode}?`)) onDelete(a._id!); }} className="block w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-50 dark:hover:bg-[#1e2d4a] text-left">Delete</button>
-                            </div>
-                          )}
+                          <div className="fixed inset-0 z-10" onClick={() => setMenuFor(null)} />
+                          <div className="absolute right-4 top-10 z-20 w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left">
+                            {MENU.filter((m) => (!m.admin || isAdmin) && (m.key === 'view' || m.key === 'print' || allowEdit)).map((m) => (
+                              <button key={m.key} onClick={() => { setMenuFor(null); if (onMenuAction) onMenuAction(a, m.key); else if (m.key === 'view') onView(a); else if (m.key === 'edit') onEdit(a); else if (m.key === 'archive') { if (confirm(`Archive ${a.deviceCode}?`)) onDelete(a._id!); } else if (m.key === 'print') window.print(); }} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
+                                <m.icon className="w-4 h-4" /> {m.label}
+                              </button>
+                            ))}
+                          </div>
                         </>
                       )}
                     </td>

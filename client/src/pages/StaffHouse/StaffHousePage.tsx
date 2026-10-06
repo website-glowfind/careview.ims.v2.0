@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StaffHouseInventory } from '@/components/staff-house-inventory';
 import { StaffHouseForm } from '@/components/staff-house-form';
+import { StaffHouseDetails } from '@/components/staff-house-details';
 import { useAssetStore } from '@/store/assetStore';
 import { useAuthStore } from '@/store/authStore';
 import { useActivityLogStore } from '@/store/activityLogStore';
@@ -18,13 +19,30 @@ export function StaffHousePage() {
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<ITAsset | undefined>(undefined);
+  const [viewing, setViewing] = useState<ITAsset | undefined>(undefined);
+  const [viewIntent, setViewIntent] = useState<{ tab?: string; modal?: 'assign' | 'transfer' | 'maintenance' | 'disposal' | null }>({});
 
   useEffect(() => { fetchAssets(); fetchCategories(); }, [fetchAssets, fetchCategories]);
 
   const items = assets.filter((a) => a.assetType === 'StaffHouse');
 
   const handleAdd = () => { setEditing(undefined); setShowForm(true); };
+  // Edit keeps the detail open underneath (when open) so we return to it refreshed
   const handleEdit = (a: ITAsset) => { setEditing(a); setShowForm(true); };
+  const handleView = (a: ITAsset) => { setViewIntent({}); setViewing(a); };
+  const closeView = () => { setViewing(undefined); setViewIntent({}); };
+
+  const handleMenu = (a: ITAsset, action: string) => {
+    switch (action) {
+      case 'edit':        handleEdit(a); break;
+      case 'assign':      setViewIntent({ tab: 'Assignment', modal: 'assign' }); setViewing(a); break;
+      case 'transfer':    setViewIntent({ tab: 'Location', modal: 'transfer' }); setViewing(a); break;
+      case 'maintenance': setViewIntent({ tab: 'Maintenance', modal: 'maintenance' }); setViewing(a); break;
+      case 'disposal':    setViewIntent({ tab: 'Disposal', modal: 'disposal' }); setViewing(a); break;
+      case 'archive':     handleDelete(a._id!); break;
+      default:            setViewIntent({}); setViewing(a); break;
+    }
+  };
 
   const handleDelete = async (id: string) => {
     const a = assets.find((x) => x._id === id);
@@ -73,6 +91,8 @@ export function StaffHousePage() {
     <div className="space-y-6">
       {isLoading && items.length === 0 ? (
         <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0b5c96]" /></div>
+      ) : viewing ? (
+        <StaffHouseDetails asset={viewing} onClose={closeView} onEdit={handleEdit} isAdmin={isAdmin} canEdit={canEdit} initialTab={viewIntent.tab} initialModal={viewIntent.modal ?? null} />
       ) : (
         <StaffHouseInventory
           assets={items}
@@ -80,9 +100,10 @@ export function StaffHousePage() {
           onCompanyChange={setSelectedCompany}
           onAdd={handleAdd}
           onEdit={handleEdit}
-          onView={handleEdit}
+          onView={handleView}
           onDelete={handleDelete}
           onImport={handleImport}
+          onMenuAction={handleMenu}
           isAdmin={isAdmin}
           canEdit={canEdit}
         />

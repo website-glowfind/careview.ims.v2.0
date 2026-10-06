@@ -174,3 +174,14 @@
 
 
 
+
+/* ── Hide scrollbars app-wide (scrolling still works) ─────────────────── */
+* {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/old Edge */
+}
+*::-webkit-scrollbar {          /* Chrome/Safari/Edge */
+  width: 0;
+  height: 0;
+  display: none;
+}

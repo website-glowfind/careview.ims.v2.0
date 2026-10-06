@@ -19,6 +19,9 @@ interface Props {
   onEdit: (asset: ITAsset) => void;
   isAdmin: boolean;
   canEdit?: boolean;
+  /** Open on a specific tab / with a modal already open (from the row … menu) */
+  initialTab?: string;
+  initialModal?: 'assign' | 'transfer' | 'maintenance' | 'disposal' | null;
 }
 
 const STATUS_PILL: Record<string, string> = {
@@ -51,7 +54,7 @@ const DL = ({ label, value }: { label: string; value?: React.ReactNode }) => (
   </div>
 );
 
-export function FurnitureDetails({ asset, onClose, onEdit, isAdmin, canEdit }: Props) {
+export function FurnitureDetails({ asset, onClose, onEdit, isAdmin, canEdit, initialTab, initialModal }: Props) {
   const allowEdit = canEdit ?? isAdmin;
   const { updateAsset, deleteAsset } = useAssetStore();
   const live = useAssetStore((s) => s.assets.find((a) => a._id === asset._id));
@@ -62,8 +65,8 @@ export function FurnitureDetails({ asset, onClose, onEdit, isAdmin, canEdit }: P
   const { addFormRecord } = useFormRecordStore();
   const user = useAuthStore((s) => s.user);
 
-  const [tab, setTab] = useState<Tab>('Overview');
-  const [modal, setModal] = useState<null | 'assign' | 'transfer' | 'maintenance' | 'disposal' | 'archive'>(null);
+  const [tab, setTab] = useState<Tab>((initialTab as Tab) ?? 'Overview');
+  const [modal, setModal] = useState<null | 'assign' | 'transfer' | 'maintenance' | 'disposal' | 'archive'>(initialModal ?? null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => { if (data.deviceCode) fetchHistoryByDevice(data.deviceCode); }, [data.deviceCode, fetchHistoryByDevice]);

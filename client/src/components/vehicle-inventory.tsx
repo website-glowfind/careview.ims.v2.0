@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Search, Eye, Edit, MoreHorizontal, Plus, Download, Car, CalendarClock, ShieldCheck, Wrench, Bell, SlidersHorizontal } from 'lucide-react';
+import { Search, Eye, Edit, MoreHorizontal, Plus, Download, Car, CalendarClock, ShieldCheck, Wrench, Bell, SlidersHorizontal, UserPlus, ArrowRightLeft, Gauge, Fuel, Hammer, ClipboardCheck, AlertTriangle, Upload, Recycle, Printer, Archive as ArchiveIcon } from 'lucide-react';
 import type { ITAsset, Company } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
 import { usePagination } from '@/hooks/usePagination';
@@ -11,9 +11,19 @@ interface Props {
   onEdit: (a: ITAsset) => void;
   onView: (a: ITAsset) => void;
   onDelete: (id: string) => void;
+  onMenuAction?: (asset: ITAsset, action: string) => void;
   isAdmin: boolean;
   canEdit?: boolean;
 }
+
+const VMENU: { key: string; label: string; icon: any; danger?: boolean; admin?: boolean }[] = [
+  { key: 'assign', label: 'Assign Driver', icon: UserPlus }, { key: 'transfer', label: 'Transfer', icon: ArrowRightLeft },
+  { key: 'odometer', label: 'Update Odometer', icon: Gauge }, { key: 'fuel', label: 'Add Fuel Record', icon: Fuel },
+  { key: 'maintenance', label: 'Add Maintenance', icon: Wrench }, { key: 'repair', label: 'Add Repair', icon: Hammer },
+  { key: 'inspection', label: 'Add Inspection', icon: ClipboardCheck }, { key: 'incident', label: 'Add Incident', icon: AlertTriangle },
+  { key: 'documents', label: 'Upload Documents', icon: Upload }, { key: 'disposal', label: 'Request Disposal', icon: Recycle },
+  { key: 'print', label: 'Print QR', icon: Printer }, { key: 'archive', label: 'Archive / Delete', icon: ArchiveIcon, danger: true, admin: true },
+];
 
 const PILL = {
   green: 'bg-green-100 text-green-700', amber: 'bg-amber-100 text-amber-700', red: 'bg-red-100 text-red-700',
@@ -40,7 +50,7 @@ function expiryState(expiry?: string, stored?: string): { label: string; pill: k
   return { label: '—', pill: 'gray', attention: false };
 }
 
-export function VehicleInventory({ assets, onAdd, onEdit, onView, onDelete, isAdmin, canEdit }: Props) {
+export function VehicleInventory({ assets, onAdd, onEdit, onView, onDelete, onMenuAction, isAdmin, canEdit }: Props) {
   const allowEdit = canEdit ?? isAdmin;
   const [search, setSearch] = useState('');
   const [company, setCompany] = useState<Company | 'all'>('all');
@@ -170,14 +180,17 @@ export function VehicleInventory({ assets, onAdd, onEdit, onView, onDelete, isAd
                   <td className="px-5 py-3 text-right whitespace-nowrap relative">
                     <button onClick={() => onView(a)} className="p-1.5 text-gray-400 hover:text-blue-600" title="View"><Eye className="w-4 h-4" /></button>
                     {allowEdit && <button onClick={() => onEdit(a)} className="p-1.5 text-gray-400 hover:text-green-600" title="Edit"><Edit className="w-4 h-4" /></button>}
-                    {isAdmin && (
+                    <button onClick={() => setMenuFor(menuFor === a._id ? null : a._id!)} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>
+                    {menuFor === a._id && (
                       <>
-                        <button onClick={() => setMenuFor(menuFor === a._id ? null : a._id!)} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>
-                        {menuFor === a._id && (
-                          <div className="absolute right-4 top-10 z-10 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-lg shadow-lg py-1 text-left">
-                            <button onClick={() => { setMenuFor(null); if (confirm(`Delete ${a.deviceCode}?`)) onDelete(a._id!); }} className="block w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]">Delete</button>
-                          </div>
-                        )}
+                        <div className="fixed inset-0 z-10" onClick={() => setMenuFor(null)} />
+                        <div className="absolute right-4 top-10 z-20 w-52 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left max-h-80 overflow-y-auto">
+                          {VMENU.filter((m) => (!m.admin || isAdmin) && (m.key === 'print' || allowEdit)).map((m) => (
+                            <button key={m.key} onClick={() => { setMenuFor(null); if (onMenuAction) onMenuAction(a, m.key); else if (m.key === 'print') window.print(); else if (m.key === 'archive') { if (confirm(`Archive ${a.deviceCode}?`)) onDelete(a._id!); } }} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
+                              <m.icon className="w-4 h-4" /> {m.label}
+                            </button>
+                          ))}
+                        </div>
                       </>
                     )}
                   </td>

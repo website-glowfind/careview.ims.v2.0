@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { VehicleInventory } from '@/components/vehicle-inventory';
 import { VehicleForm } from '@/components/vehicle-form';
+import { VehicleDetails } from '@/components/vehicle-details';
 import { useAssetStore } from '@/store/assetStore';
 import { useAuthStore } from '@/store/authStore';
 import { useActivityLogStore } from '@/store/activityLogStore';
@@ -15,6 +16,8 @@ export function VehiclePage() {
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<ITAsset | undefined>(undefined);
+  const [viewing, setViewing] = useState<ITAsset | undefined>(undefined);
+  const [viewModal, setViewModal] = useState<string | null>(null);
 
   useEffect(() => { fetchAssets(); }, [fetchAssets]);
 
@@ -22,6 +25,14 @@ export function VehiclePage() {
 
   const handleAdd = () => { setEditing(undefined); setShowForm(true); };
   const handleEdit = (a: ITAsset) => { setEditing(a); setShowForm(true); };
+  const handleView = (a: ITAsset) => { setViewModal(null); setViewing(a); };
+  const closeView = () => { setViewing(undefined); setViewModal(null); };
+
+  const handleMenu = (a: ITAsset, action: string) => {
+    if (action === 'edit') { handleEdit(a); return; }
+    if (action === 'archive') { handleDelete(a._id!); return; }
+    setViewModal(action); setViewing(a);
+  };
 
   const handleDelete = async (id: string) => {
     const a = assets.find((x) => x._id === id);
@@ -49,13 +60,16 @@ export function VehiclePage() {
     <div className="space-y-6">
       {isLoading && vehicles.length === 0 ? (
         <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0b5c96]" /></div>
+      ) : viewing ? (
+        <VehicleDetails asset={viewing} onClose={closeView} onEdit={handleEdit} isAdmin={isAdmin} canEdit={canEdit} initialModal={viewModal} />
       ) : (
         <VehicleInventory
           assets={vehicles}
           onAdd={handleAdd}
           onEdit={handleEdit}
-          onView={handleEdit}
+          onView={handleView}
           onDelete={handleDelete}
+          onMenuAction={handleMenu}
           isAdmin={isAdmin}
           canEdit={canEdit}
         />
