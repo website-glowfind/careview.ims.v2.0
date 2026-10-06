@@ -28,6 +28,12 @@ interface Props {
   onClose: () => void;
   /** Creates the parsed assets; returns a summary. */
   onImport: (rows: FurnitureImportRow[]) => Promise<ImportResult>;
+  /** Optional copy overrides so other registers (Staff House, …) can reuse this modal. */
+  title?: string;
+  subtitle?: string;
+  templateHeaders?: string[];
+  templateExampleRow?: (string | number)[];
+  templateFileName?: string;
 }
 
 // Status label → DB enum
@@ -78,7 +84,14 @@ const TEMPLATE_HEADERS = [
   'Assigned To', 'Department', 'Location', 'Condition', 'Status', 'Purchase Date', 'Notes',
 ];
 
-export function FurnitureUploadModal({ onClose, onImport }: Props) {
+export function FurnitureUploadModal({
+  onClose, onImport,
+  title = 'Upload Furniture from Excel',
+  subtitle = 'Asset codes and QR codes are generated automatically on import.',
+  templateHeaders,
+  templateExampleRow,
+  templateFileName = 'furniture-upload-template.xlsx',
+}: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [rows, setRows] = useState<FurnitureImportRow[]>([]);
@@ -87,16 +100,16 @@ export function FurnitureUploadModal({ onClose, onImport }: Props) {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
 
+  const headers = templateHeaders ?? TEMPLATE_HEADERS;
+  const exampleRow = templateExampleRow ?? ['Executive Office Chair', 'Office Chair', 'Ergohuman', 'V2', 'SN-0001', 'KHEALTH',
+    'Juan Dela Cruz', 'IT Department', 'Main Office · Tower B · 5F', 'New', 'In Use', '2026-01-15', ''];
+
   const downloadTemplate = () => {
-    const ws = XLSX.utils.aoa_to_sheet([
-      TEMPLATE_HEADERS,
-      ['Executive Office Chair', 'Office Chair', 'Ergohuman', 'V2', 'SN-0001', 'KHEALTH',
-       'Juan Dela Cruz', 'IT Department', 'Main Office · Tower B · 5F', 'New', 'In Use', '2026-01-15', ''],
-    ]);
-    ws['!cols'] = TEMPLATE_HEADERS.map(() => ({ wch: 18 }));
+    const ws = XLSX.utils.aoa_to_sheet([headers, exampleRow]);
+    ws['!cols'] = headers.map(() => ({ wch: 18 }));
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Furniture');
-    XLSX.writeFile(wb, 'furniture-upload-template.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, 'Assets');
+    XLSX.writeFile(wb, templateFileName);
   };
 
   const parseFile = async (f: File) => {
@@ -150,10 +163,8 @@ export function FurnitureUploadModal({ onClose, onImport }: Props) {
         {/* Header */}
         <div className="flex items-start justify-between p-6 pb-4">
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Upload Furniture from Excel</h2>
-            <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">
-              Asset codes and QR codes are generated automatically on import.
-            </p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h2>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
           </div>
           <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-slate-200">
             <X className="w-5 h-5" />

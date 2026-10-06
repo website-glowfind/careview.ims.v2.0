@@ -6,6 +6,8 @@ import { getModuleForView } from '@/config/modules';
 import { InventoryPage } from '@/pages/Inventory/InventoryPage';
 import { ITOverviewTab } from '@/pages/Inventory/ITOverviewTab';
 import { ITExportReportsTab } from '@/pages/Inventory/ITExportReportsTab';
+import { VehiclePage } from '@/pages/Vehicle/VehiclePage';
+import { StaffHousePage } from '@/pages/StaffHouse/StaffHousePage';
 import { FormMasterlistPage } from './Form-Masterlist/FormMasterListPage';
 import { SubscriptionPage } from './Subscripton/SubscriptionPage';
 import { DeletedDevices } from './Deleted-Device/DeletedDevicePage';
@@ -33,6 +35,8 @@ export default function MainLayout() {
       case 'export':          return <ITExportReportsTab />;
       // ───────────────────────────────────────────────────────────────
       case 'furniture':       return <InventoryPage assetType="General" />;
+      case 'vehicle':         return <VehiclePage />;
+      case 'staff-house':     return <StaffHousePage />;
       case 'deleted':         return <DeletedDevices />;
       case 'history':         return <ActivityLog />;
       case 'employees':       return <EmployeeListPage />;

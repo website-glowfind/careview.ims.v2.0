@@ -3,7 +3,7 @@ export type AssetStatus = 'active' | 'in-maintenance' | 'in-storage' | 'availabl
 export type AssetCategory = 'laptop' | 'desktop' | 'monitor' | 'keyboard' | 'mouse' | 'printer' | 'server' | 'networking' | 'mobile' | 'mobile + subscription' | 'tablet' | 'other'
   | 'furniture' | 'appliance' | 'fixture' | 'equipment' | 'vehicle';
 
-export type AssetType = 'IT' | 'General';
+export type AssetType = 'IT' | 'General' | 'Vehicle' | 'StaffHouse';
 
 export type LicenseSubscriptionType = 'license' | 'subscription';
 
@@ -38,6 +38,8 @@ export interface ITAsset {
   status: AssetStatus;
   condition?: 'New' | 'Good' | 'Fair' | 'Poor' | 'Damaged';
   furniture?: FurnitureDetails;
+  vehicle?: VehicleDetails;
+  staffHouse?: StaffHouseDetails;
   assignedTo?: string;
   employeeId?: string;
   position?: string;
@@ -80,6 +82,101 @@ export interface FurnitureDetails {
   floor?: string;
   roomArea?: string;
   specificLocation?: string;
+  conditionRemarks?: string;
+  lastInspectionDate?: string;
+  inspectedBy?: string;
+  documentType?: string;
+}
+
+/** Company Vehicle fleet details captured by the dedicated vehicle wizard. */
+export interface VehicleDetails {
+  // Basic
+  vehicleType?: 'Car' | 'Motorcycle';
+  plateNumber?: string;
+  variant?: string;
+  yearModel?: string;
+  color?: string;
+  vehicleStatus?: string;
+  mvFileNumber?: string;
+  engineNumber?: string;
+  chassisNumber?: string;
+  conductionSticker?: string;
+  engineDisplacement?: string;
+  seatingCapacity?: string;
+  fuelType?: string;
+  transmission?: string;
+  bodyType?: string;
+  condition?: string;
+  // Registration
+  orNumber?: string;
+  crNumber?: string;
+  registrationDate?: string;
+  registrationExpiry?: string;
+  ltoStatus?: string;
+  emissionTestDate?: string;
+  emissionExpiry?: string;
+  registrationRemarks?: string;
+  // Insurance
+  insuranceProvider?: string;
+  policyNumber?: string;
+  coverageType?: string;
+  insuranceStart?: string;
+  insuranceExpiry?: string;
+  premiumCost?: number;
+  insuranceStatus?: string;
+  insuranceRemarks?: string;
+  // Assignment
+  branchCenter?: string;
+  assignmentDate?: string;
+  custodian?: string;
+  officeSite?: string;
+  parkingLocation?: string;
+  currentLocation?: string;
+  // Purchase
+  acquisitionDate?: string;
+  purchasePrice?: number;
+  supplierDealer?: string;
+  purchaseOrderNumber?: string;
+  invoiceOrNumber?: string;
+  ownershipType?: string;
+  financingCompany?: string;
+  purchaseRemarks?: string;
+}
+
+/** Staff House asset details captured by the dedicated staff-house wizard. */
+export interface StaffHouseDetails {
+  // Basic (shared with furniture-style fields)
+  assetType?: string; // e.g. "Split type inverter" (free text, distinct from top-level assetType)
+  description?: string;
+  material?: string;
+  color?: string;
+  dimensions?: string;
+  quantity?: number;
+  unit?: string;
+  // Purchase
+  supplier?: string;
+  poNumber?: string;
+  invoiceNumber?: string;
+  acquisitionCost?: number;
+  currency?: string;
+  warranty?: boolean;
+  // Assignment
+  dateAssigned?: string;
+  assignedResident?: string;
+  assignedRoom?: string;
+  bedNumber?: string;
+  // Staff House location
+  staffHouseName?: string;
+  staffHouseCode?: string;
+  completeLocation?: string;
+  building?: string;
+  floor?: string;
+  roomNumber?: string;
+  roomName?: string;
+  capacity?: string;
+  occupancyStatus?: string;
+  specificArea?: string;
+  // Condition
   conditionRemarks?: string;
   lastInspectionDate?: string;
   inspectedBy?: string;

@@ -27,7 +27,11 @@ export const REGISTERS: RegisterDef[] = [
  */
 export function assetRegisterId(a: { assetType?: string; category?: string } | undefined): RegisterId {
   if (!a) return 'it';
-  return (a.assetType ?? 'IT') === 'IT' ? 'it' : 'furniture';
+  const t = a.assetType ?? 'IT';
+  if (t === 'Vehicle') return 'vehicle';
+  if (t === 'StaffHouse') return 'staff-house';
+  if (t === 'General') return 'furniture';
+  return 'it';
 }
 
 // General-asset category prefixes (device code middle segment), e.g. KH-FN-001
@@ -37,5 +41,7 @@ const GENERAL_PREFIXES = new Set(['FN', 'AP', 'FX', 'EQ', 'VH']);
 export function registerFromDeviceCode(code?: string): RegisterId {
   const m = (code || '').match(/^[A-Z]{2}-([A-Z]{2})-/);
   if (!m) return 'it';
+  if (m[1] === 'VH') return 'vehicle';
+  if (m[1] === 'SH') return 'staff-house';
   return GENERAL_PREFIXES.has(m[1]) ? 'furniture' : 'it';
 }

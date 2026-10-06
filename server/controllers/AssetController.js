@@ -16,17 +16,18 @@ async function generateDeviceCode(company, category, assetType) {
   const companyPrefix = COMPANY_PREFIXES[company] || 'XX';
   const allAssets = await Asset.find({}, 'deviceCode');
 
-  // General asset registers (Furniture, etc.) use a fixed 'FN' prefix with its
-  // own 4-digit sequence shared across companies — independent of the global IT
-  // numbering. Keeps furniture codes clean (KH-FN-0007 / CV-FN-0008 …).
-  if (assetType === 'General') {
-    const fnPattern = /^[A-Z]{2}-FN-(\d+)$/;
-    let maxFn = 0;
+  // General / Vehicle registers use a fixed prefix with their own 4-digit
+  // sequence shared across companies — independent of the global IT numbering.
+  // Furniture → FN (KH-FN-0007), Vehicle → VH (KH-VH-0001).
+  const registerPrefix = assetType === 'General' ? 'FN' : assetType === 'Vehicle' ? 'VH' : assetType === 'StaffHouse' ? 'SH' : null;
+  if (registerPrefix) {
+    const pat = new RegExp(`^[A-Z]{2}-${registerPrefix}-(\\d+)$`);
+    let maxN = 0;
     allAssets.forEach(a => {
-      const m = a.deviceCode?.match(fnPattern);
-      if (m) { const n = parseInt(m[1], 10); if (n > maxFn) maxFn = n; }
+      const m = a.deviceCode?.match(pat);
+      if (m) { const n = parseInt(m[1], 10); if (n > maxN) maxN = n; }
     });
-    return `${companyPrefix}-FN-${(maxFn + 1).toString().padStart(4, '0')}`;
+    return `${companyPrefix}-${registerPrefix}-${(maxN + 1).toString().padStart(4, '0')}`;
   }
 
   // IT assets: global sequential numbering across all company/category prefixes.

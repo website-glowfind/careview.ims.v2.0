@@ -6,8 +6,9 @@ const assetSchema = new mongoose.Schema({
     // Free-form category — managed via the Category collection (no fixed enum,
     // so custom categories added by users don't fail validation)
     category: { type: String, required: true },
-    // 'IT' = IT Inventory (default); 'General' = Asset List (appliances, furniture, etc.)
-    assetType: { type: String, enum: ['IT', 'General'], default: 'IT' },
+    // 'IT' = IT Inventory (default); 'General' = Asset List (furniture, etc.);
+    // 'Vehicle' = Company Vehicle fleet; 'StaffHouse' = Staff House asset register
+    assetType: { type: String, enum: ['IT', 'General', 'Vehicle', 'StaffHouse'], default: 'IT' },
     company: { type: String, enum: ['KHEALTH', 'CAREVIEW', 'GLOWFIND'], required: true },
     companyId: { type: String },
     brand: { type: String },
@@ -27,6 +28,11 @@ const assetSchema = new mongoose.Schema({
     //  siteBranch, building, floor, roomArea, specificLocation, conditionRemarks,
     //  lastInspectionDate, inspectedBy, documentType)
     furniture: { type: mongoose.Schema.Types.Mixed },
+    // Company Vehicle fleet details captured by the dedicated vehicle wizard
+    // (plate, brand, registration, insurance, assignment, purchase, etc.)
+    vehicle: { type: mongoose.Schema.Types.Mixed },
+    // Staff House asset details (room, bed, resident, occupancy, etc.)
+    staffHouse: { type: mongoose.Schema.Types.Mixed },
     assignedTo: { type: String },
     employeeId: { type: String },
     position: { type: String },

@@ -40,7 +40,8 @@ export const getCategories = async (req, res) => {
 export const createCategory = async (req, res) => {
   try {
     const name = String(req.body.name || '').toLowerCase().trim();
-    const assetType = req.body.assetType === 'General' ? 'General' : 'IT';
+    const allowed = ['IT', 'General', 'StaffHouse', 'Vehicle'];
+    const assetType = allowed.includes(req.body.assetType) ? req.body.assetType : 'IT';
     if (!name) return res.status(400).json({ error: "Category name is required" });
 
     const existing = await Category.findOne({ name, assetType });
