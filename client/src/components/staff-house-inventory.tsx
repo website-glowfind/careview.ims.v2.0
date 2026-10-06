@@ -43,6 +43,12 @@ export function StaffHouseInventory({ assets, selectedCompany, onCompanyChange, 
   const [conditionFilter, setConditionFilter] = useState('all');
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const [deptFilter, setDeptFilter] = useState('all');
+  const [residentFilter, setResidentFilter] = useState('all');
+  const [locationFilter, setLocationFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const nonDeleted = assets.filter((a) => !a.isDeleted);
 
@@ -56,6 +62,9 @@ export function StaffHouseInventory({ assets, selectedCompany, onCompanyChange, 
 
   const houses = useMemo(() => Array.from(new Set(nonDeleted.map((a) => (a.staffHouse as any)?.staffHouseName).filter(Boolean))) as string[], [nonDeleted]);
   const categories = useMemo(() => Array.from(new Set(nonDeleted.map((a) => a.category).filter(Boolean))), [nonDeleted]);
+  const departments = useMemo(() => Array.from(new Set(nonDeleted.map((a) => a.department).filter(Boolean))) as string[], [nonDeleted]);
+  const residents = useMemo(() => Array.from(new Set(nonDeleted.map((a) => (a.staffHouse as any)?.assignedResident || a.assignedTo).filter(Boolean))) as string[], [nonDeleted]);
+  const moreActive = deptFilter !== 'all' || residentFilter !== 'all' || !!locationFilter.trim() || !!dateFrom || !!dateTo;
 
   const companyScoped = selectedCompany === 'all' ? nonDeleted : nonDeleted.filter((a) => a.company === selectedCompany);
   const filtered = companyScoped.filter((a) => {
@@ -67,7 +76,12 @@ export function StaffHouseInventory({ assets, selectedCompany, onCompanyChange, 
     const matchCategory = categoryFilter === 'all' || a.category === categoryFilter;
     const matchStatus = statusFilter === 'all' || statusLabelOf(a) === statusFilter;
     const matchCondition = conditionFilter === 'all' || a.condition === conditionFilter;
-    return matchSearch && matchHouse && matchCategory && matchStatus && matchCondition;
+    const matchDept = deptFilter === 'all' || a.department === deptFilter;
+    const matchResident = residentFilter === 'all' || (sh.assignedResident || a.assignedTo) === residentFilter;
+    const matchLocation = !locationFilter.trim() || (a.location || '').toLowerCase().includes(locationFilter.trim().toLowerCase());
+    const day = a.purchaseDate ? a.purchaseDate.slice(0, 10) : '';
+    const matchDate = (!dateFrom || (day && day >= dateFrom)) && (!dateTo || (day && day <= dateTo));
+    return matchSearch && matchHouse && matchCategory && matchStatus && matchCondition && matchDept && matchResident && matchLocation && matchDate;
   }).sort((x, y) => x.deviceCode.localeCompare(y.deviceCode));
 
   const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filtered, 10);
@@ -134,8 +148,18 @@ export function StaffHouseInventory({ assets, selectedCompany, onCompanyChange, 
           <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300"><option value="all">All Categories</option>{categories.map((c) => <option key={c} value={c}>{c}</option>)}</select>
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300"><option value="all">All Statuses</option>{['Available', 'Assigned', 'In Use', 'Under Repair', 'For Disposal', 'Disposed'].map((s) => <option key={s}>{s}</option>)}</select>
           <select value={conditionFilter} onChange={(e) => setConditionFilter(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300"><option value="all">All Conditions</option>{['New', 'Good', 'Fair', 'Poor', 'Damaged'].map((c) => <option key={c}>{c}</option>)}</select>
-          <button className="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg text-sm text-gray-600 dark:text-slate-300"><SlidersHorizontal className="w-4 h-4" /> More Filters</button>
+          <button onClick={() => setShowMore((s) => !s)} className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm font-medium whitespace-nowrap ${showMore || moreActive ? 'border-[#0b5c96] text-[#0b5c96] bg-[#0b5c96]/5' : 'border-gray-300 dark:border-[#1e3a5f] text-gray-600 dark:text-slate-300'}`}><SlidersHorizontal className="w-4 h-4" /> More Filters</button>
         </div>
+
+        {showMore && (
+          <div className="px-6 pb-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300"><option value="all">All Departments</option>{departments.map((d) => <option key={d} value={d}>{d}</option>)}</select>
+            <select value={residentFilter} onChange={(e) => setResidentFilter(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300"><option value="all">All Residents</option>{residents.map((r) => <option key={r} value={r}>{r}</option>)}</select>
+            <input value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} placeholder="Location" className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-900 dark:text-white" />
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300" />
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300" />
+          </div>
+        )}
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

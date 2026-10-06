@@ -57,6 +57,11 @@ export function VehicleInventory({ assets, onAdd, onEdit, onView, onDelete, onMe
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [showMore, setShowMore] = useState(false);
+  const [branchFilter, setBranchFilter] = useState('all');
+  const [driverFilter, setDriverFilter] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const list = assets.filter((a) => !a.isDeleted);
 
@@ -80,8 +85,16 @@ export function VehicleInventory({ assets, onAdd, onEdit, onView, onDelete, onMe
     const matchCompany = company === 'all' || a.company === company;
     const matchType = typeFilter === 'all' || v.vehicleType === typeFilter;
     const matchStatus = statusFilter === 'all' || v.vehicleStatus === statusFilter;
-    return matchSearch && matchCompany && matchType && matchStatus;
+    const matchBranch = branchFilter === 'all' || v.branchCenter === branchFilter;
+    const matchDriver = driverFilter === 'all' || a.assignedTo === driverFilter;
+    const day = (v.acquisitionDate || a.purchaseDate || '').slice(0, 10);
+    const matchDate = (!dateFrom || (day && day >= dateFrom)) && (!dateTo || (day && day <= dateTo));
+    return matchSearch && matchCompany && matchType && matchStatus && matchBranch && matchDriver && matchDate;
   }).sort((x, y) => x.a.deviceCode.localeCompare(y.a.deviceCode));
+
+  const branches = useMemo(() => Array.from(new Set(list.map((a) => (a.vehicle as any)?.branchCenter).filter(Boolean))) as string[], [list]);
+  const drivers = useMemo(() => Array.from(new Set(list.map((a) => a.assignedTo).filter(Boolean))) as string[], [list]);
+  const moreActive = branchFilter !== 'all' || driverFilter !== 'all' || !!dateFrom || !!dateTo;
 
   const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filtered, 10);
 
@@ -150,8 +163,17 @@ export function VehicleInventory({ assets, onAdd, onEdit, onView, onDelete, onMe
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search code, name, plate, driver..." className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-900 dark:text-white" />
           </div>
-          <button className="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg text-sm text-gray-600 dark:text-slate-300"><SlidersHorizontal className="w-4 h-4" /> More Filters</button>
+          <button onClick={() => setShowMore((s) => !s)} className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm font-medium whitespace-nowrap ${showMore || moreActive ? 'border-[#0b5c96] text-[#0b5c96] bg-[#0b5c96]/5' : 'border-gray-300 dark:border-[#1e3a5f] text-gray-600 dark:text-slate-300'}`}><SlidersHorizontal className="w-4 h-4" /> More Filters</button>
         </div>
+
+        {showMore && (
+          <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+            <select value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300"><option value="all">All Branch / Center</option>{branches.map((b) => <option key={b} value={b}>{b}</option>)}</select>
+            <select value={driverFilter} onChange={(e) => setDriverFilter(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300"><option value="all">All Drivers</option>{drivers.map((d) => <option key={d} value={d}>{d}</option>)}</select>
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300" />
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300" />
+          </div>
+        )}
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

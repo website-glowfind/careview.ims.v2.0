@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   Search, Eye, Edit, ArrowRightLeft, Plus, Download, Upload,
   Package, UserCheck, CircleCheck, Wrench, Trash,
-  MoreHorizontal, UserPlus, Recycle, Printer, Archive as ArchiveIcon,
+  MoreHorizontal, UserPlus, Recycle, Printer, Archive as ArchiveIcon, SlidersHorizontal,
 } from 'lucide-react';
 import type { ITAsset, AssetStatus, Company } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
@@ -59,6 +59,12 @@ export function FurnitureInventory({
   const [showUpload, setShowUpload] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [showMore, setShowMore] = useState(false);
+  const [deptFilter, setDeptFilter] = useState('all');
+  const [employeeFilter, setEmployeeFilter] = useState('all');
+  const [locationFilter, setLocationFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const act = (a: ITAsset, action: string) => {
     setMenuFor(null);
@@ -93,6 +99,9 @@ export function FurnitureInventory({
   };
 
   const categories = Array.from(new Set(nonDeleted.map((a) => a.category))).filter(Boolean);
+  const departments = Array.from(new Set(nonDeleted.map((a) => a.department).filter(Boolean))) as string[];
+  const employees = Array.from(new Set(nonDeleted.map((a) => a.assignedTo).filter(Boolean))) as string[];
+  const moreActive = deptFilter !== 'all' || employeeFilter !== 'all' || !!locationFilter.trim() || !!dateFrom || !!dateTo;
 
   const companyScoped = selectedCompany === 'all' ? nonDeleted : nonDeleted.filter((a) => a.company === selectedCompany);
   const filtered = companyScoped.filter((a) => {
@@ -106,7 +115,12 @@ export function FurnitureInventory({
     const matchCategory = categoryFilter === 'all' || a.category === categoryFilter;
     const matchStatus = statusFilter === 'all' || a.status === statusFilter;
     const matchCondition = conditionFilter === 'all' || a.condition === conditionFilter;
-    return matchSearch && matchCategory && matchStatus && matchCondition;
+    const matchDept = deptFilter === 'all' || a.department === deptFilter;
+    const matchEmployee = employeeFilter === 'all' || a.assignedTo === employeeFilter;
+    const matchLocation = !locationFilter.trim() || (a.location || '').toLowerCase().includes(locationFilter.trim().toLowerCase());
+    const day = a.purchaseDate ? a.purchaseDate.slice(0, 10) : '';
+    const matchDate = (!dateFrom || (day && day >= dateFrom)) && (!dateTo || (day && day <= dateTo));
+    return matchSearch && matchCategory && matchStatus && matchCondition && matchDept && matchEmployee && matchLocation && matchDate;
   }).sort((a, b) => a.deviceCode.localeCompare(b.deviceCode));
 
   const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filtered, 10);
@@ -210,7 +224,25 @@ export function FurnitureInventory({
             <option value="Poor">Poor</option>
             <option value="Damaged">Damaged</option>
           </select>
+          <button onClick={() => setShowMore((s) => !s)} className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm font-medium whitespace-nowrap ${showMore || moreActive ? 'border-[#0b5c96] text-[#0b5c96] bg-[#0b5c96]/5' : 'border-gray-300 dark:border-[#1e3a5f] text-gray-600 dark:text-slate-300'}`}>
+            <SlidersHorizontal className="w-4 h-4" /> More Filters
+          </button>
         </div>
+
+        {/* Expanded filters */}
+        {showMore && (
+          <div className="px-6 pb-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300">
+              <option value="all">All Departments</option>{departments.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+            <select value={employeeFilter} onChange={(e) => setEmployeeFilter(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300">
+              <option value="all">All Employees</option>{employees.map((e) => <option key={e} value={e}>{e}</option>)}
+            </select>
+            <input value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} placeholder="Location" className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-900 dark:text-white" />
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300" />
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300" />
+          </div>
+        )}
 
         {/* Table */}
         <div className="overflow-x-auto">
