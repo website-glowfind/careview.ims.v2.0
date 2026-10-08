@@ -63,7 +63,7 @@ const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => (
 
 const ORG_NAMES = {
   KHEALTH: 'Khealth Corporation',
-  CAREVIEW: 'Careview Communications',
+  CAREVIEW: 'Careview Corporation',
   GLOWFIND: 'Glowfind',
 };
 

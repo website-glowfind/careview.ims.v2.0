@@ -28,7 +28,7 @@ export function IssuanceAgreement({ asset, assetData, onClose, currentUser, onSa
   const companyColor = getCompanyHexColor(brandCompany);
 
   const companyName = brandCompany === 'KHEALTH' ? 'KHEALTH CORPORATION' :
-                       brandCompany === 'CAREVIEW' ? 'CAREVIEW COMMUNICATIONS' :
+                       brandCompany === 'CAREVIEW' ? 'CAREVIEW CORPORATION' :
                        'GLOWFIND';
 
   const generatePDF = async (): Promise<jsPDF | null> => {

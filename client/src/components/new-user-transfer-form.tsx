@@ -51,7 +51,7 @@ export function NewUserTransferForm({
   const fromColor = getCompanyHexColor(fromCompany);
 
   const toCompanyName = toCompany === 'KHEALTH' ? 'KHEALTH CORPORATION'
-    : toCompany === 'CAREVIEW' ? 'CAREVIEW COMMUNICATIONS'
+    : toCompany === 'CAREVIEW' ? 'CAREVIEW CORPORATION'
     : 'GLOWFIND';
 
   const docId = `RCPT-${asset.deviceCode}-${Date.now()}`;
