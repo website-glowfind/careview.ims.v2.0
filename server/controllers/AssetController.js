@@ -14,7 +14,7 @@ function deriveCategoryPrefix(category) {
 
 async function generateDeviceCode(company, category, assetType) {
   const companyPrefix = COMPANY_PREFIXES[company] || 'XX';
-  const allAssets = await Asset.find({}, 'deviceCode');
+  const allAssets = await Asset.find({}, 'deviceCode assetType');
 
   // General / Vehicle registers use a fixed prefix with their own 4-digit
   // sequence shared across companies — independent of the global IT numbering.
@@ -30,9 +30,12 @@ async function generateDeviceCode(company, category, assetType) {
     return `${companyPrefix}-${registerPrefix}-${(maxN + 1).toString().padStart(4, '0')}`;
   }
 
-  // IT assets: global sequential numbering across all company/category prefixes.
+  // IT assets: global sequential numbering across all IT category prefixes only.
+  // Skip other registers (General/Vehicle/StaffHouse) so their FN/VH/SH codes
+  // don't inflate the IT counter.
   let maxNumber = 0;
   allAssets.forEach(asset => {
+    if (asset.assetType && asset.assetType !== 'IT') return;
     const match = asset.deviceCode?.match(DEVICE_CODE_PATTERN);
     if (match) {
       const num = parseInt(match[1], 10);

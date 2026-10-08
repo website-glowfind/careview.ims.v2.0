@@ -46,12 +46,15 @@ export function generateDeviceCode(
   const companyPrefix = companyPrefixes[company];
   const categoryPrefix = categoryPrefixes[category] ?? deriveCategoryPrefix(category);
   
-  // Find the highest number across ALL companies AND ALL categories (truly global sequential numbering)
-  // Pattern matches: XX-YY-### where XX is company, YY is category, ### is the global number
+  // Find the highest number across all IT category prefixes (global sequential numbering).
+  // Pattern matches: XX-YY-### where XX is company, YY is category, ### is the global number.
+  // Skip other registers (General/Vehicle/StaffHouse) so their FN/VH/SH codes don't
+  // inflate the IT counter.
   const pattern = new RegExp(`^[A-Z]{2}-[A-Z]{2}-(\\d+)$`);
   let maxNumber = 0;
-  
+
   existingAssets.forEach(asset => {
+    if (asset.assetType && asset.assetType !== 'IT') return;
     const match = asset.deviceCode.match(pattern);
     if (match) {
       const num = parseInt(match[1], 10);
