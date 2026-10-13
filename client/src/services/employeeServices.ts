@@ -14,12 +14,25 @@ export interface EmployeePage {
 export const employeeServices = {
   /** Paginated list with optional search / company filter */
   getEmployees: async (params?: {
-    search?:  string;
-    company?: string;
-    page?:    number;
-    limit?:   number;
+    search?:     string;
+    company?:    string;
+    department?: string;
+    page?:       number;
+    limit?:      number;
   }): Promise<EmployeePage> => {
     const res = await api.get('/employees', { params });
+    return res.data;
+  },
+
+  /** Aggregate stats across all employees (company counts, departments, centers) */
+  getStats: async (): Promise<{
+    total: number;
+    byCompany: { KHEALTH: number; CAREVIEW: number; GLOWFIND: number };
+    departments: number;
+    centers: number;
+    departmentList: string[];
+  }> => {
+    const res = await api.get('/employees/stats');
     return res.data;
   },
 

@@ -19,7 +19,7 @@ async function generateDeviceCode(company, category, assetType) {
   // General / Vehicle registers use a fixed prefix with their own 4-digit
   // sequence shared across companies — independent of the global IT numbering.
   // Furniture → FN (KH-FN-0007), Vehicle → VH (KH-VH-0001).
-  const registerPrefix = assetType === 'General' ? 'FN' : assetType === 'Vehicle' ? 'VH' : assetType === 'StaffHouse' ? 'SH' : null;
+  const registerPrefix = assetType === 'General' ? 'FN' : assetType === 'Vehicle' ? 'VH' : assetType === 'StaffHouse' ? 'SH' : assetType === 'OfficeSupply' ? 'OS' : null;
   if (registerPrefix) {
     const pat = new RegExp(`^[A-Z]{2}-${registerPrefix}-(\\d+)$`);
     let maxN = 0;

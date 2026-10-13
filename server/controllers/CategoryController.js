@@ -19,6 +19,17 @@ export const seedCategories = async () => {
     const res = await Category.bulkWrite(ops, { ordered: false });
     const added = res.upsertedCount || 0;
     if (added > 0) console.log(`🌱 Seeded ${added} default categor${added === 1 ? 'y' : 'ies'}`);
+
+    // Prune stale General defaults: remove auto-seeded (isDefault) categories
+    // that are no longer part of the current default list. User-added custom
+    // categories (isDefault:false) are preserved; existing assets keep their
+    // own category label even if its row is removed from the picker.
+    const prune = await Category.deleteMany({
+      assetType: 'General',
+      isDefault: true,
+      name: { $nin: DEFAULT_GENERAL_CATEGORIES },
+    });
+    if (prune.deletedCount > 0) console.log(`🧹 Pruned ${prune.deletedCount} stale default General categor${prune.deletedCount === 1 ? 'y' : 'ies'}`);
   } catch (e) {
     console.error("Category seed skipped:", e.message);
   }
@@ -40,7 +51,7 @@ export const getCategories = async (req, res) => {
 export const createCategory = async (req, res) => {
   try {
     const name = String(req.body.name || '').toLowerCase().trim();
-    const allowed = ['IT', 'General', 'StaffHouse', 'Vehicle'];
+    const allowed = ['IT', 'General', 'StaffHouse', 'Vehicle', 'OfficeSupply'];
     const assetType = allowed.includes(req.body.assetType) ? req.body.assetType : 'IT';
     if (!name) return res.status(400).json({ error: "Category name is required" });
 

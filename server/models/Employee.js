@@ -5,6 +5,7 @@ const employeeSchema = new mongoose.Schema({
   employeeId: { type: String, required: true, unique: true },
   department: { type: String, default: '' },
   position:   { type: String, default: '' },
+  centerBranch: { type: String, default: '' },
   company:    { type: String, enum: ['KHEALTH', 'CAREVIEW', 'GLOWFIND'], required: true },
 }, { timestamps: true });
 

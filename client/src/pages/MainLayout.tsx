@@ -8,6 +8,8 @@ import { ITOverviewTab } from '@/pages/Inventory/ITOverviewTab';
 import { ITExportReportsTab } from '@/pages/Inventory/ITExportReportsTab';
 import { VehiclePage } from '@/pages/Vehicle/VehiclePage';
 import { StaffHousePage } from '@/pages/StaffHouse/StaffHousePage';
+import { OfficeSuppliesPage } from '@/pages/OfficeSupplies/OfficeSuppliesPage';
+import { RecordsCompliancePage } from '@/pages/RecordsCompliance/RecordsCompliancePage';
 import { FormMasterlistPage } from './Form-Masterlist/FormMasterListPage';
 import { SubscriptionPage } from './Subscripton/SubscriptionPage';
 import { DeletedDevices } from './Deleted-Device/DeletedDevicePage';
@@ -37,6 +39,8 @@ export default function MainLayout() {
       case 'furniture':       return <InventoryPage assetType="General" />;
       case 'vehicle':         return <VehiclePage />;
       case 'staff-house':     return <StaffHousePage />;
+      case 'office-supplies': return <OfficeSuppliesPage />;
+      case 'records-compliance': return <RecordsCompliancePage onNavigate={setCurrentView} />;
       case 'deleted':         return <DeletedDevices />;
       case 'history':         return <ActivityLog />;
       case 'employees':       return <EmployeeListPage />;

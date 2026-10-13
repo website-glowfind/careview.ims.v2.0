@@ -8,6 +8,7 @@ export interface Employee {
   employeeId: string;
   department: string;
   position:   string;
+  centerBranch?: string;
   company:    Company;
 }
 
@@ -24,15 +25,28 @@ export interface Pagination {
   totalPages: number;
 }
 
-interface EmployeeState {
-  employees:       Employee[];
-  pagination:      Pagination;
-  selectedCompany: Company | 'ALL';
-  isLoading:       boolean;
-  isImporting:     boolean;
-  error:           string | null;
+export interface EmployeeStats {
+  total: number;
+  byCompany: { KHEALTH: number; CAREVIEW: number; GLOWFIND: number };
+  departments: number;
+  centers: number;
+  departmentList: string[];
+}
 
-  setSelectedCompany: (c: Company | 'ALL') => void;
+interface EmployeeState {
+  employees:          Employee[];
+  pagination:         Pagination;
+  selectedCompany:    Company | 'ALL';
+  selectedDepartment: string;
+  isLoading:          boolean;
+  isImporting:        boolean;
+  error:              string | null;
+
+  stats:              EmployeeStats | null;
+
+  setSelectedCompany:    (c: Company | 'ALL') => void;
+  setSelectedDepartment: (d: string) => void;
+  fetchStats:         () => Promise<void>;
   fetchEmployees:     (search?: string, page?: number) => Promise<void>;
   addEmployee:        (employee: Omit<Employee, '_id'>) => Promise<void>;
   updateEmployee:     (id: string, employee: Omit<Employee, '_id'>) => Promise<void>;
@@ -43,27 +57,39 @@ interface EmployeeState {
 const DEFAULT_PAGINATION: Pagination = { total: 0, page: 1, limit: 10, totalPages: 0 };
 
 export const useEmployeeStore = create<EmployeeState>((set, get) => ({
-  employees:       [],
-  pagination:      DEFAULT_PAGINATION,
-  selectedCompany: 'ALL',
-  isLoading:       false,
-  isImporting:     false,
-  error:           null,
+  employees:          [],
+  pagination:         DEFAULT_PAGINATION,
+  selectedCompany:    'ALL',
+  selectedDepartment: 'all',
+  stats:              null,
+  isLoading:          false,
+  isImporting:        false,
+  error:              null,
+
+  fetchStats: async () => {
+    try { const stats = await employeeServices.getStats(); set({ stats }); } catch { /* ignore */ }
+  },
 
   setSelectedCompany: (c) => {
     set({ selectedCompany: c });
     get().fetchEmployees(undefined, 1);
   },
 
+  setSelectedDepartment: (d) => {
+    set({ selectedDepartment: d });
+    get().fetchEmployees(undefined, 1);
+  },
+
   fetchEmployees: async (search?: string, page?: number) => {
     set({ isLoading: true, error: null });
     try {
-      const { selectedCompany, pagination } = get();
+      const { selectedCompany, selectedDepartment, pagination } = get();
       const data = await employeeServices.getEmployees({
-        limit:   10,
-        page:    page ?? pagination.page,
-        company: selectedCompany !== 'ALL' ? selectedCompany : undefined,
-        search:  search || undefined,
+        limit:      10,
+        page:       page ?? pagination.page,
+        company:    selectedCompany !== 'ALL' ? selectedCompany : undefined,
+        department: selectedDepartment && selectedDepartment !== 'all' ? selectedDepartment : undefined,
+        search:     search || undefined,
       });
       set({ employees: data.employees, pagination: data.pagination, isLoading: false });
     } catch (err: any) {
@@ -77,6 +103,7 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
       await employeeServices.bulkImport([employee]);
       set({ isLoading: false });
       get().fetchEmployees(undefined, 1);
+      get().fetchStats();
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to add employee';
       set({ error: message, isLoading: false });
@@ -91,6 +118,7 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
       set({ isLoading: false });
       const { pagination } = get();
       get().fetchEmployees(undefined, pagination.page);
+      get().fetchStats();
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to update employee';
       set({ error: message, isLoading: false });
@@ -105,6 +133,7 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
       set({ isLoading: false });
       const { pagination } = get();
       get().fetchEmployees(undefined, pagination.page);
+      get().fetchStats();
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to delete employee';
       set({ error: message, isLoading: false });
@@ -118,6 +147,7 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
       const result = await employeeServices.bulkImport(employees);
       set({ isImporting: false });
       get().fetchEmployees();
+      get().fetchStats();
       return result as ImportResult;
     } catch (err: any) {
       const message = err.response?.data?.error || 'Import failed';

@@ -30,6 +30,7 @@ export function assetRegisterId(a: { assetType?: string; category?: string } | u
   const t = a.assetType ?? 'IT';
   if (t === 'Vehicle') return 'vehicle';
   if (t === 'StaffHouse') return 'staff-house';
+  if (t === 'OfficeSupply') return 'office-supplies';
   if (t === 'General') return 'furniture';
   return 'it';
 }
@@ -43,5 +44,6 @@ export function registerFromDeviceCode(code?: string): RegisterId {
   if (!m) return 'it';
   if (m[1] === 'VH') return 'vehicle';
   if (m[1] === 'SH') return 'staff-house';
+  if (m[1] === 'OS') return 'office-supplies';
   return GENERAL_PREFIXES.has(m[1]) ? 'furniture' : 'it';
 }

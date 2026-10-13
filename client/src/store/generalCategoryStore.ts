@@ -1,11 +1,15 @@
 import { create } from 'zustand';
 import api from '@/services/api';
 
-const STORAGE_KEY = 'generalAssetCategories_v1';
+const STORAGE_KEY = 'generalAssetCategories_v2';
 
 // Built-in categories for General assets (appliances, furniture, etc.)
 export const DEFAULT_GENERAL_CATEGORIES = [
-  'furniture', 'appliance', 'fixture', 'equipment', 'vehicle', 'other',
+  'office chair', 'executive chair', 'visitor chair',
+  'office table', 'executive table', 'conference table',
+  'cabinet', 'filing cabinet', 'shelf', 'sofa', 'bench',
+  'reception furniture', 'desk', 'partition', 'whiteboard',
+  'air conditioner', 'appliance', 'locker', 'other',
 ];
 
 interface CatItem { _id?: string; name: string; }

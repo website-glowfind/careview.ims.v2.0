@@ -3,7 +3,7 @@ export type AssetStatus = 'active' | 'in-maintenance' | 'in-storage' | 'availabl
 export type AssetCategory = 'laptop' | 'desktop' | 'monitor' | 'keyboard' | 'mouse' | 'printer' | 'server' | 'networking' | 'mobile' | 'mobile + subscription' | 'tablet' | 'other'
   | 'furniture' | 'appliance' | 'fixture' | 'equipment' | 'vehicle';
 
-export type AssetType = 'IT' | 'General' | 'Vehicle' | 'StaffHouse';
+export type AssetType = 'IT' | 'General' | 'Vehicle' | 'StaffHouse' | 'OfficeSupply';
 
 export type LicenseSubscriptionType = 'license' | 'subscription';
 
@@ -40,6 +40,7 @@ export interface ITAsset {
   furniture?: FurnitureDetails;
   vehicle?: VehicleDetails;
   staffHouse?: StaffHouseDetails;
+  officeSupply?: OfficeSupplyDetails;
   assignedTo?: string;
   employeeId?: string;
   position?: string;
@@ -181,6 +182,33 @@ export interface StaffHouseDetails {
   lastInspectionDate?: string;
   inspectedBy?: string;
   documentType?: string;
+}
+
+/** Office Supplies item details captured by the dedicated office-supply wizard. */
+export interface OfficeSupplyDetails {
+  itemType?: 'reusable' | 'consumable';
+  description?: string;
+  // Purchase
+  purchaseNumber?: string;
+  supplier?: string;
+  poNumber?: string;
+  invoiceNumber?: string;
+  unitCost?: number;
+  quantity?: number;
+  totalCost?: number;
+  currency?: string;
+  warranty?: boolean;
+  // Location / Assignment
+  centerBranch?: string;
+  custodian?: string;
+  locationRoom?: string;
+  // Stock (controlled consumables)
+  currentStock?: number;
+  minStock?: number;
+  // Condition
+  conditionRemarks?: string;
+  documentType?: string;
+  statusLabel?: string;
 }
 
 export interface Subscription {

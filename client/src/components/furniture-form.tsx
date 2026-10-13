@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import {
-  X, Copy, Check, Printer, Upload, Loader2, FileText, Trash2, Image as ImageIcon,
+  X, Copy, Check, Printer, Upload, Loader2, FileText, Trash2, Plus, Image as ImageIcon,
 } from 'lucide-react';
 import { QRCodeDisplay } from '@/components/qr-code-display';
 import { assetServices } from '@/services/assetServices';
@@ -10,6 +10,8 @@ interface Props {
   asset?: ITAsset;
   assets: ITAsset[];
   categories: string[];
+  onAddCategory?: (name: string) => void;
+  onDeleteCategory?: (name: string) => void;
   onSave: (asset: ITAsset | Omit<ITAsset, 'id' | 'deviceCode'>, subscriptionData?: any) => void;
   onCancel: () => void;
   onBack?: () => void;
@@ -17,7 +19,14 @@ interface Props {
 }
 
 const STEPS = ['Basic Information', 'Purchase Details', 'Assignment & Location', 'Condition', 'Documents'];
-const DEFAULT_CATEGORIES = ['Office Chair', 'Desk', 'Table', 'Cabinet', 'Sofa', 'Shelf', 'Whiteboard', 'Partition', 'Other'];
+const DEFAULT_CATEGORIES = [
+  'office chair', 'executive chair', 'visitor chair',
+  'office table', 'executive table', 'conference table',
+  'cabinet', 'filing cabinet', 'shelf', 'sofa', 'bench',
+  'reception furniture', 'desk', 'partition', 'whiteboard',
+  'air conditioner', 'appliance', 'locker', 'other',
+];
+const titleCase = (s: string) => s.replace(/\b\w/g, (m) => m.toUpperCase());
 const STATUS_OPTIONS: { value: AssetStatus; label: string }[] = [
   { value: 'available', label: 'Available' },
   { value: 'active', label: 'In Use' },
@@ -45,7 +54,7 @@ function TextField({ label, required, value, onChange, placeholder, type = 'text
   );
 }
 
-export function FurnitureForm({ asset, assets, categories, onSave, onCancel, onBack, currentUser }: Props) {
+export function FurnitureForm({ asset, assets, categories, onAddCategory, onDeleteCategory, onSave, onCancel, onBack, currentUser }: Props) {
   const isEdit = !!asset?._id;
   const cats = categories.length > 0 ? categories : DEFAULT_CATEGORIES;
   const f = asset?.furniture ?? {};
@@ -116,6 +125,18 @@ export function FurnitureForm({ asset, assets, categories, onSave, onCancel, onB
     navigator.clipboard?.writeText(previewCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  };
+
+  const addCategoryPrompt = () => {
+    const n = window.prompt('New furniture category name:');
+    if (n && n.trim()) { onAddCategory?.(n.trim()); setCategory(n.trim().toLowerCase()); }
+  };
+  const deleteCategoryPrompt = () => {
+    if (!category) return;
+    if (window.confirm(`Delete category "${titleCase(category)}"?`)) {
+      onDeleteCategory?.(category);
+      setCategory(cats.find((c) => c !== category) ?? '');
+    }
   };
 
   const uploadFiles = async (files: FileList | null) => {
@@ -275,9 +296,14 @@ export function FurnitureForm({ asset, assets, categories, onSave, onCancel, onB
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label required>Furniture Category</Label>
-                    <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls}>
-                      {cats.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <div className="flex gap-2">
+                      <select value={category} onChange={(e) => setCategory(e.target.value)} className={`${inputCls} capitalize`}>
+                        {cats.map((c) => <option key={c} value={c}>{titleCase(c)}</option>)}
+                      </select>
+                      <button type="button" onClick={addCategoryPrompt} title="Add category" className="px-2.5 rounded-lg bg-[#0b5c96]/10 text-[#0b5c96] hover:bg-[#0b5c96]/20"><Plus className="w-4 h-4" /></button>
+                      <button type="button" onClick={deleteCategoryPrompt} title="Delete category" className="px-2.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">Add a custom category for other furniture assets.</p>
                   </div>
                   <TextField label="Furniture Type" value={type} onChange={setType} placeholder="e.g. High-back, mesh" />
                 </div>

@@ -39,6 +39,28 @@ export const getEmployees = async (req, res) => {
   }
 };
 
+export const getEmployeeStats = async (_req, res) => {
+  try {
+    const [total, kh, cv, gf, departments, centers] = await Promise.all([
+      Employee.countDocuments({}),
+      Employee.countDocuments({ company: 'KHEALTH' }),
+      Employee.countDocuments({ company: 'CAREVIEW' }),
+      Employee.countDocuments({ company: 'GLOWFIND' }),
+      Employee.distinct('department', { department: { $nin: ['', null] } }),
+      Employee.distinct('centerBranch', { centerBranch: { $nin: ['', null] } }),
+    ]);
+    res.status(200).json({
+      total,
+      byCompany: { KHEALTH: kh, CAREVIEW: cv, GLOWFIND: gf },
+      departments: departments.length,
+      centers: centers.length,
+      departmentList: departments.sort(),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const bulkImport = async (req, res) => {
   try {
     const { employees } = req.body; // [{ fullName, employeeId, department, position, company }]
@@ -69,7 +91,7 @@ export const bulkImport = async (req, res) => {
 
 export const updateEmployee = async (req, res) => {
   try {
-    const { fullName, employeeId, department, position, company } = req.body;
+    const { fullName, employeeId, department, position, centerBranch, company } = req.body;
 
     // Guard against duplicate employeeId (excluding the current doc)
     if (employeeId) {
@@ -84,7 +106,7 @@ export const updateEmployee = async (req, res) => {
 
     const updated = await Employee.findByIdAndUpdate(
       req.params.id,
-      { $set: { fullName, employeeId, department, position, company } },
+      { $set: { fullName, employeeId, department, position, centerBranch, company } },
       { new: true, runValidators: true }
     );
 
