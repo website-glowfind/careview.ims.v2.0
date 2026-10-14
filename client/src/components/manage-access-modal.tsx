@@ -4,6 +4,7 @@ import type { User } from '@/types/inventory';
 import {
   PERMISSION_CATALOG, type PermissionMap, fullAccessMap, roleDefaults,
   effectivePermissions, grantedModuleCount, TOTAL_MODULES,
+  ACCESS_TEMPLATES, templatePermissions,
 } from '@/config/permissions';
 
 interface Props {
@@ -58,7 +59,7 @@ export function ManageAccessModal({ user, allUsers, onClose, onSave }: Props) {
 
   const selectAll = () => setWorking(fullAccessMap());
   const clearAll = () => setWorking({});
-  const applyTemplate = (role: string) => { setTemplate(role); if (role) setWorking(role === 'admin' ? fullAccessMap() : roleDefaults(role)); };
+  const applyTemplate = (key: string) => { setTemplate(key); if (key) setWorking(templatePermissions(key)); };
   const applyCopy = (id: string) => { setCopyFrom(id); const u = allUsers.find((x) => x.id === id); if (u) setWorking(JSON.parse(JSON.stringify(effectivePermissions(u)))); };
 
   const toggleExpand = (mid: string) => setExpanded((s) => { const n = new Set(s); n.has(mid) ? n.delete(mid) : n.add(mid); return n; });
@@ -92,9 +93,7 @@ export function ManageAccessModal({ user, allUsers, onClose, onSave }: Props) {
           <div className="flex flex-wrap items-center gap-2">
             <select value={template} onChange={(e) => applyTemplate(e.target.value)} className={SELECT}>
               <option value="">— Apply Template —</option>
-              <option value="admin">Administrator (full)</option>
-              <option value="encoder">Encoder</option>
-              <option value="employee">Employee (view only)</option>
+              {ACCESS_TEMPLATES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
             </select>
             <button onClick={selectAll} className={SELECT}>Select All</button>
             <button onClick={clearAll} className={SELECT}>Clear All</button>

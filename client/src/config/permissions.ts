@@ -87,6 +87,56 @@ export function roleDefaults(role?: string): PermissionMap {
   return map;
 }
 
+// ── Access templates (modal presets) ──────────────────────────────────────
+export interface AccessTemplate { key: string; label: string }
+export const ACCESS_TEMPLATES: AccessTemplate[] = [
+  { key: 'super_admin', label: 'Super Admin' },
+  { key: 'admin', label: 'Admin' },
+  { key: 'editor', label: 'Editor' },
+  { key: 'staff', label: 'Staff' },
+  { key: 'viewer', label: 'Viewer' },
+];
+
+const ASSET_MODULES = ['it-assets', 'furniture', 'mw', 'vehicle', 'staff-house', 'office-supplies'];
+
+/** Permission preset for an access template. */
+export function templatePermissions(key: string): PermissionMap {
+  const map: PermissionMap = {};
+  const pick = (id: string, keys: string[]) => { const avail = allActionKeys(id); const got = keys.filter((k) => avail.includes(k)); if (got.length) map[id] = got; };
+  const viewAll = () => { for (const m of PERMISSION_CATALOG) if (m.id !== 'users') pick(m.id, ['view']); };
+
+  switch (key) {
+    case 'super_admin':
+      return fullAccessMap();
+    case 'admin':
+      for (const m of PERMISSION_CATALOG) map[m.id] = m.actions.map((a) => a.key);
+      // Admin: not the system-level user controls or permanent delete / log clear
+      pick('users', ['view', 'create', 'edit', 'reset_password']);
+      pick('deleted', ['view', 'restore']);
+      pick('history', ['view', 'export']);
+      return map;
+    case 'editor':
+      for (const id of ASSET_MODULES) pick(id, ['view', 'create', 'edit', 'assign', 'transfer', 'maintenance', 'restock', 'export', 'import', 'print', 'manage_categories', 'manage_subscriptions']);
+      pick('records-compliance', ['view', 'export']);
+      pick('disposal', ['view', 'create', 'edit']);
+      pick('employees', ['view', 'create', 'edit', 'import', 'export']);
+      pick('deleted', ['view']);
+      pick('history', ['view', 'export']);
+      return map;
+    case 'staff':
+      for (const id of ASSET_MODULES) pick(id, ['view', 'assign', 'transfer', 'restock', 'print', 'export']);
+      pick('records-compliance', ['view']);
+      pick('employees', ['view']);
+      pick('history', ['view']);
+      return map;
+    case 'viewer':
+      viewAll();
+      return map;
+    default:
+      return {};
+  }
+}
+
 export interface PermUser { role?: string; permissions?: PermissionMap | null }
 
 const hasCustom = (u?: PermUser | null) => !!u?.permissions && Object.keys(u.permissions).length > 0;
