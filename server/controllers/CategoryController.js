@@ -1,4 +1,5 @@
 import { Category, DEFAULT_IT_CATEGORIES, DEFAULT_GENERAL_CATEGORIES } from "../models/Category.js";
+import { Asset } from "../models/Asset.js";
 
 // Ensure built-in categories exist (called on server startup). Idempotent —
 // inserts only the defaults that are missing, so newly added defaults (e.g.
@@ -21,15 +22,18 @@ export const seedCategories = async () => {
     if (added > 0) console.log(`🌱 Seeded ${added} default categor${added === 1 ? 'y' : 'ies'}`);
 
     // Prune stale General defaults: remove auto-seeded (isDefault) categories
-    // that are no longer part of the current default list. User-added custom
-    // categories (isDefault:false) are preserved; existing assets keep their
-    // own category label even if its row is removed from the picker.
+    // that are no longer part of the current default list — but ONLY if no
+    // asset is still using them (usage-aware, so existing data is never
+    // orphaned). User-added custom categories (isDefault:false) are preserved.
+    const usedRaw = await Asset.distinct('category', { assetType: 'General', isDeleted: { $ne: true } });
+    const inUse = usedRaw.map((n) => String(n || '').toLowerCase().trim()).filter(Boolean);
+    const keep = Array.from(new Set([...DEFAULT_GENERAL_CATEGORIES, ...inUse]));
     const prune = await Category.deleteMany({
       assetType: 'General',
       isDefault: true,
-      name: { $nin: DEFAULT_GENERAL_CATEGORIES },
+      name: { $nin: keep },
     });
-    if (prune.deletedCount > 0) console.log(`🧹 Pruned ${prune.deletedCount} stale default General categor${prune.deletedCount === 1 ? 'y' : 'ies'}`);
+    if (prune.deletedCount > 0) console.log(`🧹 Pruned ${prune.deletedCount} unused stale default General categor${prune.deletedCount === 1 ? 'y' : 'ies'}`);
   } catch (e) {
     console.error("Category seed skipped:", e.message);
   }
