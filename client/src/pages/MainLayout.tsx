@@ -3,6 +3,8 @@ import { TopBar } from '@/components/customUI/TopBar';
 import { ModuleHub } from '@/components/ModuleHub';
 import { ModulePageHeader, ModuleSetupPlaceholder } from '@/components/customUI/ModulePageHeader';
 import { getModuleForView } from '@/config/modules';
+import { canAccessModule } from '@/config/permissions';
+import { useAuthStore } from '@/store/authStore';
 import { InventoryPage } from '@/pages/Inventory/InventoryPage';
 import { ITOverviewTab } from '@/pages/Inventory/ITOverviewTab';
 import { ITExportReportsTab } from '@/pages/Inventory/ITExportReportsTab';
@@ -21,10 +23,19 @@ import { EmployeeListPage } from './Employee-List/EmployeeListPage';
 export default function MainLayout() {
   const [currentView, setCurrentView] = useState('hub');
   const goHub = () => setCurrentView('hub');
+  const user = useAuthStore((s) => s.user);
 
   const renderView = () => {
     const mod = getModuleForView(currentView);
     if (mod?.upcoming) return <ModuleSetupPlaceholder view={currentView} />;
+    if (mod && !canAccessModule(user, mod.id)) {
+      return (
+        <div className="border-2 border-dashed border-gray-200 dark:border-[#1e3a5f] rounded-xl py-24 px-6 text-center">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">No access to this module</h3>
+          <p className="text-sm text-gray-500 dark:text-slate-400">You don't have permission to view {mod.name}. Contact an administrator.</p>
+        </div>
+      );
+    }
 
     switch (currentView) {
       // ── IT Assets module tabs ──────────────────────────────────────

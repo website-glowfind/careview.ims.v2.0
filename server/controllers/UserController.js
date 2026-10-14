@@ -24,7 +24,23 @@ const loginUser = async (req, res) => {
         const user = await User.findOne({ username });
 
         if (user && (await user.matchPassword(password))) {
+            if (user.status === "inactive") {
+                return res.status(403).json({ error: "This account is inactive. Contact an administrator." });
+            }
+            user.lastLogin = new Date();
+            await user.save();
             const token = generateToken(user._id);
+
+            const userPayload = {
+                id: user._id,
+                username: user.username,
+                name: user.name,
+                role: user.role,
+                department: user.department,
+                email: user.email || "",
+                status: user.status || "active",
+                permissions: user.permissions || {},
+            };
 
             // Configuration options
             const cookieOptions = {
@@ -39,21 +55,15 @@ const loginUser = async (req, res) => {
             res.cookie("token", token, cookieOptions);
 
             // 2. I-set ang User Data (Accessible sa JS/Frontend)
-            res.cookie("user", JSON.stringify({
-                id: user._id,
-                username: user.username,
-                name: user.name,
-                role: user.role,
-                department: user.department
-            }), { 
-                ...cookieOptions, 
+            res.cookie("user", JSON.stringify(userPayload), {
+                ...cookieOptions,
                 httpOnly: false // Overwrite para mabasa ng Cookies.get()
             });
 
-            return res.status(200).json({ 
+            return res.status(200).json({
                 success: true,
                 message: "Login successful",
-                user: { id: user._id, username: user.username, name: user.name, role: user.role, department: user.department } // Optional: Ibalik din sa JSON
+                user: userPayload
             });
         } else {
             return res.status(401).json({ error: "Invalid username or password" });
@@ -65,7 +75,7 @@ const loginUser = async (req, res) => {
 
 const registerUser = async (req, res) => {
     try {
-        const { name, username, password } = req.body;
+        const { name, username, password, role, department, email } = req.body;
 
         const userExists = await User.findOne({ username });
         if (userExists) {
@@ -75,14 +85,14 @@ const registerUser = async (req, res) => {
             name,
             username,
             password,
+            ...(role ? { role } : {}),
+            ...(department ? { department } : {}),
+            ...(email ? { email } : {}),
         });
 
         if (newUser) {
-            res.status(201).json({
-                _id: newUser._id,
-                name: newUser.name,
-                username: newUser.username,
-            });
+            const { password: _pw, ...userData } = newUser.toObject();
+            res.status(201).json(userData);
         }
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -111,15 +121,18 @@ const logoutUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
     try {
-        const { name, username, role, department, password } = req.body;
+        const { name, username, role, department, password, email, status, permissions } = req.body;
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ error: 'User not found' });
 
-        if (name)       user.name       = name;
-        if (username)   user.username   = username;
-        if (role)       user.role       = role;
-        if (department) user.department = department;
-        if (password)   user.password   = password; // hashed via pre-save hook
+        if (name)        user.name       = name;
+        if (username)    user.username   = username;
+        if (role)        user.role       = role;
+        if (department)  user.department = department;
+        if (email !== undefined)       user.email  = email;
+        if (status)                    user.status = status;
+        if (permissions !== undefined) { user.permissions = permissions; user.markModified('permissions'); }
+        if (password)    user.password   = password; // hashed via pre-save hook
 
         const updated = await user.save();
         const { password: _, ...userData } = updated.toObject();

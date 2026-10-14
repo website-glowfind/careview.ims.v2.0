@@ -1,6 +1,7 @@
 import { ArrowRight, Lock } from 'lucide-react';
 import { MODULES, MODULE_GROUPS } from '@/config/modules';
 import { useAuthStore } from '@/store/authStore';
+import { canAccessModule } from '@/config/permissions';
 
 interface ModuleHubProps {
   onOpen: (view: string) => void;
@@ -9,7 +10,6 @@ interface ModuleHubProps {
 export function ModuleHub({ onOpen }: ModuleHubProps) {
   const user = useAuthStore((s) => s.user);
   const userName = user?.name ?? 'User';
-  const isAdmin = user?.role === 'admin';
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
@@ -35,7 +35,7 @@ export function ModuleHub({ onOpen }: ModuleHubProps) {
 
               <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                 {items.map((m) => {
-                  const locked = m.adminOnly && !isAdmin;
+                  const locked = !canAccessModule(user, m.id);
                   const Icon = m.icon;
                   return (
                     <button
@@ -60,7 +60,7 @@ export function ModuleHub({ onOpen }: ModuleHubProps) {
                       </div>
 
                       <div className="mt-4 flex items-center justify-between border-t border-gray-100 dark:border-[#1e3a5f] pt-3 text-xs">
-                        <span className={locked ? 'text-gray-400 dark:text-slate-500' : 'font-medium text-gray-900 dark:text-white'}>{locked ? 'Admin only' : 'Open'}</span>
+                        <span className={locked ? 'text-gray-400 dark:text-slate-500' : 'font-medium text-gray-900 dark:text-white'}>{locked ? 'No access' : 'Open'}</span>
                         {!locked && <ArrowRight className="h-4 w-4 text-gray-300 dark:text-slate-600 transition-all group-hover:translate-x-0.5 group-hover:text-[#0b5c96] dark:group-hover:text-blue-400" />}
                       </div>
                     </button>

@@ -20,6 +20,10 @@ export interface User {
   username: string;
   password: string;
   role: UserRole;
+  email?: string;
+  status?: 'active' | 'inactive';
+  permissions?: Record<string, string[]>;
+  lastLogin?: string;
   createdAt: string;
 }
 

@@ -12,6 +12,10 @@ function mapUser(u: any): User {
     password:   '',
     role:       u.role ?? 'employee',
     department: u.department ?? '',
+    email:      u.email ?? '',
+    status:     u.status ?? 'active',
+    permissions: u.permissions ?? {},
+    lastLogin:  u.lastLogin ?? undefined,
     createdAt:  u.createdAt ?? new Date().toISOString(),
   };
 }
@@ -25,6 +29,8 @@ interface UserStoreState {
   addUser: (data: Omit<User, 'id' | 'createdAt'>) => Promise<void>;
   editUser: (id: string, data: Omit<User, 'id' | 'createdAt'>) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
+  updatePermissions: (id: string, permissions: Record<string, string[]>) => Promise<void>;
+  setUserStatus: (id: string, status: 'active' | 'inactive') => Promise<void>;
 }
 
 export const useUserStore = create<UserStoreState>((set, get) => ({
@@ -84,6 +90,36 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to update user';
       set({ error: message, isLoading: false });
+      throw new Error(message);
+    }
+  },
+
+  updatePermissions: async (id, permissions) => {
+    try {
+      const res = await api.put(`/users/${id}`, { permissions });
+      const updated = mapUser(res.data);
+      set(s => ({ users: s.users.map(u => u.id === id ? updated : u) }));
+      const u = get().users.find(x => x.id === id);
+      useActivityLogStore.getState().addHistoryEntry({
+        action: 'edited', category: 'user',
+        deviceCode: u?.username ?? '', deviceName: u?.fullName ?? '',
+        company: 'KHEALTH', details: 'Updated module access permissions',
+      });
+    } catch (err: any) {
+      const message = err.response?.data?.error || 'Failed to update permissions';
+      set({ error: message });
+      throw new Error(message);
+    }
+  },
+
+  setUserStatus: async (id, status) => {
+    try {
+      const res = await api.put(`/users/${id}`, { status });
+      const updated = mapUser(res.data);
+      set(s => ({ users: s.users.map(u => u.id === id ? updated : u) }));
+    } catch (err: any) {
+      const message = err.response?.data?.error || 'Failed to update status';
+      set({ error: message });
       throw new Error(message);
     }
   },

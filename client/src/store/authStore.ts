@@ -8,6 +8,9 @@ interface UserData {
   role?: string;
   department?: string;
   name: string;
+  email?: string;
+  status?: 'active' | 'inactive';
+  permissions?: Record<string, string[]>;
 }
 
 interface AuthState {

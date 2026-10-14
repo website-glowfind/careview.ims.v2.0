@@ -26,6 +26,12 @@ const userSchema = new mongoose.Schema(
         type: String,
         enum: ["Admin", "HR", "IT", "Finance", "Marketing", "Operations"],
     },
+    email: { type: String, default: "" },
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
+    lastLogin: { type: Date },
+    // Module-level access control: { [moduleId]: ["view","create",...] }.
+    // Empty/absent → falls back to role defaults on the client.
+    permissions: { type: mongoose.Schema.Types.Mixed, default: {} },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
   },
