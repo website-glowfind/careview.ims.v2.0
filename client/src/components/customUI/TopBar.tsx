@@ -9,8 +9,8 @@ interface TopBarProps {
 
 const ROLE_LABEL: Record<string, string> = {
   admin: 'Administrator',
-  encoder: 'Encoder',
-  employee: 'Employee',
+  encoder: 'Editor',
+  employee: 'Staff',
 };
 
 export function TopBar({ currentView, onModulesClick }: TopBarProps) {

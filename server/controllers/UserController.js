@@ -1,5 +1,6 @@
 import User from "../models/User.js"; // Siguraduhing tama ang path at export
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 // Helper function para sa JWT (Optional pero malinis tignan)
 const generateToken = (id) => {
@@ -75,7 +76,7 @@ const loginUser = async (req, res) => {
 
 const registerUser = async (req, res) => {
     try {
-        const { name, username, password, role, department, email } = req.body;
+        const { name, username, password, role, department, email, centerBranch, status } = req.body;
 
         const userExists = await User.findOne({ username });
         if (userExists) {
@@ -88,6 +89,8 @@ const registerUser = async (req, res) => {
             ...(role ? { role } : {}),
             ...(department ? { department } : {}),
             ...(email ? { email } : {}),
+            ...(centerBranch ? { centerBranch } : {}),
+            ...(status ? { status } : {}),
         });
 
         if (newUser) {
@@ -121,7 +124,7 @@ const logoutUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
     try {
-        const { name, username, role, department, password, email, status, permissions } = req.body;
+        const { name, username, role, department, password, email, centerBranch, status, permissions } = req.body;
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -129,8 +132,9 @@ const updateUser = async (req, res) => {
         if (username)    user.username   = username;
         if (role)        user.role       = role;
         if (department)  user.department = department;
-        if (email !== undefined)       user.email  = email;
-        if (status)                    user.status = status;
+        if (email !== undefined)        user.email        = email;
+        if (centerBranch !== undefined) user.centerBranch = centerBranch;
+        if (status)                     user.status       = status;
         if (permissions !== undefined) { user.permissions = permissions; user.markModified('permissions'); }
         if (password)    user.password   = password; // hashed via pre-save hook
 
@@ -141,6 +145,24 @@ const updateUser = async (req, res) => {
         if (error.code === 11000) {
             return res.status(400).json({ error: 'Username already exists' });
         }
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Generate a secure temporary password, set it on the user, and return it so an
+// admin can hand it over. (Email delivery can be wired later via an SMTP service.)
+const resetUserPassword = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const raw = crypto.randomBytes(9).toString('base64').replace(/[^a-zA-Z0-9]/g, '');
+        const tempPassword = (raw + 'Aa1').slice(0, 10);
+        user.password = tempPassword; // hashed by the pre-save hook
+        await user.save();
+
+        res.status(200).json({ tempPassword, email: user.email || '', username: user.username });
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
@@ -162,5 +184,6 @@ export {
     registerUser,
     logoutUser,
     updateUser,
+    resetUserPassword,
     deleteUser,
 };

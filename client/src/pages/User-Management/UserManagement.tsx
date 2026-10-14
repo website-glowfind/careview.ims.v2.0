@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { UserPlus, Shield, Pencil, Eye, Search, Users, MoreHorizontal, KeyRound, Power, Trash2, CheckCircle2, SlidersHorizontal } from 'lucide-react';
+import { UserPlus, Shield, Pencil, Eye, Search, Users, MoreHorizontal, KeyRound, Power, Trash2, CheckCircle2, SlidersHorizontal, RotateCcw, Copy, Check, AlertTriangle, X } from 'lucide-react';
 import { useUserStore } from '@/store/userStore';
 import { useAuthStore } from '@/store/authStore';
 import { AddUserModal } from '@/components/add-user-modal';
@@ -8,9 +8,9 @@ import { accessLevelLabel } from '@/config/permissions';
 import type { User } from '@/types/inventory';
 
 const ROLE_META: Record<string, { label: string; pill: string; icon: typeof Shield }> = {
-  admin:    { label: 'Admin',    pill: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400', icon: Shield },
-  encoder:  { label: 'Encoder',  pill: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400', icon: Pencil },
-  employee: { label: 'Employee', pill: 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300', icon: Eye },
+  admin:    { label: 'Admin',  pill: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400', icon: Shield },
+  encoder:  { label: 'Editor', pill: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400', icon: Pencil },
+  employee: { label: 'Staff',  pill: 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300', icon: Eye },
 };
 const roleMeta = (role?: string) => ROLE_META[role ?? 'employee'] ?? ROLE_META.employee;
 const hasCustom = (u: User) => !!u.permissions && Object.keys(u.permissions).length > 0;
@@ -18,13 +18,19 @@ const fmtDate = (d?: string) => (d ? new Date(d).toLocaleDateString('en-US', { y
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase() || 'U';
 
 export function UserManagement() {
-  const { users, isLoading, error, fetchUsers, addUser, editUser, deleteUser, updatePermissions, setUserStatus } = useUserStore();
+  const { users, isLoading, error, fetchUsers, addUser, editUser, deleteUser, updatePermissions, setUserStatus, resetPassword } = useUserStore();
   const { user: currentUser } = useAuthStore();
   const isAdmin = currentUser?.role === 'admin';
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | undefined>();
   const [managingUser, setManagingUser] = useState<User | null>(null);
+  const [resetTarget, setResetTarget] = useState<User | null>(null);
+  const [resetting, setResetting] = useState(false);
+  const [resetResult, setResetResult] = useState<{ user: User; tempPassword: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -67,11 +73,26 @@ export function UserManagement() {
     catch (err: any) { setActionError(err.message); }
   };
 
-  const handleDelete = async (u: User) => {
-    setMenuFor(null);
-    if (!confirm(`Delete user "${u.fullName}"? This cannot be undone.`)) return;
-    try { await deleteUser(u.id); } catch (err: any) { setActionError(err.message); }
+  const doReset = async () => {
+    if (!resetTarget) return;
+    setResetting(true);
+    try {
+      const res = await resetPassword(resetTarget.id);
+      setResetResult({ user: resetTarget, tempPassword: res.tempPassword });
+      setResetTarget(null);
+    } catch (err: any) { setActionError(err.message); setResetTarget(null); }
+    finally { setResetting(false); }
   };
+
+  const doDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try { await deleteUser(deleteTarget.id); setDeleteTarget(null); }
+    catch (err: any) { setActionError(err.message); }
+    finally { setDeleting(false); }
+  };
+
+  const copyTemp = () => { if (resetResult) { navigator.clipboard?.writeText(resetResult.tempPassword); setCopied(true); setTimeout(() => setCopied(false), 1500); } };
 
   const SELECT = 'px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-700 dark:text-slate-300';
 
@@ -150,10 +171,11 @@ export function UserManagement() {
                       {menuFor === u.id && (
                         <>
                           <div className="fixed inset-0 z-10" onClick={() => setMenuFor(null)} />
-                          <div className="absolute right-4 top-9 z-20 w-44 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left">
+                          <div className="absolute right-4 top-9 z-20 w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left">
                             <button onClick={() => { setMenuFor(null); setEditingUser(u); setIsModalOpen(true); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><Pencil className="w-4 h-4" /> Edit User</button>
-                            <button onClick={() => toggleStatus(u)} disabled={self} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a] disabled:opacity-40"><Power className="w-4 h-4" /> {active ? 'Deactivate' : 'Activate'}</button>
-                            <button onClick={() => handleDelete(u)} disabled={self} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-40"><Trash2 className="w-4 h-4" /> Delete</button>
+                            <button onClick={() => toggleStatus(u)} disabled={self} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a] disabled:opacity-40"><Power className="w-4 h-4" /> {active ? 'Disable Account' : 'Enable Account'}</button>
+                            <button onClick={() => { setMenuFor(null); setResetTarget(u); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><RotateCcw className="w-4 h-4" /> Reset Password</button>
+                            <button onClick={() => { setMenuFor(null); setDeleteTarget(u); }} disabled={self} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-40"><Trash2 className="w-4 h-4" /> Delete User</button>
                           </div>
                         </>
                       )}
@@ -177,6 +199,52 @@ export function UserManagement() {
           onClose={() => setManagingUser(null)}
           onSave={async (perms) => { await updatePermissions(managingUser.id, perms); }}
         />
+      )}
+
+      {/* Reset Password — confirm */}
+      {resetTarget && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[75] p-4">
+          <div className="bg-white dark:bg-[#162236] rounded-2xl max-w-sm w-full shadow-2xl border dark:border-[#1e3a5f] p-5">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2">Reset Password</h3>
+            <div className="flex items-start gap-2 text-sm text-gray-600 dark:text-slate-400 mb-5"><AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" /><span>Reset <strong className="text-gray-900 dark:text-white">{resetTarget.fullName}</strong>'s password. They will need to use the new temporary password.</span></div>
+            <div className="flex gap-3">
+              <button onClick={() => setResetTarget(null)} disabled={resetting} className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm font-semibold text-gray-700 dark:text-slate-200 disabled:opacity-50">Cancel</button>
+              <button onClick={doReset} disabled={resetting} className="flex-1 py-2 rounded-lg bg-[#0b5c96] text-white text-sm font-semibold hover:bg-[#094a79] disabled:opacity-50">{resetting ? 'Resetting...' : 'Reset Password'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password — result (temporary password) */}
+      {resetResult && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[75] p-4">
+          <div className="bg-white dark:bg-[#162236] rounded-2xl max-w-md w-full shadow-2xl border dark:border-[#1e3a5f]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#1e3a5f]"><h3 className="text-base font-bold text-gray-900 dark:text-white">Temporary Password</h3><button onClick={() => setResetResult(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button></div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-gray-600 dark:text-slate-400">A temporary password was generated for <strong className="text-gray-900 dark:text-white">{resetResult.user.fullName}</strong> (@{resetResult.user.username}). Share it securely — they should change it after logging in.</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 px-3 py-2 rounded-lg bg-gray-50 dark:bg-[#0f1729] border border-gray-200 dark:border-[#1e3a5f] font-mono text-sm text-gray-900 dark:text-white tracking-wide">{resetResult.tempPassword}</code>
+                <button onClick={copyTemp} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-gray-500 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]">{copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}</button>
+              </div>
+              <p className="text-xs text-gray-400">Email delivery isn't configured yet — hand this to the user directly. A password-reset email can be added later with an SMTP service.</p>
+            </div>
+            <div className="flex justify-end px-5 py-4 border-t border-gray-100 dark:border-[#1e3a5f]"><button onClick={() => setResetResult(null)} className="px-5 py-2 rounded-lg bg-[#0b5c96] text-white text-sm font-semibold hover:bg-[#094a79]">Done</button></div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete — confirm */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[75] p-4">
+          <div className="bg-white dark:bg-[#162236] rounded-2xl max-w-sm w-full shadow-2xl border dark:border-[#1e3a5f] p-5">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2">Delete User</h3>
+            <div className="flex items-start gap-2 text-sm text-gray-600 dark:text-slate-400 mb-5"><AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" /><span>Permanently delete <strong className="text-gray-900 dark:text-white">{deleteTarget.fullName}</strong>'s account. This cannot be undone.</span></div>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteTarget(null)} disabled={deleting} className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm font-semibold text-gray-700 dark:text-slate-200 disabled:opacity-50">Cancel</button>
+              <button onClick={doDelete} disabled={deleting} className="flex-1 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-50">{deleting ? 'Deleting...' : 'Delete User'}</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

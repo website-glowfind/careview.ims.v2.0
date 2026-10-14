@@ -27,6 +27,7 @@ const userSchema = new mongoose.Schema(
         enum: ["Admin", "HR", "IT", "Finance", "Marketing", "Operations"],
     },
     email: { type: String, default: "" },
+    centerBranch: { type: String, default: "" },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
     lastLogin: { type: Date },
     // Module-level access control: { [moduleId]: ["view","create",...] }.

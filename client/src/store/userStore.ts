@@ -13,6 +13,7 @@ function mapUser(u: any): User {
     role:       u.role ?? 'employee',
     department: u.department ?? '',
     email:      u.email ?? '',
+    centerBranch: u.centerBranch ?? '',
     status:     u.status ?? 'active',
     permissions: u.permissions ?? {},
     lastLogin:  u.lastLogin ?? undefined,
@@ -31,6 +32,7 @@ interface UserStoreState {
   deleteUser: (id: string) => Promise<void>;
   updatePermissions: (id: string, permissions: Record<string, string[]>) => Promise<void>;
   setUserStatus: (id: string, status: 'active' | 'inactive') => Promise<void>;
+  resetPassword: (id: string) => Promise<{ tempPassword: string; email: string; username: string }>;
 }
 
 export const useUserStore = create<UserStoreState>((set, get) => ({
@@ -54,6 +56,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
       const res = await api.post('/users/register', {
         name: data.fullName, username: data.username,
         password: data.password, role: data.role, department: data.department,
+        email: data.email, centerBranch: data.centerBranch, status: data.status,
       });
       const created = mapUser(res.data);
       set(s => ({ users: [...s.users, created], isLoading: false }));
@@ -76,6 +79,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
       const body: any = {
         name: data.fullName, username: data.username,
         role: data.role, department: data.department,
+        email: data.email, centerBranch: data.centerBranch, status: data.status,
       };
       if (data.password) body.password = data.password;
       const res = await api.put(`/users/${id}`, body);
@@ -119,6 +123,23 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
       set(s => ({ users: s.users.map(u => u.id === id ? updated : u) }));
     } catch (err: any) {
       const message = err.response?.data?.error || 'Failed to update status';
+      set({ error: message });
+      throw new Error(message);
+    }
+  },
+
+  resetPassword: async (id) => {
+    try {
+      const res = await api.post(`/users/${id}/reset-password`);
+      const u = get().users.find(x => x.id === id);
+      useActivityLogStore.getState().addHistoryEntry({
+        action: 'edited', category: 'user',
+        deviceCode: u?.username ?? '', deviceName: u?.fullName ?? '',
+        company: 'KHEALTH', details: 'Password reset (temporary password issued)',
+      });
+      return res.data as { tempPassword: string; email: string; username: string };
+    } catch (err: any) {
+      const message = err.response?.data?.error || 'Failed to reset password';
       set({ error: message });
       throw new Error(message);
     }

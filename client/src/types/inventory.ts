@@ -21,6 +21,7 @@ export interface User {
   password: string;
   role: UserRole;
   email?: string;
+  centerBranch?: string;
   status?: 'active' | 'inactive';
   permissions?: Record<string, string[]>;
   lastLogin?: string;

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, Eye, EyeOff, UserPlus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, Eye, EyeOff, UserCog } from 'lucide-react';
 import type { User, UserRole } from '@/types/inventory';
 
 interface AddUserModalProps {
@@ -9,198 +9,96 @@ interface AddUserModalProps {
   editUser?: User;
 }
 
-export function AddUserModal({ isOpen, onClose, onAdd, editUser }: AddUserModalProps) {
-  const [formData, setFormData] = useState<Omit<User, 'id' | 'createdAt'>>({
-    fullName: editUser?.fullName || '',
-    department: editUser?.department || '',
-    username: editUser?.username || '',
-    password: editUser?.password || '',
-    role: editUser?.role || 'employee',
-  });
+type FormState = {
+  fullName: string; email: string; department: string; centerBranch: string;
+  username: string; password: string; role: UserRole; status: 'active' | 'inactive';
+};
+const EMPTY: FormState = { fullName: '', email: '', department: '', centerBranch: '', username: '', password: '', role: 'employee', status: 'active' };
 
+const INPUT = 'w-full px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0b5c96]/40';
+const LABEL = 'block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1';
+
+export function AddUserModal({ isOpen, onClose, onAdd, editUser }: AddUserModalProps) {
+  const [form, setForm] = useState<FormState>(EMPTY);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onAdd(formData);
-    onClose();
-    // Reset form
-    setFormData({
-      fullName: '',
-      department: '',
-      username: '',
-      password: '',
-      role: 'employee',
-    });
-  };
+  // Sync form whenever the modal opens or the target user changes
+  useEffect(() => {
+    if (!isOpen) return;
+    setForm(editUser ? {
+      fullName: editUser.fullName || '', email: editUser.email || '', department: editUser.department || '',
+      centerBranch: editUser.centerBranch || '', username: editUser.username || '', password: '',
+      role: editUser.role || 'employee', status: editUser.status || 'active',
+    } : EMPTY);
+    setShowPassword(false);
+  }, [isOpen, editUser]);
 
   if (!isOpen) return null;
 
+  const set = (k: keyof FormState, v: string) => setForm((p) => ({ ...p, [k]: v }));
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onAdd({
+      fullName: form.fullName, email: form.email, department: form.department, centerBranch: form.centerBranch,
+      username: form.username, password: form.password, role: form.role, status: form.status,
+    } as Omit<User, 'id' | 'createdAt'>);
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <UserPlus className="w-5 h-5 text-blue-600" />
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
+      <div className="bg-white dark:bg-[#162236] rounded-2xl shadow-xl max-w-xl w-full max-h-[92vh] overflow-y-auto border dark:border-[#1e3a5f]">
+        <div className="sticky top-0 bg-white dark:bg-[#162236] border-b border-gray-100 dark:border-[#1e3a5f] px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-[#0b5c96]/10 text-[#0b5c96] dark:text-blue-400 flex items-center justify-center"><UserCog className="w-5 h-5" /></div>
+            <div>
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">{editUser ? 'Edit User' : 'Add New User'}</h2>
+              <p className="text-xs text-gray-500 dark:text-slate-400">Fill in the details for this account.</p>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              {editUser ? 'Edit User' : 'Add New User'}
-            </h2>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100"
-          >
-            <X className="w-6 h-6" />
-          </button>
+          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-slate-200"><X className="w-5 h-5" /></button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label className={LABEL}>Full Name <span className="text-red-500">*</span></label><input required value={form.fullName} onChange={(e) => set('fullName', e.target.value)} placeholder="John Doe" className={INPUT} /></div>
+            <div><label className={LABEL}>Email Address</label><input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="juan@khealth.com" className={INPUT} /></div>
+            <div><label className={LABEL}>Department <span className="text-red-500">*</span></label><input required value={form.department} onChange={(e) => set('department', e.target.value)} placeholder="IT Administration" className={INPUT} /></div>
+            <div><label className={LABEL}>Center / Branch</label><input value={form.centerBranch} onChange={(e) => set('centerBranch', e.target.value)} placeholder="Main Office" className={INPUT} /></div>
+            <div><label className={LABEL}>Username <span className="text-red-500">*</span></label><input required value={form.username} onChange={(e) => set('username', e.target.value)} placeholder="johndoe" className={INPUT} /></div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name *
-              </label>
-              <input
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="John Doe"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Department *
-              </label>
-              <input
-                type="text"
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="IT Department"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Username *
-              </label>
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="johndoe"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password *
-              </label>
+              <label className={LABEL}>Password {!editUser && <span className="text-red-500">*</span>}</label>
               <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
+                <input type={showPassword ? 'text' : 'password'} required={!editUser} value={form.password} onChange={(e) => set('password', e.target.value)} placeholder={editUser ? 'Leave blank to keep current' : '••••••••'} className={`${INPUT} pr-10`} />
+                <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
               </div>
             </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Role *
-              </label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="employee">Employee - View-only access</option>
-                <option value="encoder">Encoder - Can add & edit (no delete)</option>
-                <option value="admin">Admin - Full access to all features</option>
+            <div>
+              <label className={LABEL}>Role <span className="text-red-500">*</span></label>
+              <select required value={form.role} onChange={(e) => set('role', e.target.value)} className={INPUT}>
+                <option value="admin">Admin — Full access</option>
+                <option value="encoder">Editor — View &amp; edit</option>
+                <option value="employee">Staff — View-only</option>
               </select>
             </div>
-          </div>
-
-          {/* Role Descriptions */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              Role Permissions
-            </h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-start gap-2">
-                <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded">
-                  Admin
-                </span>
-                <p className="text-gray-600 flex-1">
-                  Full access: can add, edit, and delete both users and devices
-                </p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-semibold rounded">
-                  Editor
-                </span>
-                <p className="text-gray-600 flex-1">
-                  Can view and edit records, but cannot delete data or manage users
-                </p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="px-2 py-0.5 bg-gray-100 text-gray-800 text-xs font-semibold rounded">
-                  User
-                </span>
-                <p className="text-gray-600 flex-1">
-                  View-only: can see everything but cannot modify any data
-                </p>
-              </div>
+            <div>
+              <label className={LABEL}>Account Status</label>
+              <select value={form.status} onChange={(e) => set('status', e.target.value)} className={INPUT}><option value="active">Active</option><option value="inactive">Inactive</option></select>
             </div>
           </div>
 
-          <div className="flex gap-3 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              {editUser ? 'Update User' : 'Add User'}
-            </button>
+          <div className="p-4 bg-gray-50 dark:bg-[#0f1729] rounded-xl border border-gray-100 dark:border-[#1e3a5f]">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-slate-300 mb-2">Role Defaults</h3>
+            <div className="space-y-1.5 text-xs text-gray-600 dark:text-slate-400">
+              <p><span className="font-semibold text-blue-700 dark:text-blue-400">Admin</span> — Full access to all modules and actions. Permissions can be customized after creation.</p>
+              <p><span className="font-semibold text-green-700 dark:text-green-400">Editor</span> — View and edit access to key modules. Cannot delete data or manage users.</p>
+              <p><span className="font-semibold text-gray-700 dark:text-slate-300">Staff</span> — View-only access to limited modules. Customize via Manage Access.</p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm font-medium text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]">Cancel</button>
+            <button type="submit" className="flex-1 px-4 py-2 rounded-lg bg-[#0b5c96] text-white text-sm font-semibold hover:bg-[#094a79]">{editUser ? 'Update User' : 'Add User'}</button>
           </div>
         </form>
       </div>
