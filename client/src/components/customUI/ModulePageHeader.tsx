@@ -18,7 +18,7 @@ export function ModulePageHeader({
 
   return (
     <div className="bg-white dark:bg-[#0d1535] border-b border-gray-200 dark:border-[#1e3a5f]">
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 pt-4 pb-5">
+      <div className="max-w-[1600px] mx-auto px-6 lg:px-10 pt-4 pb-5">
         <button
           onClick={onBack}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-slate-400 hover:text-[#0b5c96] dark:hover:text-blue-400 transition-colors"
@@ -39,7 +39,7 @@ export function ModulePageHeader({
 
       {/* Sub-tabs (e.g. IT Assets: Inventory · Add Assets · Subscription List · Overview · Export Reports) */}
       {m.tabs && m.tabs.length > 0 && (
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-10">
           <nav className="flex items-center gap-6 overflow-x-auto -mb-px">
             {m.tabs.map((t) => {
               const active = t.view === view;

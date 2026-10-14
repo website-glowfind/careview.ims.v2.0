@@ -84,7 +84,7 @@ export function OfficeSupplyInventory({ assets, onEdit, onView, onDelete, onMenu
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[1200px] text-sm">
           <thead className="bg-gray-50 dark:bg-[#1e2d4a] border-y border-gray-200 dark:border-[#1e3a5f]">
             <tr className="text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <th className="px-5 py-3">Item Code</th><th className="px-5 py-3">Item Name</th><th className="px-5 py-3">Category</th><th className="px-5 py-3">Brand</th>

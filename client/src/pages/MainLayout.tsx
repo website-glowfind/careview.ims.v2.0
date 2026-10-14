@@ -64,7 +64,7 @@ export default function MainLayout() {
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f1729] transition-colors duration-300">
       <TopBar currentView={currentView} onModulesClick={goHub} />
       <ModulePageHeader view={currentView} onBack={goHub} onSelectTab={setCurrentView} />
-      <main className="max-w-7xl mx-auto px-6 lg:px-10 py-8">
+      <main className="max-w-[1600px] mx-auto px-6 lg:px-10 py-8">
         {renderView()}
       </main>
     </div>

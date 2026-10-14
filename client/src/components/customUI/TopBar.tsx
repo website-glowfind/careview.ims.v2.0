@@ -21,7 +21,7 @@ export function TopBar({ currentView, onModulesClick }: TopBarProps) {
 
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-[#0d1535] border-b border-gray-200 dark:border-[#1e3a5f]">
-      <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
         {/* Brand */}
         <button onClick={onModulesClick} className="flex items-center" title="Go to Modules">
           <img
