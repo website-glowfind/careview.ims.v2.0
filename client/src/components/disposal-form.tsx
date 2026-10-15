@@ -11,6 +11,8 @@ interface DisposalFormProps {
   assets: ITAsset[];
   currentUser: string;
   onSaveFormRecord: (record: Omit<FormRecord, 'id' | 'dateCreated'>) => void;
+  /** Assets sent from an asset register's Disposal action — preselected on mount */
+  preselectedAssets?: ITAsset[];
 }
 
 interface DisposalItem {
@@ -27,15 +29,18 @@ interface BlankFormRow {
   remarks: string;
 }
 
-export function DisposalForm({ assets, currentUser, onSaveFormRecord }: DisposalFormProps) {
+export function DisposalForm({ assets, currentUser, onSaveFormRecord, preselectedAssets }: DisposalFormProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const previewRef = useRef<HTMLDivElement>(null);
+  const detailsRef = useRef<HTMLDivElement>(null);
   // Employee name autocomplete
   const [empSuggestions, setEmpSuggestions] = useState<{ _id?: string; fullName: string; employeeId: string; position: string; department: string }[]>([]);
   const [showEmpSuggestions, setShowEmpSuggestions] = useState(false);
   const [empNameLoading, setEmpNameLoading] = useState(false);
   const empTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [selectedAssets, setSelectedAssets] = useState<DisposalItem[]>([]);
+  const [selectedAssets, setSelectedAssets] = useState<DisposalItem[]>(
+    (preselectedAssets ?? []).map((a) => ({ asset: a, quantity: 1, reason: '' })),
+  );
   const [showPreview, setShowPreview] = useState(false);
   const [disposalDate, setDisposalDate] = useState(new Date().toISOString().split('T')[0]);
   const [disposalMethod, setDisposalMethod] = useState('');
@@ -49,6 +54,13 @@ export function DisposalForm({ assets, currentUser, onSaveFormRecord }: Disposal
   const [isBlankForm, setIsBlankForm] = useState(false);
   const [companyFilter, setCompanyFilter] = useState<string>('ALL');
   const [registerFilter, setRegisterFilter] = useState<RegisterId>('all');
+
+  // When assets arrive from a register's Disposal action, scroll to the details.
+  useEffect(() => {
+    if (preselectedAssets && preselectedAssets.length) {
+      setTimeout(() => detailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Blank form editable fields
   const [blankFormData, setBlankFormData] = useState({
@@ -385,7 +397,7 @@ export function DisposalForm({ assets, currentUser, onSaveFormRecord }: Disposal
           </div>
 
           {/* Right Column: Selected Assets and Details */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div ref={detailsRef} className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Disposal Details</h2>
 
             {/* Employee Information */}

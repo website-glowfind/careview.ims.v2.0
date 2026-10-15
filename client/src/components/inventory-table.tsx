@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, Edit, Trash2, Eye, AlertTriangle, ArrowRightLeft, Download, FileSpreadsheet } from 'lucide-react';
+import { Search, Filter, Edit, Trash2, Eye, AlertTriangle, ArrowRightLeft, Download, FileSpreadsheet, Recycle } from 'lucide-react';
 import type { ITAsset, AssetStatus, AssetCategory, Company, AssetType } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
 import { exportToCSV, exportDetailedDevicesPDF } from '@/utils/exportUtils';
@@ -14,6 +14,7 @@ interface InventoryTableProps {
   onDelete: (id: string) => void;
   onViewDetails: (asset: ITAsset) => void;
   onTransfer: (asset: ITAsset) => void;
+  onDispose?: (asset: ITAsset) => void;
   isAdmin: boolean;
   canEdit?: boolean;
   assetType?: AssetType;
@@ -47,6 +48,7 @@ export function InventoryTable({
   onDelete,
   onViewDetails,
   onTransfer,
+  onDispose,
   isAdmin,
   canEdit,
   assetType = 'IT',
@@ -238,6 +240,7 @@ export function InventoryTable({
                     <>
                       <button onClick={() => onEdit(asset)} className="p-1 hover:text-green-600"><Edit size={18}/></button>
                       <button onClick={() => onTransfer(asset)} className="p-1 hover:text-purple-600"><ArrowRightLeft size={18}/></button>
+                      {onDispose && <button onClick={() => onDispose(asset)} className="p-1 hover:text-orange-600" title="Dispose"><Recycle size={18}/></button>}
                     </>
                   )}
                   {isAdmin && (

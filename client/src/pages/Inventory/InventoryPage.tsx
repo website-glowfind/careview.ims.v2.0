@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { LayoutList, LayoutGrid, Plus } from 'lucide-react';
+import { LayoutList, LayoutGrid, Plus, Recycle, X, Search as SearchIcon } from 'lucide-react';
+import { useDisposalDraftStore } from '@/store/disposalDraftStore';
 import { InventoryTable } from '@/components/inventory-table';
 import { InventoryCards } from '@/components/inventory-cards';
 import { FurnitureInventory } from '@/components/furniture-inventory';
@@ -30,9 +31,11 @@ interface InventoryPageProps {
   autoOpenForm?: boolean;
   /** Called when the auto-opened form is closed, so the parent can switch back to the Inventory tab */
   onRequestCloseForm?: () => void;
+  /** Navigate to another module view (used by the Disposal action → Disposal module) */
+  onNavigate?: (view: string) => void;
 }
 
-export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embedded = false, autoOpenForm = false, onRequestCloseForm }: InventoryPageProps) {
+export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embedded = false, autoOpenForm = false, onRequestCloseForm, onNavigate }: InventoryPageProps) {
   const {
     assets,
     selectedCompany,
@@ -47,6 +50,13 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embed
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === 'admin';
   const canEdit = user?.role === 'admin' || user?.role === 'encoder';
+
+  // ── Disposal flow (IT) ──
+  const setDisposalDraft = useDisposalDraftStore((s) => s.setItems);
+  const [disposalQueue, setDisposalQueue] = useState<ITAsset[]>([]);
+  const [showDisposalModal, setShowDisposalModal] = useState(false);
+  const [addMore, setAddMore] = useState(false);
+  const [disposalSearch, setDisposalSearch] = useState('');
 
   const title = pageTitle ?? (assetType === 'General' ? 'Asset List' : 'Inventory Management');
   const subtitle = pageSubtitle ?? (assetType === 'General'
@@ -342,6 +352,20 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embed
     localStorage.setItem('inventoryViewMode', mode);
   };
 
+  const handleDispose = (asset: ITAsset) => {
+    setDisposalQueue((q) => (q.some((a) => a._id === asset._id) ? q : [...q, asset]));
+    setShowDisposalModal(true);
+  };
+  const removeFromQueue = (id?: string) => setDisposalQueue((q) => q.filter((a) => a._id !== id));
+  const cancelDisposal = () => { setDisposalQueue([]); setShowDisposalModal(false); setAddMore(false); setDisposalSearch(''); };
+  const proceedDisposal = () => {
+    if (disposalQueue.length === 0) return;
+    setDisposalDraft(disposalQueue);
+    setShowDisposalModal(false); setAddMore(false); setDisposalSearch('');
+    setDisposalQueue([]);
+    onNavigate?.('disposal');
+  };
+
   const sharedProps = {
     assets: visibleAssets,
     selectedCompany,
@@ -350,6 +374,7 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embed
     onDelete: handleDelete,
     onViewDetails: handleView,
     onTransfer: handleTransfer,
+    onDispose: assetType === 'IT' ? handleDispose : undefined,
     isAdmin,
     canEdit,
     assetType,
@@ -512,6 +537,68 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embed
           onTransfer={handleConfirmTransfer}
           onSaveFormRecord={addFormRecord}
         />
+      )}
+
+      {/* Confirm Disposal (IT) */}
+      {showDisposalModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
+          <div className="bg-white dark:bg-[#162236] rounded-2xl w-full max-w-md shadow-xl">
+            <div className="flex items-start justify-between p-5 pb-3 border-b border-gray-100 dark:border-[#1e3a5f]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-600 flex items-center justify-center"><Recycle className="w-5 h-5" /></div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">Confirm Disposal</h3>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">This asset will be added to the centralized Disposal Form.</p>
+                </div>
+              </div>
+              <button onClick={cancelDisposal} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-slate-200"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-5 space-y-3 max-h-[52vh] overflow-y-auto">
+              <p className="text-sm text-gray-600 dark:text-slate-400">Are you sure you want to proceed with {disposalQueue.length > 1 ? `these ${disposalQueue.length} assets` : 'this asset'} for disposal?</p>
+              {disposalQueue.map((a) => (
+                <div key={a._id} className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 dark:border-[#1e3a5f] p-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-600 flex items-center justify-center shrink-0"><Recycle className="w-4 h-4" /></div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-xs font-semibold text-[#0b5c96] dark:text-blue-400">{a.deviceCode}</span>
+                        <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-gray-100 dark:bg-[#1e2d4a] text-gray-600 dark:text-slate-300">{a.company}</span>
+                        <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-blue-50 text-blue-700">IT Assets</span>
+                      </div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-slate-200 truncate">{a.name}</div>
+                      <div className="text-xs text-gray-400 capitalize">{a.category}</div>
+                    </div>
+                  </div>
+                  {disposalQueue.length > 1 && <button onClick={() => removeFromQueue(a._id)} className="p-1 text-gray-400 hover:text-red-600 shrink-0"><X className="w-4 h-4" /></button>}
+                </div>
+              ))}
+
+              {addMore && (
+                <div className="rounded-xl border border-gray-200 dark:border-[#1e3a5f] p-2">
+                  <div className="relative mb-2">
+                    <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input value={disposalSearch} onChange={(e) => setDisposalSearch(e.target.value)} placeholder="Search assets to add..." className="w-full pl-8 pr-3 py-1.5 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-900 dark:text-white" />
+                  </div>
+                  <div className="max-h-40 overflow-y-auto space-y-1">
+                    {assets.filter((a) => (a.assetType ?? 'IT') === 'IT' && !a.isDeleted && !disposalQueue.some((q) => q._id === a._id) && (!disposalSearch.trim() || `${a.deviceCode} ${a.name} ${a.brand}`.toLowerCase().includes(disposalSearch.trim().toLowerCase()))).slice(0, 20).map((a) => (
+                      <button key={a._id} onClick={() => { setDisposalQueue((q) => [...q, a]); setDisposalSearch(''); }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a]">
+                        <span className="font-mono text-xs font-semibold text-[#0b5c96] dark:text-blue-400">{a.deviceCode}</span>
+                        <span className="text-gray-700 dark:text-slate-300 truncate">{a.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-3 px-5 py-4 border-t border-gray-100 dark:border-[#1e3a5f]">
+              <button onClick={cancelDisposal} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm font-medium text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]">Cancel</button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setAddMore((v) => !v)} className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium ${addMore ? 'border-[#0b5c96] text-[#0b5c96] bg-[#0b5c96]/5' : 'border-gray-300 dark:border-[#1e3a5f] text-gray-600 dark:text-slate-300'}`}><Plus className="w-4 h-4" /> Add More</button>
+                <button onClick={proceedDisposal} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700"><Recycle className="w-4 h-4" /> Proceed</button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

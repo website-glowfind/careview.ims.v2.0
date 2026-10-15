@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Search, MoreVertical, Eye, Edit, Trash2, ArrowRightLeft,
+  Search, MoreVertical, Eye, Edit, Trash2, ArrowRightLeft, Recycle,
   Monitor, Keyboard, Mouse, Printer, Server, Wifi, Smartphone,
   Laptop, AlertTriangle,
   Sofa, Refrigerator, Lightbulb, Wrench, Car, Package,
@@ -18,6 +18,7 @@ interface InventoryCardsProps {
   onDelete: (id: string) => void;
   onViewDetails: (asset: ITAsset) => void;
   onTransfer: (asset: ITAsset) => void;
+  onDispose?: (asset: ITAsset) => void;
   isAdmin: boolean;
   canEdit?: boolean;
   assetType?: AssetType;
@@ -92,6 +93,7 @@ export function InventoryCards({
   onDelete,
   onViewDetails,
   onTransfer,
+  onDispose,
   isAdmin,
   canEdit,
   assetType = 'IT',
@@ -382,6 +384,14 @@ export function InventoryCards({
                           >
                             <ArrowRightLeft className="w-4 h-4" /> Transfer
                           </button>
+                          {onDispose && (
+                            <button
+                              onClick={() => { onDispose(asset); setOpenMenu(null); }}
+                              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-[#243352]"
+                            >
+                              <Recycle className="w-4 h-4" /> Dispose
+                            </button>
+                          )}
                           {isAdmin && (
                             <button
                               onClick={() => { setAssetToDelete(asset); setShowDeleteModal(true); setOpenMenu(null); }}

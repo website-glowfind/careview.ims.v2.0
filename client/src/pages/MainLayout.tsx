@@ -39,7 +39,7 @@ export default function MainLayout() {
 
     switch (currentView) {
       // ── IT Assets module tabs ──────────────────────────────────────
-      case 'inventory':       return <InventoryPage assetType="IT" embedded />;
+      case 'inventory':       return <InventoryPage assetType="IT" embedded onNavigate={setCurrentView} />;
       case 'add':             return (
         <InventoryPage assetType="IT" embedded autoOpenForm onRequestCloseForm={() => setCurrentView('inventory')} />
       );
