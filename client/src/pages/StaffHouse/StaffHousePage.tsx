@@ -8,8 +8,10 @@ import { useActivityLogStore } from '@/store/activityLogStore';
 import { useStaffHouseCategoryStore } from '@/store/staffHouseCategoryStore';
 import type { ITAsset, Company } from '@/types/inventory';
 import type { FurnitureImportRow, ImportResult } from '@/components/furniture-upload-modal';
+import { ConfirmDisposalModal } from '@/components/confirm-disposal-modal';
+import { useDisposalDraftStore } from '@/store/disposalDraftStore';
 
-export function StaffHousePage() {
+export function StaffHousePage({ onNavigate }: { onNavigate?: (view: string) => void }) {
   const { assets, fetchAssets, isLoading, addAsset, updateAsset, deleteAsset, selectedCompany, setSelectedCompany } = useAssetStore();
   const { categories, addCategory, deleteCategory, fetchCategories } = useStaffHouseCategoryStore();
   const user = useAuthStore((s) => s.user);
@@ -21,6 +23,8 @@ export function StaffHousePage() {
   const [editing, setEditing] = useState<ITAsset | undefined>(undefined);
   const [viewing, setViewing] = useState<ITAsset | undefined>(undefined);
   const [viewIntent, setViewIntent] = useState<{ tab?: string; modal?: 'assign' | 'transfer' | 'maintenance' | 'disposal' | null }>({});
+  const [disposalItems, setDisposalItems] = useState<ITAsset[] | null>(null);
+  const setDisposalDraft = useDisposalDraftStore((s) => s.setItems);
 
   useEffect(() => { fetchAssets(); fetchCategories(); }, [fetchAssets, fetchCategories]);
 
@@ -38,7 +42,7 @@ export function StaffHousePage() {
       case 'assign':      setViewIntent({ tab: 'Assignment', modal: 'assign' }); setViewing(a); break;
       case 'transfer':    setViewIntent({ tab: 'Location', modal: 'transfer' }); setViewing(a); break;
       case 'maintenance': setViewIntent({ tab: 'Maintenance', modal: 'maintenance' }); setViewing(a); break;
-      case 'disposal':    setViewIntent({ tab: 'Disposal', modal: 'disposal' }); setViewing(a); break;
+      case 'disposal':    setDisposalItems([a]); break;
       case 'archive':     handleDelete(a._id!); break;
       default:            setViewIntent({}); setViewing(a); break;
     }
@@ -106,6 +110,16 @@ export function StaffHousePage() {
           onMenuAction={handleMenu}
           isAdmin={isAdmin}
           canEdit={canEdit}
+        />
+      )}
+
+      {disposalItems && (
+        <ConfirmDisposalModal
+          initial={disposalItems}
+          pickFrom={items}
+          registerLabel="Staff House"
+          onClose={() => setDisposalItems(null)}
+          onProceed={(sel) => { setDisposalDraft(sel); setDisposalItems(null); onNavigate?.('disposal'); }}
         />
       )}
 

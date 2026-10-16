@@ -6,8 +6,10 @@ import { useAssetStore } from '@/store/assetStore';
 import { useAuthStore } from '@/store/authStore';
 import { useActivityLogStore } from '@/store/activityLogStore';
 import type { ITAsset } from '@/types/inventory';
+import { ConfirmDisposalModal } from '@/components/confirm-disposal-modal';
+import { useDisposalDraftStore } from '@/store/disposalDraftStore';
 
-export function VehiclePage() {
+export function VehiclePage({ onNavigate }: { onNavigate?: (view: string) => void }) {
   const { assets, fetchAssets, isLoading, addAsset, updateAsset, deleteAsset } = useAssetStore();
   const user = useAuthStore((s) => s.user);
   const { addHistoryEntry } = useActivityLogStore();
@@ -18,6 +20,8 @@ export function VehiclePage() {
   const [editing, setEditing] = useState<ITAsset | undefined>(undefined);
   const [viewing, setViewing] = useState<ITAsset | undefined>(undefined);
   const [viewModal, setViewModal] = useState<string | null>(null);
+  const [disposalItems, setDisposalItems] = useState<ITAsset[] | null>(null);
+  const setDisposalDraft = useDisposalDraftStore((s) => s.setItems);
 
   useEffect(() => { fetchAssets(); }, [fetchAssets]);
 
@@ -31,6 +35,7 @@ export function VehiclePage() {
   const handleMenu = (a: ITAsset, action: string) => {
     if (action === 'edit') { handleEdit(a); return; }
     if (action === 'archive') { handleDelete(a._id!); return; }
+    if (action === 'disposal') { setDisposalItems([a]); return; }
     setViewModal(action); setViewing(a);
   };
 
@@ -72,6 +77,16 @@ export function VehiclePage() {
           onMenuAction={handleMenu}
           isAdmin={isAdmin}
           canEdit={canEdit}
+        />
+      )}
+
+      {disposalItems && (
+        <ConfirmDisposalModal
+          initial={disposalItems}
+          pickFrom={vehicles.filter((v) => !v.isDeleted)}
+          registerLabel="Company Vehicle"
+          onClose={() => setDisposalItems(null)}
+          onProceed={(items) => { setDisposalDraft(items); setDisposalItems(null); onNavigate?.('disposal'); }}
         />
       )}
 

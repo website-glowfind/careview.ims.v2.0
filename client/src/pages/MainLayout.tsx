@@ -48,9 +48,9 @@ export default function MainLayout() {
       case 'dashboard':       return <ITOverviewTab />;
       case 'export':          return <ITExportReportsTab />;
       // ───────────────────────────────────────────────────────────────
-      case 'furniture':       return <InventoryPage assetType="General" />;
-      case 'vehicle':         return <VehiclePage />;
-      case 'staff-house':     return <StaffHousePage />;
+      case 'furniture':       return <InventoryPage assetType="General" onNavigate={setCurrentView} />;
+      case 'vehicle':         return <VehiclePage onNavigate={setCurrentView} />;
+      case 'staff-house':     return <StaffHousePage onNavigate={setCurrentView} />;
       case 'office-supplies': return <OfficeSuppliesPage />;
       case 'records-compliance': return <RecordsCompliancePage onNavigate={setCurrentView} />;
       case 'deleted':         return <DeletedDevices />;

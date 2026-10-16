@@ -265,7 +265,7 @@ export function FurnitureInventory({
             <tbody className="divide-y divide-gray-100 dark:divide-[#1e3a5f]">
               {pageItems.length === 0 ? (
                 <tr><td colSpan={11} className="px-5 py-12 text-center text-gray-400 dark:text-slate-500">No furniture assets found</td></tr>
-              ) : pageItems.map((a) => (
+              ) : pageItems.map((a, rowIdx) => (
                 <tr key={a._id} className="hover:bg-gray-50 dark:hover:bg-[#1e2d4a]">
                   <td className="px-5 py-3 font-mono font-semibold text-[#0b5c96] dark:text-blue-400 whitespace-nowrap">{a.deviceCode}</td>
                   <td className="px-5 py-3 font-medium text-gray-900 dark:text-slate-200 max-w-[180px] truncate" title={a.name}>{a.name}</td>
@@ -284,7 +284,7 @@ export function FurnitureInventory({
                     {menuFor === a._id && (
                       <>
                         <div className="fixed inset-0 z-10" onClick={() => setMenuFor(null)} />
-                        <div className="absolute right-4 top-10 z-20 w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left">
+                        <div className={`absolute right-4 z-20 ${pageItems.length > 2 && rowIdx >= pageItems.length - 2 ? "bottom-10" : "top-10"} w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left`}>
                           {MENU.filter((m) => (!m.admin || isAdmin) && (m.key === 'view' || m.key === 'print' || allowEdit)).map((m) => (
                             <button key={m.key} onClick={() => act(a, m.key)} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
                               <m.icon className="w-4 h-4" /> {m.label}
