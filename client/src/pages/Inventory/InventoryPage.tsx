@@ -417,11 +417,11 @@ export function InventoryPage({ assetType = 'IT', pageTitle, pageSubtitle, embed
           <p className="text-gray-600 dark:text-slate-400 mt-1">{subtitle}</p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Add Asset (hidden in the tabbed module — "Add Assets" is its own tab) */}
-          {canEdit && !embedded && (
+          {/* Add Asset — right-side button (shown in the IT module too) */}
+          {canEdit && (
             <button
               onClick={handleAdd}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-[#0b5c96] text-white rounded-xl hover:bg-[#094a79] transition-colors font-medium"
             >
               <Plus className="w-4 h-4" />
               Add Asset

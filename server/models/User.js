@@ -29,6 +29,8 @@ const userSchema = new mongoose.Schema(
     email: { type: String, default: "" },
     centerBranch: { type: String, default: "" },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
+    // Force a password change on next login (admin-created or admin-reset accounts)
+    mustChangePassword: { type: Boolean, default: false },
     lastLogin: { type: Date },
     // Module-level access control: { [moduleId]: ["view","create",...] }.
     // Empty/absent → falls back to role defaults on the client.

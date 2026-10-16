@@ -5,6 +5,7 @@ import { ModulePageHeader, ModuleSetupPlaceholder } from '@/components/customUI/
 import { getModuleForView } from '@/config/modules';
 import { canAccessModule } from '@/config/permissions';
 import { useAuthStore } from '@/store/authStore';
+import { ForceChangePasswordModal } from '@/components/force-change-password-modal';
 import { InventoryPage } from '@/pages/Inventory/InventoryPage';
 import { ITOverviewTab } from '@/pages/Inventory/ITOverviewTab';
 import { ITExportReportsTab } from '@/pages/Inventory/ITExportReportsTab';
@@ -67,6 +68,7 @@ export default function MainLayout() {
       <div className="min-h-screen bg-gray-50 dark:bg-[#0f1729] transition-colors duration-300">
         <TopBar currentView={currentView} onModulesClick={goHub} />
         <ModuleHub onOpen={setCurrentView} />
+        {user?.mustChangePassword && <ForceChangePasswordModal />}
       </div>
     );
   }
@@ -78,6 +80,7 @@ export default function MainLayout() {
       <main className="max-w-[1600px] mx-auto px-6 lg:px-10 py-8">
         {renderView()}
       </main>
+      {user?.mustChangePassword && <ForceChangePasswordModal />}
     </div>
   );
 }

@@ -23,11 +23,10 @@ export interface ModuleDef {
 }
 
 export const MODULES: ModuleDef[] = [
-  { id: 'it-assets', name: 'IT Assets', description: 'Manage company computers, devices, software subscriptions, and IT inventory.', icon: MonitorSmartphone, views: ['inventory', 'add', 'subscriptions', 'dashboard', 'export'], entryView: 'inventory', tabs: [
-    { view: 'inventory',     label: 'Inventory' },
-    { view: 'add',           label: 'Add Assets' },
-    { view: 'subscriptions', label: 'Subscription List' },
+  { id: 'it-assets', name: 'IT Assets', description: 'Manage company computers, devices, software subscriptions, and IT inventory.', icon: MonitorSmartphone, views: ['inventory', 'add', 'subscriptions', 'dashboard', 'export'], entryView: 'dashboard', tabs: [
     { view: 'dashboard',     label: 'Overview' },
+    { view: 'inventory',     label: 'Inventory' },
+    { view: 'subscriptions', label: 'Subscription List' },
     { view: 'export',        label: 'Export Reports' },
   ], accent: 'bg-white text-[#0b5c96] ring-gray-200', code: 'ITA', group: 'Asset Registers' },
   { id: 'furniture', name: 'Furniture', description: 'Track office desks, chairs, cabinets, and other fixed company assets.', icon: Armchair, views: ['furniture'], entryView: 'furniture', adminOnly: true, accent: 'bg-white text-[#0b5c96] ring-gray-200', code: 'FUR', group: 'Asset Registers' },

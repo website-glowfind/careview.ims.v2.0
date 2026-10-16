@@ -147,10 +147,11 @@ export function UserManagement() {
                 <tr><td colSpan={8} className="px-5 py-12 text-center"><div className="animate-spin rounded-full h-7 w-7 border-b-2 border-[#0b5c96] mx-auto" /></td></tr>
               ) : visible.length === 0 ? (
                 <tr><td colSpan={8} className="px-5 py-14 text-center text-gray-400"><Users className="w-10 h-10 mx-auto mb-2 opacity-30" />No users found</td></tr>
-              ) : visible.map((u) => {
+              ) : visible.map((u, idx) => {
                 const meta = roleMeta(u.role);
                 const active = (u.status ?? 'active') === 'active';
                 const self = isSelf(u);
+                const openUp = visible.length > 2 && idx >= visible.length - 2;
                 return (
                   <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-[#1e2d4a]">
                     <td className="px-5 py-3">
@@ -171,7 +172,7 @@ export function UserManagement() {
                       {menuFor === u.id && (
                         <>
                           <div className="fixed inset-0 z-10" onClick={() => setMenuFor(null)} />
-                          <div className="absolute right-4 top-9 z-20 w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left">
+                          <div className={`absolute right-4 z-20 w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left ${openUp ? 'bottom-9' : 'top-9'}`}>
                             <button onClick={() => { setMenuFor(null); setEditingUser(u); setIsModalOpen(true); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><Pencil className="w-4 h-4" /> Edit User</button>
                             <button onClick={() => toggleStatus(u)} disabled={self} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a] disabled:opacity-40"><Power className="w-4 h-4" /> {active ? 'Disable Account' : 'Enable Account'}</button>
                             <button onClick={() => { setMenuFor(null); setResetTarget(u); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><RotateCcw className="w-4 h-4" /> Reset Password</button>

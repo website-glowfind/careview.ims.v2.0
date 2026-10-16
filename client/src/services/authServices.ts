@@ -21,6 +21,19 @@ export const loginService = async (username: string, password: string) => {
     }
 };
 
+export const changePasswordService = async (currentPassword: string, newPassword: string) => {
+    try {
+        await api.post("/users/change-password", { currentPassword, newPassword });
+        useAuthStore.getState().patchUser({ mustChangePassword: false });
+        return { success: true };
+    } catch (error: any) {
+        if (axios.isAxiosError(error)) {
+            throw new Error(error.response?.data?.error || "Failed to change password");
+        }
+        throw new Error("An unknown error occurred");
+    }
+};
+
 export const logoutService = async () => {
     try {
         await api.post("/users/logout");

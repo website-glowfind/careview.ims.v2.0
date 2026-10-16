@@ -41,6 +41,7 @@ const loginUser = async (req, res) => {
                 email: user.email || "",
                 status: user.status || "active",
                 permissions: user.permissions || {},
+                mustChangePassword: !!user.mustChangePassword,
             };
 
             // Configuration options
@@ -86,6 +87,8 @@ const registerUser = async (req, res) => {
             name,
             username,
             password,
+            // Admin-created accounts must change the admin-set password on first login
+            mustChangePassword: true,
             ...(role ? { role } : {}),
             ...(department ? { department } : {}),
             ...(email ? { email } : {}),
@@ -136,7 +139,7 @@ const updateUser = async (req, res) => {
         if (centerBranch !== undefined) user.centerBranch = centerBranch;
         if (status)                     user.status       = status;
         if (permissions !== undefined) { user.permissions = permissions; user.markModified('permissions'); }
-        if (password)    user.password   = password; // hashed via pre-save hook
+        if (password) { user.password = password; user.mustChangePassword = true; } // admin-set → force change on next login
 
         const updated = await user.save();
         const { password: _, ...userData } = updated.toObject();
@@ -159,9 +162,32 @@ const resetUserPassword = async (req, res) => {
         const raw = crypto.randomBytes(9).toString('base64').replace(/[^a-zA-Z0-9]/g, '');
         const tempPassword = (raw + 'Aa1').slice(0, 10);
         user.password = tempPassword; // hashed by the pre-save hook
+        user.mustChangePassword = true; // force change after using the temp password
         await user.save();
 
         res.status(200).json({ tempPassword, email: user.email || '', username: user.username });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// The logged-in user changes their own password (clears the force-change flag).
+const changeOwnPassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!newPassword || String(newPassword).length < 6) {
+            return res.status(400).json({ error: 'New password must be at least 6 characters.' });
+        }
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const ok = await user.matchPassword(currentPassword || '');
+        if (!ok) return res.status(400).json({ error: 'Current password is incorrect.' });
+
+        user.password = newPassword; // hashed by the pre-save hook
+        user.mustChangePassword = false;
+        await user.save();
+        res.status(200).json({ success: true, message: 'Password updated' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -185,5 +211,6 @@ export {
     logoutUser,
     updateUser,
     resetUserPassword,
+    changeOwnPassword,
     deleteUser,
 };

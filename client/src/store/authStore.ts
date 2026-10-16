@@ -11,11 +11,13 @@ interface UserData {
   email?: string;
   status?: 'active' | 'inactive';
   permissions?: Record<string, string[]>;
+  mustChangePassword?: boolean;
 }
 
 interface AuthState {
   user: UserData | null;
   setAuth: (user: UserData) => void;
+  patchUser: (partial: Partial<UserData>) => void;
   logout: () => void;
 }
 
@@ -30,6 +32,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
     set({ user: userData });
     console.log("User data set in Zustand and cookie:", userData);
+  },
+
+  patchUser: (partial: Partial<UserData>) => {
+    const current = useAuthStore.getState().user;
+    if (!current) return;
+    const merged = { ...current, ...partial };
+    try { Cookies.set("user", JSON.stringify(merged), { expires: 1, secure: false, sameSite: 'lax' }); } catch { /* ignore */ }
+    set({ user: merged });
   },
 
   logout: () => {
