@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
     },
     department: {
         type: String,
-        enum: ["Admin", "HR", "IT", "Finance", "Marketing", "Operations"],
+        default: "",
     },
     email: { type: String, default: "" },
     centerBranch: { type: String, default: "" },
