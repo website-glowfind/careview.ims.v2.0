@@ -18,6 +18,9 @@ const EMPTY: FormState = { fullName: '', email: '', department: '', centerBranch
 const INPUT = 'w-full px-3 py-2 border border-gray-300 dark:border-[#1e3a5f] rounded-lg bg-white dark:bg-[#1e2d4a] text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0b5c96]/40';
 const LABEL = 'block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1';
 
+// Must match the backend User model's `department` enum to avoid validation errors.
+const DEPARTMENTS = ['Admin', 'HR', 'IT', 'Finance', 'Marketing', 'Operations'];
+
 export function AddUserModal({ isOpen, onClose, onAdd, editUser }: AddUserModalProps) {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [showPassword, setShowPassword] = useState(false);
@@ -63,7 +66,14 @@ export function AddUserModal({ isOpen, onClose, onAdd, editUser }: AddUserModalP
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><label className={LABEL}>Full Name <span className="text-red-500">*</span></label><input required value={form.fullName} onChange={(e) => set('fullName', e.target.value)} placeholder="John Doe" className={INPUT} /></div>
             <div><label className={LABEL}>Email Address</label><input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="juan@khealth.com" className={INPUT} /></div>
-            <div><label className={LABEL}>Department <span className="text-red-500">*</span></label><input required value={form.department} onChange={(e) => set('department', e.target.value)} placeholder="IT Administration" className={INPUT} /></div>
+            <div>
+              <label className={LABEL}>Department <span className="text-red-500">*</span></label>
+              <select required value={form.department} onChange={(e) => set('department', e.target.value)} className={INPUT}>
+                <option value="">Select department...</option>
+                {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
+                {form.department && !DEPARTMENTS.includes(form.department) && <option value={form.department}>{form.department}</option>}
+              </select>
+            </div>
             <div><label className={LABEL}>Center / Branch</label><input value={form.centerBranch} onChange={(e) => set('centerBranch', e.target.value)} placeholder="Main Office" className={INPUT} /></div>
             <div><label className={LABEL}>Username <span className="text-red-500">*</span></label><input required value={form.username} onChange={(e) => set('username', e.target.value)} placeholder="johndoe" className={INPUT} /></div>
             <div>
