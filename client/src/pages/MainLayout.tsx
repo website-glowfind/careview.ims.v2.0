@@ -65,22 +65,34 @@ export default function MainLayout() {
 
   if (currentView === 'hub') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0f1729] transition-colors duration-300">
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[#0f1729] transition-colors duration-300">
         <TopBar currentView={currentView} onModulesClick={goHub} />
         <ModuleHub onOpen={setCurrentView} />
+        <AppFooter />
         {user?.mustChangePassword && <ForceChangePasswordModal />}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0f1729] transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[#0f1729] transition-colors duration-300">
       <TopBar currentView={currentView} onModulesClick={goHub} />
       <ModulePageHeader view={currentView} onBack={goHub} onSelectTab={setCurrentView} />
-      <main className="max-w-[1600px] mx-auto px-6 lg:px-10 py-8">
+      <main className="flex-1 w-full max-w-[1600px] mx-auto px-6 lg:px-10 py-8">
         {renderView()}
       </main>
+      <AppFooter />
       {user?.mustChangePassword && <ForceChangePasswordModal />}
     </div>
+  );
+}
+
+function AppFooter() {
+  return (
+    <footer className="mt-auto border-t border-gray-200 dark:border-[#1e3a5f]">
+      <div className="max-w-[1600px] mx-auto px-6 lg:px-10 py-3 flex justify-end">
+        <p className="text-xs text-gray-400 dark:text-slate-500">Created by: Jan &amp; Jin</p>
+      </div>
+    </footer>
   );
 }
