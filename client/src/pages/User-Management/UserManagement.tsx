@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 import { AddUserModal } from '@/components/add-user-modal';
 import { ManageAccessModal } from '@/components/manage-access-modal';
 import { accessLevelLabel } from '@/config/permissions';
+import { menuPosition } from '@/utils/menuPosition';
 import type { User } from '@/types/inventory';
 
 const ROLE_META: Record<string, { label: string; pill: string; icon: typeof Shield }> = {
@@ -32,6 +33,7 @@ export function UserManagement() {
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -168,11 +170,11 @@ export function UserManagement() {
                     <td className="px-5 py-3 text-gray-500 dark:text-slate-400 whitespace-nowrap">{fmtDate(u.lastLogin)}</td>
                     <td className="px-5 py-3 text-right whitespace-nowrap relative">
                       {isAdmin && <button onClick={() => setManagingUser(u)} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-[#0b5c96] dark:text-blue-400 hover:bg-[#0b5c96]/10"><SlidersHorizontal className="w-3.5 h-3.5" /> Manage Access</button>}
-                      {isAdmin && <button onClick={() => setMenuFor(menuFor === u.id ? null : u.id)} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>}
+                      {isAdmin && <button onClick={(e) => { setMenuRect(e.currentTarget.getBoundingClientRect()); setMenuFor(menuFor === u.id ? null : u.id); }} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>}
                       {menuFor === u.id && (
                         <>
-                          <div className="fixed inset-0 z-10" onClick={() => setMenuFor(null)} />
-                          <div className={`absolute right-4 z-20 w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left ${openUp ? 'bottom-9' : 'top-9'}`}>
+                          <div className="fixed inset-0 z-40" onClick={() => setMenuFor(null)} onWheel={() => setMenuFor(null)} />
+                          <div style={menuPosition(menuRect, 180)} className={`fixed z-50 w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left`}>
                             <button onClick={() => { setMenuFor(null); setEditingUser(u); setIsModalOpen(true); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><Pencil className="w-4 h-4" /> Edit User</button>
                             <button onClick={() => toggleStatus(u)} disabled={self} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a] disabled:opacity-40"><Power className="w-4 h-4" /> {active ? 'Disable Account' : 'Enable Account'}</button>
                             <button onClick={() => { setMenuFor(null); setResetTarget(u); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><RotateCcw className="w-4 h-4" /> Reset Password</button>

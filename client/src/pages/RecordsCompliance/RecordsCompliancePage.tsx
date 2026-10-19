@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Download, Search, Eye, SlidersHorizontal, ClipboardList, CheckCircle2, Clock, AlertTriangle, XCircle, Check, AlertCircle, X } from 'lucide-react';
 import { useAssetStore } from '@/store/assetStore';
+import { useHighlightStore } from '@/store/highlightStore';
 import { usePagination } from '@/hooks/usePagination';
 import { Pagination } from '@/components/ui/Pagination';
 import { REGISTERS, assetRegisterId, type RegisterId } from '@/utils/assetRegister';
@@ -15,7 +16,8 @@ const STATUS_PILL: Record<string, string> = { active: 'bg-green-50 text-green-70
 const COMPLIANCE_FILTERS: (ComplianceStatus | 'All Compliance')[] = ['All Compliance', 'Compliant', 'For Review', 'Expiring Soon', 'Missing Requirement', 'Non-Compliant', 'Not Applicable'];
 
 export function RecordsCompliancePage({ onNavigate }: { onNavigate?: (view: string) => void }) {
-  const { assets, fetchAssets, isLoading } = useAssetStore();
+  const { assets, fetchAssets, isLoading, setSelectedCompany } = useAssetStore();
+  const setHighlight = useHighlightStore((s) => s.set);
 
   const [tab, setTab] = useState<RegisterId>('all');
   const [search, setSearch] = useState('');
@@ -204,7 +206,7 @@ export function RecordsCompliancePage({ onNavigate }: { onNavigate?: (view: stri
             </div>
             <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-100 dark:border-[#1e3a5f]">
               <button onClick={() => setViewing(null)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm font-medium text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]">Close</button>
-              <button onClick={() => { const v = REGISTER_VIEW[viewingReg]; setViewing(null); if (v && v !== 'hub') onNavigate?.(v); }} className="px-4 py-2 rounded-lg bg-[#0b5c96] text-white text-sm font-semibold hover:bg-[#094a79]">Open Source Module</button>
+              <button onClick={() => { const v = REGISTER_VIEW[viewingReg]; if (v && v !== 'hub') { setSelectedCompany('all'); setHighlight(viewing.deviceCode); onNavigate?.(v); } setViewing(null); }} className="px-4 py-2 rounded-lg bg-[#0b5c96] text-white text-sm font-semibold hover:bg-[#094a79]">Open Source Module</button>
             </div>
           </div>
         </div>

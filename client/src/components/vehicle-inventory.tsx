@@ -1,3 +1,5 @@
+import { useRowHighlight, HIGHLIGHT_ROW } from '@/hooks/useRowHighlight';
+import { menuPosition } from '@/utils/menuPosition';
 import { useMemo, useState } from 'react';
 import { Search, Eye, Edit, MoreHorizontal, Plus, Download, Car, CalendarClock, ShieldCheck, Wrench, Bell, SlidersHorizontal, UserPlus, ArrowRightLeft, Gauge, Fuel, Hammer, ClipboardCheck, AlertTriangle, Upload, Recycle, Printer, Archive as ArchiveIcon } from 'lucide-react';
 import type { ITAsset, Company } from '@/types/inventory';
@@ -57,6 +59,7 @@ export function VehicleInventory({ assets, onAdd, onEdit, onView, onDelete, onMe
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
   const [showMore, setShowMore] = useState(false);
   const [branchFilter, setBranchFilter] = useState('all');
   const [driverFilter, setDriverFilter] = useState('all');
@@ -97,6 +100,7 @@ export function VehicleInventory({ assets, onAdd, onEdit, onView, onDelete, onMe
   const moreActive = branchFilter !== 'all' || driverFilter !== 'all' || !!dateFrom || !!dateTo;
 
   const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filtered, 10);
+  const hlCode = useRowHighlight(filtered, (x: any) => x.a.deviceCode, setPage, pageSize);
 
   const exportCsv = () => {
     if (filtered.length === 0) { alert('No vehicles to export'); return; }
@@ -188,7 +192,7 @@ export function VehicleInventory({ assets, onAdd, onEdit, onView, onDelete, onMe
               {pageItems.length === 0 ? (
                 <tr><td colSpan={11} className="px-5 py-12 text-center text-gray-400 dark:text-slate-500">No vehicles found</td></tr>
               ) : pageItems.map(({ a, v, reg, ins }, rowIdx) => (
-                <tr key={a._id} className="hover:bg-gray-50 dark:hover:bg-[#1e2d4a]">
+                <tr key={a._id} data-row={a.deviceCode} className={`hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${hlCode === a.deviceCode ? HIGHLIGHT_ROW : ''}`}>
                   <td className="px-5 py-3 font-mono font-semibold text-[#0b5c96] dark:text-blue-400 whitespace-nowrap">{a.deviceCode}</td>
                   <td className="px-5 py-3"><div className="font-medium text-gray-900 dark:text-slate-200">{a.name}</div><div className="text-xs text-gray-400">{v.vehicleType}{v.yearModel ? ` · ${v.yearModel}` : ''}</div></td>
                   <td className="px-5 py-3 text-gray-700 dark:text-slate-300 font-mono">{v.plateNumber || '-'}</td>
@@ -202,11 +206,11 @@ export function VehicleInventory({ assets, onAdd, onEdit, onView, onDelete, onMe
                   <td className="px-5 py-3 text-right whitespace-nowrap relative">
                     <button onClick={() => onView(a)} className="p-1.5 text-gray-400 hover:text-blue-600" title="View"><Eye className="w-4 h-4" /></button>
                     {allowEdit && <button onClick={() => onEdit(a)} className="p-1.5 text-gray-400 hover:text-green-600" title="Edit"><Edit className="w-4 h-4" /></button>}
-                    <button onClick={() => setMenuFor(menuFor === a._id ? null : a._id!)} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>
+                    <button onClick={(e) => { setMenuRect(e.currentTarget.getBoundingClientRect()); setMenuFor(menuFor === a._id ? null : a._id!); }} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>
                     {menuFor === a._id && (
                       <>
-                        <div className="fixed inset-0 z-10" onClick={() => setMenuFor(null)} />
-                        <div className={`absolute right-4 z-20 ${pageItems.length > 2 && rowIdx >= pageItems.length - 2 ? "bottom-10" : "top-10"} w-52 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left max-h-80 overflow-y-auto`}>
+                        <div className="fixed inset-0 z-40" onClick={() => setMenuFor(null)} onWheel={() => setMenuFor(null)} />
+                        <div style={menuPosition(menuRect, 420)} className={`fixed z-50 w-52 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left max-h-80 overflow-y-auto`}>
                           {VMENU.filter((m) => (!m.admin || isAdmin) && (m.key === 'print' || allowEdit)).map((m) => (
                             <button key={m.key} onClick={() => { setMenuFor(null); if (onMenuAction) onMenuAction(a, m.key); else if (m.key === 'print') window.print(); else if (m.key === 'archive') { if (confirm(`Archive ${a.deviceCode}?`)) onDelete(a._id!); } }} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
                               <m.icon className="w-4 h-4" /> {m.label}

@@ -3,6 +3,7 @@ import { Plus, Boxes, Recycle, RefreshCw, AlertTriangle, LayoutGrid, Package, Sc
 import { OfficeSupplyInventory, osOf, isConsumable, isLowStock, statusDisplay } from '@/components/office-supply-inventory';
 import { OfficeSupplyForm } from '@/components/office-supply-form';
 import { useAssetStore } from '@/store/assetStore';
+import { useHighlightStore } from '@/store/highlightStore';
 import { useAuthStore } from '@/store/authStore';
 import { useActivityLogStore } from '@/store/activityLogStore';
 import { useOfficeSupplyCategoryStore } from '@/store/officeSupplyCategoryStore';
@@ -28,6 +29,8 @@ export function OfficeSuppliesPage() {
   const canEdit = user?.role === 'admin' || user?.role === 'encoder';
 
   const [tab, setTab] = useState<Tab>('overview');
+  const pendingHighlight = useHighlightStore((s) => s.deviceCode);
+  useEffect(() => { if (pendingHighlight && /-OS-/.test(pendingHighlight)) setTab('inventory'); }, [pendingHighlight]);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<ITAsset | undefined>(undefined);
 

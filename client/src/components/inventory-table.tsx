@@ -1,3 +1,4 @@
+import { useRowHighlight, HIGHLIGHT_ROW } from '@/hooks/useRowHighlight';
 import { useState } from 'react';
 import { Search, Filter, Edit, Trash2, Eye, AlertTriangle, ArrowRightLeft, Download, FileSpreadsheet, Recycle } from 'lucide-react';
 import type { ITAsset, AssetStatus, AssetCategory, Company, AssetType } from '@/types/inventory';
@@ -106,6 +107,7 @@ export function InventoryTable({
     .sort((a, b) => a.deviceCode.localeCompare(b.deviceCode));
 
   const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filteredAssets, 10);
+  const hlCode = useRowHighlight(filteredAssets, (x: any) => x.deviceCode, setPage, pageSize);
 
   const getStatusBadgeColor = (status: AssetStatus) => {
     const colors: Record<AssetStatus, string> = {
@@ -216,7 +218,7 @@ export function InventoryTable({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {pageItems.map((asset) => (
-              <tr key={asset._id} className="hover:bg-gray-50 transition-colors">
+              <tr key={asset._id} data-row={asset.deviceCode} className={`hover:bg-gray-50 transition-colors ${hlCode === asset.deviceCode ? HIGHLIGHT_ROW : ''}`}>
                 <td className="px-6 py-4 font-mono font-bold text-blue-700">{asset.deviceCode}</td>
                 <td className="px-6 py-4">
                   <div className="font-semibold text-gray-900">{asset.name}</div>

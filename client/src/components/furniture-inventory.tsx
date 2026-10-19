@@ -1,3 +1,5 @@
+import { useRowHighlight, HIGHLIGHT_ROW } from '@/hooks/useRowHighlight';
+import { menuPosition } from '@/utils/menuPosition';
 import { useState } from 'react';
 import {
   Search, Eye, Edit, ArrowRightLeft, Plus, Download, Upload,
@@ -59,6 +61,7 @@ export function FurnitureInventory({
   const [showUpload, setShowUpload] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
   const [showMore, setShowMore] = useState(false);
   const [deptFilter, setDeptFilter] = useState('all');
   const [employeeFilter, setEmployeeFilter] = useState('all');
@@ -124,6 +127,7 @@ export function FurnitureInventory({
   }).sort((a, b) => a.deviceCode.localeCompare(b.deviceCode));
 
   const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filtered, 10);
+  const hlCode = useRowHighlight(filtered, (x: any) => x.deviceCode, setPage, pageSize);
 
   const companyTabs: { id: Company | 'all'; label: string }[] = [
     { id: 'all', label: 'All Companies' },
@@ -266,7 +270,7 @@ export function FurnitureInventory({
               {pageItems.length === 0 ? (
                 <tr><td colSpan={11} className="px-5 py-12 text-center text-gray-400 dark:text-slate-500">No furniture assets found</td></tr>
               ) : pageItems.map((a, rowIdx) => (
-                <tr key={a._id} className="hover:bg-gray-50 dark:hover:bg-[#1e2d4a]">
+                <tr key={a._id} data-row={a.deviceCode} className={`hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${hlCode === a.deviceCode ? HIGHLIGHT_ROW : ''}`}>
                   <td className="px-5 py-3 font-mono font-semibold text-[#0b5c96] dark:text-blue-400 whitespace-nowrap">{a.deviceCode}</td>
                   <td className="px-5 py-3 font-medium text-gray-900 dark:text-slate-200 max-w-[180px] truncate" title={a.name}>{a.name}</td>
                   <td className="px-5 py-3 text-gray-600 dark:text-slate-400 capitalize">{a.category || '-'}</td>
@@ -280,11 +284,11 @@ export function FurnitureInventory({
                   <td className="px-5 py-3 text-right whitespace-nowrap relative">
                     <button onClick={() => onViewDetails(a)} className="p-1.5 text-gray-400 hover:text-blue-600" title="View"><Eye className="w-4 h-4" /></button>
                     {allowEdit && <button onClick={() => onEdit(a)} className="p-1.5 text-gray-400 hover:text-green-600" title="Edit"><Edit className="w-4 h-4" /></button>}
-                    <button onClick={() => setMenuFor(menuFor === a._id ? null : a._id!)} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>
+                    <button onClick={(e) => { setMenuRect(e.currentTarget.getBoundingClientRect()); setMenuFor(menuFor === a._id ? null : a._id!); }} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>
                     {menuFor === a._id && (
                       <>
-                        <div className="fixed inset-0 z-10" onClick={() => setMenuFor(null)} />
-                        <div className={`absolute right-4 z-20 ${pageItems.length > 2 && rowIdx >= pageItems.length - 2 ? "bottom-10" : "top-10"} w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left`}>
+                        <div className="fixed inset-0 z-40" onClick={() => setMenuFor(null)} onWheel={() => setMenuFor(null)} />
+                        <div style={menuPosition(menuRect, 310)} className={`fixed z-50 w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left`}>
                           {MENU.filter((m) => (!m.admin || isAdmin) && (m.key === 'view' || m.key === 'print' || allowEdit)).map((m) => (
                             <button key={m.key} onClick={() => act(a, m.key)} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
                               <m.icon className="w-4 h-4" /> {m.label}
