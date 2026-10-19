@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import {
-  Plus, Search, Eye, Pencil, History, ArrowLeft, PackageSearch, Info, Upload, Download, FileSpreadsheet, DatabaseZap, X, Loader2, CheckCircle2, AlertTriangle,
+  Plus, Search, Eye, Pencil, History, ArrowLeft, FileText, PackageSearch, Info, Upload, Download, FileSpreadsheet, DatabaseZap, X, Loader2, CheckCircle2, AlertTriangle,
 } from 'lucide-react';
 import { useWarehouseStore, type WarehouseItem, type WarehouseItemInput, type ImportOutcome } from '@/store/warehouseStore';
 import { usePagination } from '@/hooks/usePagination';
@@ -158,6 +158,7 @@ export function WarehouseInventory({ isAdmin, canEdit, renderMovementTab, onGate
                   <td className="px-3 py-2.5 text-right whitespace-nowrap">
                     <button onClick={() => setViewing({ id: i._id, tab: 'overview' })} className="p-1.5 text-gray-400 hover:text-blue-600" title="View"><Eye className="w-4 h-4" /></button>
                     {canEdit && <button onClick={() => setForm({ editing: i })} className="p-1.5 text-gray-400 hover:text-green-600" title="Edit"><Pencil className="w-4 h-4" /></button>}
+                    {onGatePass && <button onClick={() => onGatePass(i)} className="p-1.5 text-gray-400 hover:text-[#0b5c96]" title="New Gate Pass for this item"><FileText className="w-4 h-4" /></button>}
                     <button onClick={() => setViewing({ id: i._id, tab: 'movement' })} className="p-1.5 text-gray-400 hover:text-gray-700" title="Movement history"><History className="w-4 h-4" /></button>
                   </td>
                 </tr>
