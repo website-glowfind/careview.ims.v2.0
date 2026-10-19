@@ -14,6 +14,7 @@ import employeeRoute from "./routes/EmployeeRoute.js";
 import formRecordRoute from "./routes/FormRecordRoute.js";
 import uploadRoute from "./routes/UploadRoute.js";
 import categoryRoute from "./routes/CategoryRoute.js";
+import warehouseRoute from "./routes/WarehouseRoute.js";
 import { Asset } from "./models/Asset.js";
 import { seedCategories } from "./controllers/CategoryController.js";
 
@@ -49,6 +50,7 @@ app.use('/api/v1/employees',   employeeRoute);
 app.use('/api/v1/form-records', formRecordRoute);
 app.use('/api/v1/uploads', uploadRoute);
 app.use('/api/v1/categories', categoryRoute);
+app.use('/api/v1/warehouse', warehouseRoute);
 
 // Serve uploaded files (images, PDFs, etc.)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
