@@ -22,6 +22,8 @@ const DAY = 86_400_000;
  * warranty coverage, and required documentation.
  */
 export function evaluateCompliance(a: ITAsset): ComplianceResult {
+  if ((a as any).__warehouse) return evaluateWarehouse(a);
+  if (a.assetType === 'MW' || a.assetType === 'MedicalEquipment') return evaluateEquipment(a);
   const checks: ComplianceCheck[] = [];
 
   // 1. Asset identification — code, name, and a serial/brand/model
@@ -90,3 +92,81 @@ export const REGISTER_VIEW: Record<RegisterId, string> = {
 };
 
 export const sourceRegister = (a: ITAsset): RegisterId => assetRegisterId(a);
+
+// ─── Equipment registers (MW / Medical Equipment) ────────────────────────────
+// Schedules drive compliance: regulatory registration (medical), preventive
+// maintenance, and calibration, plus the usual tag / assignment / documents.
+
+type Due = 'none' | 'ok' | 'soon' | 'overdue';
+function due(date?: string): Due {
+  if (!date) return 'none';
+  const d = new Date(`${String(date).slice(0, 10)}T00:00:00`);
+  if (isNaN(d.getTime())) return 'none';
+  const now = new Date();
+  const days = Math.round((d.getTime() - new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()) / DAY);
+  return days < 0 ? 'overdue' : days <= 30 ? 'soon' : 'ok';
+}
+const dueCheck = (d: Due): CheckState => (d === 'overdue' ? 'fail' : d === 'soon' ? 'warn' : 'pass');
+
+function evaluateEquipment(a: ITAsset): ComplianceResult {
+  const eq: Record<string, any> = a.equipment ?? {};
+  const medical = a.assetType === 'MedicalEquipment';
+  const checks: ComplianceCheck[] = [
+    { label: 'Asset tag / QR record', state: a.deviceCode ? 'pass' : 'fail' },
+    { label: 'Assignment record', state: (a.assignedTo || '').trim() || (a.location && a.location !== 'N/A') ? 'pass' : 'warn' },
+  ];
+  let missing = false, overdue = false, soon = false;
+
+  if (medical) {
+    const r = eq.regulatoryNo ? due(eq.regulatoryExpiry) : 'overdue';
+    if (!eq.regulatoryNo) missing = true; else if (r === 'overdue') overdue = true; else if (r === 'soon') soon = true;
+    checks.push({ label: eq.regulatoryNo ? 'Regulatory registration' : 'Regulatory registration (not registered)', state: eq.regulatoryNo ? dueCheck(r) : 'fail' });
+  }
+
+  const svc = due(eq.nextServiceDue);
+  if (svc !== 'none') {
+    if (svc === 'overdue') overdue = true; else if (svc === 'soon') soon = true;
+    checks.push({ label: 'Preventive maintenance schedule', state: dueCheck(svc) });
+  }
+
+  if (eq.calibrationRequired) {
+    const cal = due(eq.nextCalibrationDue);
+    if (cal === 'none') missing = true; else if (cal === 'overdue') overdue = true; else if (cal === 'soon') soon = true;
+    checks.push({ label: cal === 'none' ? 'Calibration (no due date set)' : 'Calibration', state: cal === 'none' ? 'fail' : dueCheck(cal) });
+  }
+
+  const docs = (a.attachments?.length ?? 0) > 0;
+  checks.push({ label: 'Supporting documents', state: docs ? 'pass' : 'warn' });
+
+  const status: ComplianceStatus = overdue ? 'Non-Compliant' : missing ? 'Missing Requirement' : soon ? 'Expiring Soon' : !docs ? 'For Review' : 'Compliant';
+  return { status, checks, acquisition: a.purchaseDate, lastUpdated: (a as any).updatedAt ?? a.purchaseDate };
+}
+
+// ─── MW warehouse stock items (shown as MW records) ──────────────────────────
+
+function evaluateWarehouse(a: ITAsset): ComplianceResult {
+  const w: Record<string, any> = (a as any).__warehouse;
+  const num = (v: any) => (v === null || v === undefined || v === '' ? 0 : Number(v));
+  const reconciled = num(w.received) - num(w.issued) === num(w.currentStock);
+  const checks: ComplianceCheck[] = [
+    { label: 'Warehouse item record', state: 'pass' },
+    { label: 'Storage location', state: (w.location || '').trim() ? 'pass' : 'warn' },
+    { label: 'Stock reconciled (received − issued = current stock)', state: reconciled ? 'pass' : 'warn' },
+  ];
+  return {
+    status: num(w.currentStock) <= 0 ? 'For Review' : 'Compliant',
+    checks,
+    acquisition: w.createdAt,
+    lastUpdated: w.updatedAt ?? w.createdAt,
+  };
+}
+
+/** Present a warehouse stock item as an MW record for Records & Compliance. */
+export function warehouseAsRecord(w: Record<string, any>): ITAsset {
+  return {
+    _id: `wh-${w._id}`, deviceCode: w.itemCode, name: w.itemDescription, category: 'warehouse inventory' as any,
+    assetType: 'MW', company: 'KHEALTH', companyId: '', brand: '', model: w.unit ? `Unit: ${w.unit}` : '', serialNumber: '',
+    status: (w.status || '').toLowerCase() as any, department: w.department, location: w.location, assignedTo: '',
+    purchaseDate: w.createdAt, attachments: [], __warehouse: w, updatedAt: w.updatedAt,
+  } as any;
+}

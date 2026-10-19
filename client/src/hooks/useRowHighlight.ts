@@ -3,9 +3,12 @@ import { useHighlightStore } from '@/store/highlightStore';
 
 /**
  * Consumes a pending highlight request: jumps to the page holding the record,
- * scrolls it into view, and keeps it highlighted for a few seconds.
+ * scrolls it into view, and keeps it highlighted for 30 seconds.
  * Returns the device code currently highlighted (or null).
  */
+/** How long a record stays highlighted after Open Source Module. */
+export const HIGHLIGHT_MS = 30_000;
+
 export function useRowHighlight<T>(items: T[], getCode: (item: T) => string | undefined, setPage: (p: number) => void, pageSize: number): string | null {
   const code = useHighlightStore((s) => s.deviceCode);
   const clear = useHighlightStore((s) => s.clear);
@@ -19,7 +22,7 @@ export function useRowHighlight<T>(items: T[], getCode: (item: T) => string | un
     setActive(code);
     clear();
     setTimeout(() => document.querySelector(`[data-row="${CSS.escape(code)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
-    setTimeout(() => setActive((c) => (c === code ? null : c)), 4000);
+    setTimeout(() => setActive((c) => (c === code ? null : c)), HIGHLIGHT_MS);
   }, [code, items]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return active;

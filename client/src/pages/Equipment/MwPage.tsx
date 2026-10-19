@@ -7,6 +7,7 @@ import { StockMovementPage, MovementTable } from '@/components/stock-movement';
 import { WarehouseReports } from '@/components/warehouse-reports';
 import { useWarehouseStore, useGatePassStore, type WarehouseItem } from '@/store/warehouseStore';
 import { useAuthStore } from '@/store/authStore';
+import { useHighlightStore } from '@/store/highlightStore';
 
 type MwTab = 'register' | 'warehouse' | 'gate-pass' | 'movement' | 'reports';
 
@@ -21,6 +22,12 @@ export function MwPage({ onNavigate }: { onNavigate?: (view: string) => void }) 
   const canEdit = isAdmin || user?.role === 'encoder';
 
   useEffect(() => { fetchItems(); fetchMeta(); fetchGatePasses(); fetchMovements(); }, [fetchItems, fetchMeta, fetchGatePasses, fetchMovements]);
+  // Opened from Records & Compliance on a warehouse item → show the Warehouse tab
+  const pendingHighlight = useHighlightStore((s) => s.deviceCode);
+  useEffect(() => {
+    if (pendingHighlight && items.some((i) => i.itemCode === pendingHighlight)) setTab('warehouse');
+    else if (pendingHighlight && /^[A-Z]{2}-MW-/.test(pendingHighlight)) setTab('register');
+  }, [pendingHighlight, items]);
 
   const TABS: { id: MwTab; label: string; count?: number }[] = [
     { id: 'register', label: 'Asset Register' },

@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Download, Search, Eye, SlidersHorizontal, ClipboardList, CheckCircle2, Clock, AlertTriangle, XCircle, Check, AlertCircle, X } from 'lucide-react';
 import { useAssetStore } from '@/store/assetStore';
 import { useHighlightStore } from '@/store/highlightStore';
+import { useWarehouseStore } from '@/store/warehouseStore';
 import { usePagination } from '@/hooks/usePagination';
 import { Pagination } from '@/components/ui/Pagination';
 import { REGISTERS, assetRegisterId, type RegisterId } from '@/utils/assetRegister';
-import { evaluateCompliance, COMPLIANCE_PILL, REGISTER_VIEW, type ComplianceStatus } from '@/utils/compliance';
+import { evaluateCompliance, warehouseAsRecord, COMPLIANCE_PILL, REGISTER_VIEW, type ComplianceStatus } from '@/utils/compliance';
 import type { ITAsset, Company } from '@/types/inventory';
 
 const titleCase = (s: string) => (s || '').replace(/\b\w/g, (m) => m.toUpperCase());
@@ -31,9 +32,12 @@ export function RecordsCompliancePage({ onNavigate }: { onNavigate?: (view: stri
   const [dateTo, setDateTo] = useState('');
   const [viewing, setViewing] = useState<ITAsset | null>(null);
 
-  useEffect(() => { fetchAssets(); }, [fetchAssets]);
+  const { items: warehouseItems, fetchItems: fetchWarehouse } = useWarehouseStore();
+  useEffect(() => { fetchAssets(); fetchWarehouse(); }, [fetchAssets, fetchWarehouse]);
 
-  const records = useMemo(() => assets.filter((a) => !a.isDeleted).map((a) => ({ a, reg: assetRegisterId(a), comp: evaluateCompliance(a) })), [assets]);
+  // Asset registers plus MW warehouse stock items (presented as MW records)
+  const records = useMemo(() => [...assets.filter((a) => !a.isDeleted), ...warehouseItems.map(warehouseAsRecord)]
+    .map((a) => ({ a, reg: assetRegisterId(a), comp: evaluateCompliance(a) })), [assets, warehouseItems]);
 
   const stats = useMemo(() => ({
     total: records.length,

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useWarehouseStore, type WarehouseItem, type WarehouseItemInput, type ImportOutcome } from '@/store/warehouseStore';
 import { usePagination } from '@/hooks/usePagination';
+import { useRowHighlight, HIGHLIGHT_ROW } from '@/hooks/useRowHighlight';
 import { Pagination } from '@/components/ui/Pagination';
 
 const INPUT = 'w-full rounded-lg border border-gray-300 dark:border-[#1e3a5f] bg-white dark:bg-[#0f1729] px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0b5c96]/40';
@@ -57,6 +58,7 @@ export function WarehouseInventory({ isAdmin, canEdit, renderMovementTab, onGate
     return q ? scoped.filter((i) => [i.itemCode, i.itemDescription, i.location, i.remarks, i.unit].some((v) => (v || '').toLowerCase().includes(q))) : scoped;
   }, [scoped, search]);
   const { page, setPage, totalPages, pageItems, total, pageSize } = usePagination(filtered, 10);
+  const hlCode = useRowHighlight(filtered, (x: any) => x.itemCode, setPage, pageSize);
 
   const notes = dept === 'ALL' ? (meta?.tabNotes?.FMD ?? []) : (meta?.tabNotes?.[deptTabs.find((d) => sameDept(d, dept)) ?? dept] ?? []);
   const remaining = meta ? meta.workbookCount - meta.workbookImported : 0;
@@ -143,7 +145,7 @@ export function WarehouseInventory({ isAdmin, canEdit, renderMovementTab, onGate
                   <p className="text-xs text-gray-400 mt-1">{search ? 'Try a different search.' : items.length === 0 ? 'Use "Import Workbook Data", "Upload Excel", or "Add Item" to get started.' : 'This department has no items.'}</p>
                 </td></tr>
               ) : pageItems.map((i) => (
-                <tr key={i._id} className="hover:bg-gray-50 dark:hover:bg-[#1e2d4a]">
+                <tr key={i._id} data-row={i.itemCode} className={`hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${hlCode === i.itemCode ? HIGHLIGHT_ROW : ""}`}>
                   <td className="px-3 py-2.5 whitespace-nowrap"><button onClick={() => setViewing({ id: i._id, tab: 'overview' })} className="font-mono text-xs font-semibold text-[#0b5c96] dark:text-blue-400 hover:underline">{i.itemCode}</button></td>
                   <td className="px-3 py-2.5 text-gray-900 dark:text-slate-200 min-w-[220px]">{i.itemDescription}</td>
                   <td className="px-3 py-2.5 text-gray-600 dark:text-slate-400 whitespace-nowrap">{i.department}</td>
