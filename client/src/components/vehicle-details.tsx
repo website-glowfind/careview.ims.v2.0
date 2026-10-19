@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  ArrowLeft, Pencil, UserPlus, ArrowRightLeft, Archive as ArchiveIcon, Printer, Gauge, Fuel, Wrench, Hammer,
+  ArrowLeft, Pencil, UserPlus, ArrowRightLeft, Trash2 as ArchiveIcon, Printer, Gauge, Fuel, Wrench, Hammer,
   ClipboardCheck, AlertTriangle, Recycle, Car,
 } from 'lucide-react';
 import type { ITAsset, AssetStatus } from '@/types/inventory';
@@ -101,7 +101,7 @@ export function VehicleDetails({ asset, onClose, onEdit, isAdmin, canEdit, initi
           {allowEdit && (
             <div className="grid grid-cols-2 gap-2">
               {headBtns.map((b) => <button key={b.label} onClick={b.on} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><b.icon className="w-3.5 h-3.5" /> {b.label}</button>)}
-              {isAdmin && <button onClick={() => setModal('archive')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><ArchiveIcon className="w-3.5 h-3.5" /> Archive</button>}
+              {isAdmin && <button onClick={() => setModal('archive')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><ArchiveIcon className="w-3.5 h-3.5" /> Delete</button>}
             </div>
           )}
         </div>
@@ -198,7 +198,7 @@ export function VehicleDetails({ asset, onClose, onEdit, isAdmin, canEdit, initi
       {modal === 'inspection' && <LogEntryModal title="Add Inspection" subtitle={`${data.deviceCode} · ${data.name}`} busy={busy} onClose={() => setModal(null)} onSave={(vals) => addLog('inspections', vals, `Inspection: ${vals.result}`)} fields={[{ key: 'type', label: 'Inspection Type', placeholder: 'e.g. Safety, Emission' }, { key: 'date', label: 'Date', type: 'date', required: true }, { key: 'result', label: 'Result', options: ['Pass', 'Fail', 'Needs Attention'] }, { key: 'inspector', label: 'Inspected By' }, { key: 'nextDue', label: 'Next Due', type: 'date' }, { key: 'notes', label: 'Notes', textarea: true }]} />}
       {modal === 'incident' && <LogEntryModal title="Add Incident" subtitle={`${data.deviceCode} · ${data.name}`} busy={busy} onClose={() => setModal(null)} onSave={(vals) => addLog('incidents', vals, `Incident: ${vals.type || 'reported'}`)} fields={[{ key: 'date', label: 'Date', type: 'date', required: true }, { key: 'type', label: 'Incident Type', placeholder: 'e.g. Accident, Theft' }, { key: 'severity', label: 'Severity', options: ['Minor', 'Moderate', 'Major'] }, { key: 'reportedBy', label: 'Reported By' }, { key: 'description', label: 'Description', textarea: true, required: true }]} />}
       {modal === 'disposal' && <DisposalModal data={data} busy={busy} onClose={() => setModal(null)} onSave={async (vals: any) => { await save({ ...data, vehicle: { ...v, vehicleStatus: 'For Disposal', disposal: { reason: vals.reason, date: vals.date || today(), method: vals.method, remarks: vals.remarks, by: user?.name } } }); await addFormRecord({ formType: 'Asset Disposal', assetTag: data.deviceCode, deviceCode: data.deviceCode, name: data.name, company: data.company, category: data.category as any, employeeName: data.assignedTo, department: data.department, status: 'Active', createdBy: user?.name || 'Admin', details: `Disposal requested — ${vals.method}: ${vals.reason}`, relatedAssetId: data._id, formData: { ...vals, deviceCode: data.deviceCode } }); log(`Disposal requested — ${vals.method}`, 'disposed'); setModal(null); }} />}
-      {modal === 'archive' && <ConfirmArchive data={data} busy={busy} onCancel={() => setModal(null)} onConfirm={async () => { setBusy(true); try { await deleteAsset(data._id!); log(`Archived ${data.deviceCode}`, 'deleted'); onClose(); } finally { setBusy(false); } }} />}
+      {modal === 'archive' && <ConfirmArchive data={data} busy={busy} onCancel={() => setModal(null)} onConfirm={async () => { setBusy(true); try { await deleteAsset(data._id!); log(`Deleted ${data.deviceCode}`, 'deleted'); onClose(); } finally { setBusy(false); } }} />}
     </div>
   );
 }

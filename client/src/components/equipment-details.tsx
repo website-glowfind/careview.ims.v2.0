@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  ArrowLeft, Pencil, UserPlus, ArrowRightLeft, Archive as ArchiveIcon, Printer, User, History, MapPin, Wrench, Recycle, Gauge, Image as ImageIcon,
+  ArrowLeft, Pencil, UserPlus, ArrowRightLeft, Trash2 as ArchiveIcon, Printer, User, History, MapPin, Wrench, Recycle, Gauge, Image as ImageIcon,
 } from 'lucide-react';
 import type { ITAsset, AssetStatus } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
@@ -110,7 +110,7 @@ export function EquipmentDetails({ kind, asset, onClose, onEdit, isAdmin, canEdi
               <button onClick={() => onEdit(data)} className={btnGhost}><Pencil className="w-3.5 h-3.5" /> Edit</button>
               <button onClick={() => setModal('assign')} className={btnGhost}><UserPlus className="w-3.5 h-3.5" /> Assign</button>
               <button onClick={() => setModal('transfer')} className={btnGhost}><ArrowRightLeft className="w-3.5 h-3.5" /> Transfer</button>
-              {isAdmin && <button onClick={() => setModal('archive')} className={btnGhost}><ArchiveIcon className="w-3.5 h-3.5" /> Archive</button>}
+              {isAdmin && <button onClick={() => setModal('archive')} className={btnGhost}><ArchiveIcon className="w-3.5 h-3.5" /> Delete</button>}
             </div>
           )}
         </div>
@@ -359,7 +359,7 @@ export function EquipmentDetails({ kind, asset, onClose, onEdit, isAdmin, canEdi
         }} />
       )}
       {modal === 'archive' && (
-        <ConfirmArchive data={data} busy={busy} onCancel={() => setModal(null)} onConfirm={async () => { setBusy(true); try { await deleteAsset(data._id!); log(`Archived ${data.deviceCode}`, 'deleted'); onClose(); } finally { setBusy(false); } }} />
+        <ConfirmArchive data={data} busy={busy} onCancel={() => setModal(null)} onConfirm={async () => { setBusy(true); try { await deleteAsset(data._id!); log(`Deleted ${data.deviceCode}`, 'deleted'); onClose(); } finally { setBusy(false); } }} />
       )}
     </div>
   );

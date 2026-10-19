@@ -1,13 +1,14 @@
 import express from "express";
 import authMiddleware from "../middleware/authMiddleware.js";
 import { getMeta, getItems, createItem, updateItem, importWorkbook, bulkImport } from "../controllers/WarehouseController.js";
-import { getGatePasses, getNextGatePassNo, createGatePass, getMovements } from "../controllers/GatePassController.js";
+import { getGatePasses, getNextGatePassNo, createGatePass, getMovements, deleteGatePass } from "../controllers/GatePassController.js";
 
 const router = express.Router();
 
 router.get("/gate-passes", authMiddleware, getGatePasses);
 router.get("/gate-passes/next-number", authMiddleware, getNextGatePassNo);
 router.post("/gate-passes", authMiddleware, createGatePass);
+router.delete("/gate-passes/:id", authMiddleware, deleteGatePass);
 router.get("/movements", authMiddleware, getMovements);
 
 router.get("/meta", authMiddleware, getMeta);

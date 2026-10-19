@@ -128,3 +128,68 @@ export const createGatePass = async (req, res) => {
     res.status(201).json({ gatePass: pass, movementCount: movements.length });
   } catch (e) { res.status(500).json({ error: e.message }); }
 };
+
+/**
+ * DELETE /api/v1/warehouse/gate-passes/:id
+ * Undoes the pass: an IN is subtracted back out of stock (and Received), an OUT
+ * is returned to stock (and Issued is reduced). Refused if undoing an IN would
+ * make stock negative (the received material was already issued). The pass and
+ * its stock movements are then removed. Guarded and rolled back like posting.
+ */
+export const deleteGatePass = async (req, res) => {
+  const by = (req.body && req.body.performedBy) || req.query.performedBy || "System";
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: "Invalid gate pass id." });
+    const pass = await GatePass.findById(req.params.id);
+    if (!pass) return res.status(404).json({ error: "Gate pass not found." });
+
+    const movements = await StockMovement.find({ gatePassId: pass._id });
+    const items = await WarehouseItem.find({ _id: { $in: movements.map((m) => m.itemId) } });
+    const byId = new Map(items.map((i) => [String(i._id), i]));
+
+    // Validate every reversal first
+    const plan = [];
+    for (const m of movements) {
+      const item = byId.get(String(m.itemId));
+      if (!item) continue; // item no longer exists — nothing to reverse
+      const current = n(item.currentStock);
+      const next = m.movementType === "IN" ? current - m.quantity : current + m.quantity;
+      if (next < 0) {
+        return res.status(400).json({ error: `${item.itemCode}: only ${current} in stock — the ${m.quantity} received on this pass was already issued. Post a Material OUT/IN correction instead.` });
+      }
+      plan.push({ item, m, current, next });
+    }
+
+    const applied = [];
+    const rollback = async () => {
+      for (const a of applied.reverse()) {
+        await WarehouseItem.updateOne({ _id: a.id }, { $set: { currentStock: a.currentStock, received: a.received, issued: a.issued }, $pop: { activity: 1 } });
+      }
+    };
+
+    for (const { item, m, current, next } of plan) {
+      const set = { currentStock: next, updatedBy: by };
+      if (m.movementType === "IN") set.received = Math.max(0, n(item.received) - m.quantity);
+      else set.issued = Math.max(0, n(item.issued) - m.quantity);
+      const r = await WarehouseItem.updateOne(
+        { _id: item._id, currentStock: item.currentStock ?? null, received: item.received ?? null, issued: item.issued ?? null },
+        { $set: set, $push: { activity: { user: by, action: "Gate Pass Deleted", description: `Gate Pass ${pass.gatePassNo} deleted — Material ${m.movementType} of ${m.quantity} reversed (stock ${current} → ${next})` } } },
+      );
+      if (r.matchedCount === 0) {
+        await rollback();
+        return res.status(409).json({ error: `${item.itemCode} changed while deleting. Nothing was changed — please try again.` });
+      }
+      applied.push({ id: item._id, currentStock: item.currentStock ?? null, received: item.received ?? null, issued: item.issued ?? null });
+    }
+
+    try {
+      await StockMovement.deleteMany({ gatePassId: pass._id });
+      await GatePass.deleteOne({ _id: pass._id });
+    } catch (e) {
+      await rollback();
+      return res.status(500).json({ error: e.message });
+    }
+
+    res.json({ deleted: pass.gatePassNo, reversed: applied.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+};

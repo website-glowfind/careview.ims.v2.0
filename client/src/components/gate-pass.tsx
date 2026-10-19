@@ -20,13 +20,32 @@ export const MaterialPill = ({ m }: { m: MaterialDirection }) => (
 
 interface Props {
   canEdit: boolean;
+  /** Only admins can delete a posted gate pass */
+  isAdmin?: boolean;
   /** Warehouse item to start a new gate pass with (Gate Pass action on an inventory item) */
   startWithItem: WarehouseItem | null;
   onStartConsumed: () => void;
 }
 
-export function GatePassPage({ canEdit, startWithItem, onStartConsumed }: Props) {
-  const { gatePasses } = useGatePassStore();
+export function GatePassPage({ canEdit, isAdmin = false, startWithItem, onStartConsumed }: Props) {
+  const { gatePasses, deleteGatePass } = useGatePassStore();
+  const { addHistoryEntry } = useActivityLogStore();
+  const user = useAuthStore((s) => s.user);
+  const [deleting, setDeleting] = useState<GatePass | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    setDeleteBusy(true); setDeleteError('');
+    try {
+      const r = await deleteGatePass(deleting._id);
+      addHistoryEntry({ action: 'deleted', category: 'asset', deviceCode: deleting.gatePassNo, deviceName: `Gate Pass — Material ${deleting.material}`, company: 'KHEALTH', details: `Gate pass deleted; ${r.reversed} stock movement(s) reversed`, performedBy: user?.name });
+      setNotice(`Gate Pass ${deleting.gatePassNo} deleted — ${r.reversed ? `${r.reversed} stock movement${r.reversed === 1 ? '' : 's'} reversed` : 'no stock to reverse'}.`);
+      setDeleting(null);
+    } catch (e: any) { setDeleteError(e.message); }
+    finally { setDeleteBusy(false); }
+  };
   const [creating, setCreating] = useState(false);
   const [initialItem, setInitialItem] = useState<WarehouseItem | null>(null);
   const [viewing, setViewing] = useState<GatePass | null>(null);
@@ -86,6 +105,7 @@ export function GatePassPage({ canEdit, startWithItem, onStartConsumed }: Props)
                       <td className="px-4 py-2.5 text-right whitespace-nowrap">
                         <button title="View" onClick={() => setViewing(g)} className="p-1.5 text-gray-400 hover:text-blue-600"><Eye className="w-4 h-4" /></button>
                         <button title="Print Gate Pass" onClick={() => printGatePasses([g])} className="p-1.5 text-gray-400 hover:text-gray-700"><Printer className="w-4 h-4" /></button>
+                        {isAdmin && <button title="Delete Gate Pass" onClick={() => { setDeleteError(""); setDeleting(g); }} className="p-1.5 text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>}
                       </td>
                     </tr>
                   ))}
@@ -96,6 +116,31 @@ export function GatePassPage({ canEdit, startWithItem, onStartConsumed }: Props)
           </>
         )}
       </div>
+
+      {deleting && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[75]">
+          <div className="bg-white dark:bg-[#162236] rounded-2xl w-full max-w-md shadow-xl p-6">
+            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/15 flex items-center justify-center mb-3"><Trash2 className="w-5 h-5 text-red-600" /></div>
+            <h3 className="font-bold text-gray-900 dark:text-white">Delete Gate Pass {deleting.gatePassNo}?</h3>
+            <p className="text-sm text-gray-600 dark:text-slate-400 mt-1">
+              This permanently removes the gate pass and its stock movements, and <b>reverses its effect on stock</b>:{' '}
+              {deleting.material === 'IN' ? 'the received quantities are taken back out of stock.' : 'the issued quantities are returned to stock.'}
+            </p>
+            {deleting.lines.some((l) => l.itemId) ? (
+              <ul className="mt-3 text-xs text-gray-600 dark:text-slate-400 border border-gray-200 dark:border-[#1e3a5f] rounded-lg divide-y divide-gray-100 dark:divide-[#1e3a5f]">
+                {deleting.lines.filter((l) => l.itemId).map((l, i) => (
+                  <li key={i} className="px-3 py-1.5 flex justify-between"><span className="truncate">{l.itemCode ? `${l.itemCode} — ` : ''}{l.description}</span><span className={`font-semibold ${deleting.material === 'IN' ? 'text-red-600' : 'text-green-600'}`}>{deleting.material === 'IN' ? '−' : '+'}{l.quantity}</span></li>
+                ))}
+              </ul>
+            ) : <p className="mt-2 text-xs text-gray-400">No inventory items are linked — stock will not change.</p>}
+            {deleteError && <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-sm text-red-700 dark:text-red-400">{deleteError}</div>}
+            <div className="flex justify-end gap-3 mt-5">
+              <button onClick={() => setDeleting(null)} disabled={deleteBusy} className={BTN_GHOST}>Cancel</button>
+              <button onClick={confirmDelete} disabled={deleteBusy} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-50">{deleteBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} Delete Gate Pass</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {viewing && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">

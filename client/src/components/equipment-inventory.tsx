@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Search, Eye, Edit, MoreHorizontal, Plus, Download, Upload, Package, UserCheck, CircleCheck, Wrench, CalendarClock,
-  SlidersHorizontal, UserPlus, ArrowRightLeft, Recycle, Printer, Gauge, Archive as ArchiveIcon,
+  SlidersHorizontal, UserPlus, ArrowRightLeft, Recycle, Printer, Gauge, Trash2 as ArchiveIcon,
 } from 'lucide-react';
 import type { ITAsset, Company } from '@/types/inventory';
 import { usePagination } from '@/hooks/usePagination';
@@ -31,7 +31,7 @@ const MENU: { key: string; label: string; icon: any; danger?: boolean; admin?: b
   { key: 'assign', label: 'Assign', icon: UserPlus }, { key: 'transfer', label: 'Transfer', icon: ArrowRightLeft },
   { key: 'maintenance', label: 'Maintenance', icon: Wrench }, { key: 'calibration', label: 'Log Calibration', icon: Gauge, calibration: true },
   { key: 'disposal', label: 'Request Disposal', icon: Recycle }, { key: 'print', label: 'Print QR', icon: Printer },
-  { key: 'archive', label: 'Archive', icon: ArchiveIcon, danger: true, admin: true },
+  { key: 'archive', label: 'Delete', icon: ArchiveIcon, danger: true, admin: true },
 ];
 const PILL: Record<string, string> = {
   'In Use': 'bg-blue-100 text-blue-700', Available: 'bg-green-100 text-green-700', Assigned: 'bg-blue-100 text-blue-700',
@@ -228,7 +228,7 @@ export function EquipmentInventory({ kind, assets, selectedCompany, onCompanyCha
                           <div className="fixed inset-0 z-40" onClick={() => setMenuFor(null)} onWheel={() => setMenuFor(null)} />
                           <div style={menuPosition(menuRect, 340)} className="fixed z-50 w-52 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left">
                             {MENU.filter((m) => (!m.admin || isAdmin) && (m.key === 'view' || m.key === 'print' || allowEdit) && (!m.calibration || eq.calibrationRequired)).map((m) => (
-                              <button key={m.key} onClick={() => { setMenuFor(null); if (m.key === 'archive') { if (confirm(`Archive ${a.deviceCode}?`)) onDelete(a._id!); } else onMenuAction(a, m.key); }} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
+                              <button key={m.key} onClick={() => { setMenuFor(null); if (m.key === 'archive') { if (confirm(`Delete ${a.deviceCode}? It will move to Deleted Device / Archived Records.`)) onDelete(a._id!); } else onMenuAction(a, m.key); }} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
                                 <m.icon className="w-4 h-4" /> {m.label}
                               </button>
                             ))}

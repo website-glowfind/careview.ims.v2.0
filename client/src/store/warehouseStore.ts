@@ -150,6 +150,7 @@ interface GatePassState {
   fetchMovements: () => Promise<void>;
   nextGatePassNo: () => Promise<string>;
   createGatePass: (draft: GatePassDraft) => Promise<{ gatePass: GatePass; movementCount: number }>;
+  deleteGatePass: (id: string) => Promise<{ deleted: string; reversed: number }>;
 }
 
 export const useGatePassStore = create<GatePassState>((set, get) => ({
@@ -171,5 +172,13 @@ export const useGatePassStore = create<GatePassState>((set, get) => ({
       await Promise.all([get().fetchGatePasses(), get().fetchMovements(), useWarehouseStore.getState().fetchItems()]);
       return r.data;
     } catch (e) { throw new Error(errMsg(e, 'Failed to post gate pass')); }
+  },
+
+  deleteGatePass: async (id) => {
+    try {
+      const r = await api.delete(`/warehouse/gate-passes/${id}`, { data: { performedBy: by() } });
+      await Promise.all([get().fetchGatePasses(), get().fetchMovements(), useWarehouseStore.getState().fetchItems()]);
+      return r.data;
+    } catch (e) { throw new Error(errMsg(e, 'Failed to delete gate pass')); }
   },
 }));

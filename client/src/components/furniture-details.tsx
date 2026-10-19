@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowLeft, Pencil, UserPlus, ArrowRightLeft, Archive as ArchiveIcon, Printer, Upload,
+  ArrowLeft, Pencil, UserPlus, ArrowRightLeft, Trash2 as ArchiveIcon, Printer, Upload,
   User, History, MapPin, Wrench, FileText, Trash2, Recycle, AlertTriangle, X, Image as ImageIcon, Loader2,
 } from 'lucide-react';
 import type { ITAsset, AssetStatus } from '@/types/inventory';
@@ -111,7 +111,7 @@ export function FurnitureDetails({ asset, onClose, onEdit, isAdmin, canEdit, ini
             <button onClick={() => onEdit(data)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><Pencil className="w-3.5 h-3.5" /> Edit</button>
             <button onClick={() => setModal('assign')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><UserPlus className="w-3.5 h-3.5" /> Assign</button>
             <button onClick={() => setModal('transfer')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><ArrowRightLeft className="w-3.5 h-3.5" /> Transfer</button>
-            {isAdmin && <button onClick={() => setModal('archive')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><ArchiveIcon className="w-3.5 h-3.5" /> Archive</button>}
+            {isAdmin && <button onClick={() => setModal('archive')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><ArchiveIcon className="w-3.5 h-3.5" /> Delete</button>}
           </div>
         )}
       </div>
@@ -394,7 +394,7 @@ export function FurnitureDetails({ asset, onClose, onEdit, isAdmin, canEdit, ini
       {modal === 'archive' && (
         <ConfirmArchive data={data} busy={busy} onCancel={() => setModal(null)} onConfirm={async () => {
           setBusy(true);
-          try { await deleteAsset(data._id!); await log(`Archived ${data.deviceCode}`, 'deleted'); onClose(); }
+          try { await deleteAsset(data._id!); await log(`Deleted ${data.deviceCode}`, 'deleted'); onClose(); }
           finally { setBusy(false); }
         }} />
       )}
@@ -515,11 +515,11 @@ function ConfirmArchive({ data, busy, onCancel, onConfirm }: any) {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
       <div className="bg-white dark:bg-[#162236] rounded-2xl w-full max-w-sm shadow-xl p-6 text-center">
         <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/15 flex items-center justify-center mx-auto mb-3"><AlertTriangle className="w-5 h-5 text-red-600" /></div>
-        <h3 className="font-bold text-gray-900 dark:text-white">Archive this asset?</h3>
-        <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{data.deviceCode} · {data.name} will move to Archived Records. Its history is kept and its code will never be reused.</p>
+        <h3 className="font-bold text-gray-900 dark:text-white">Delete this asset?</h3>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{data.deviceCode} · {data.name} will move to Deleted Device / Archived Records, where an admin can restore it. Its code will never be reused.</p>
         <div className="flex items-center justify-center gap-3 mt-5">
           <button onClick={onCancel} className={cancelBtn}>Cancel</button>
-          <button disabled={busy} onClick={onConfirm} className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-50">Archive</button>
+          <button disabled={busy} onClick={onConfirm} className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-50">Delete</button>
         </div>
       </div>
     </div>

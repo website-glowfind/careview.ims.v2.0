@@ -4,7 +4,7 @@ import { useState } from 'react';
 import {
   Search, Eye, Edit, ArrowRightLeft, Plus, Download, Upload,
   Package, UserCheck, CircleCheck, Wrench, Trash,
-  MoreHorizontal, UserPlus, Recycle, Printer, Archive as ArchiveIcon, SlidersHorizontal,
+  MoreHorizontal, UserPlus, Recycle, Printer, Trash2 as ArchiveIcon, SlidersHorizontal,
 } from 'lucide-react';
 import type { ITAsset, AssetStatus, Company } from '@/types/inventory';
 import { getCompanyBadgeClasses } from '@/utils/device-code';
@@ -71,6 +71,7 @@ export function FurnitureInventory({
 
   const act = (a: ITAsset, action: string) => {
     setMenuFor(null);
+    if (action === 'archive' && !confirm(`Delete ${a.deviceCode}? It will move to Deleted Device / Archived Records.`)) return;
     if (onMenuAction) { onMenuAction(a, action); return; }
     // Fallbacks when no handler is wired
     if (action === 'view') onViewDetails(a);
@@ -87,7 +88,7 @@ export function FurnitureInventory({
     { key: 'maintenance', label: 'Maintenance', icon: Wrench },
     { key: 'disposal', label: 'Request Disposal', icon: Recycle },
     { key: 'print', label: 'Print QR', icon: Printer },
-    { key: 'archive', label: 'Archive', icon: ArchiveIcon, danger: true, admin: true },
+    { key: 'archive', label: 'Delete', icon: ArchiveIcon, danger: true, admin: true },
   ];
 
   const nonDeleted = assets.filter((a) => !a.isDeleted);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  ArrowLeft, Pencil, UserPlus, ArrowRightLeft, Archive as ArchiveIcon, Printer,
+  ArrowLeft, Pencil, UserPlus, ArrowRightLeft, Trash2 as ArchiveIcon, Printer,
   User, History, MapPin, Wrench, Recycle, Image as ImageIcon,
 } from 'lucide-react';
 import type { ITAsset, AssetStatus } from '@/types/inventory';
@@ -94,7 +94,7 @@ export function StaffHouseDetails({ asset, onClose, onEdit, isAdmin, canEdit, in
               <button onClick={() => onEdit(data)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><Pencil className="w-3.5 h-3.5" /> Edit</button>
               <button onClick={() => setModal('assign')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><UserPlus className="w-3.5 h-3.5" /> Assign</button>
               <button onClick={() => setModal('transfer')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><ArrowRightLeft className="w-3.5 h-3.5" /> Transfer</button>
-              {isAdmin && <button onClick={() => setModal('archive')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><ArchiveIcon className="w-3.5 h-3.5" /> Archive</button>}
+              {isAdmin && <button onClick={() => setModal('archive')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-[#1e3a5f] text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-[#1e2d4a]"><ArchiveIcon className="w-3.5 h-3.5" /> Delete</button>}
             </div>
           )}
         </div>
@@ -280,7 +280,7 @@ export function StaffHouseDetails({ asset, onClose, onEdit, isAdmin, canEdit, in
         }} />
       )}
       {modal === 'archive' && (
-        <ConfirmArchive data={data} busy={busy} onCancel={() => setModal(null)} onConfirm={async () => { setBusy(true); try { await deleteAsset(data._id!); log(`Archived ${data.deviceCode}`, 'deleted'); onClose(); } finally { setBusy(false); } }} />
+        <ConfirmArchive data={data} busy={busy} onCancel={() => setModal(null)} onConfirm={async () => { setBusy(true); try { await deleteAsset(data._id!); log(`Deleted ${data.deviceCode}`, 'deleted'); onClose(); } finally { setBusy(false); } }} />
       )}
     </div>
   );

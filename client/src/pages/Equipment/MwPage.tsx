@@ -61,7 +61,7 @@ export function MwPage({ onNavigate }: { onNavigate?: (view: string) => void }) 
         <WarehouseInventory isAdmin={isAdmin} canEdit={canEdit} renderMovementTab={itemMovements}
           onGatePass={canEdit ? (item) => { setStartWithItem(item); setTab('gate-pass'); } : undefined} />
       </div>
-      <div hidden={tab !== 'gate-pass'}><GatePassPage canEdit={canEdit} startWithItem={startWithItem} onStartConsumed={() => setStartWithItem(null)} /></div>
+      <div hidden={tab !== 'gate-pass'}><GatePassPage canEdit={canEdit} isAdmin={isAdmin} startWithItem={startWithItem} onStartConsumed={() => setStartWithItem(null)} /></div>
       <div hidden={tab !== 'movement'}><StockMovementPage /></div>
       <div hidden={tab !== 'reports'}><WarehouseReports /></div>
     </div>
