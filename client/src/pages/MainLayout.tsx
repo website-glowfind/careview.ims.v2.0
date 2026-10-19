@@ -53,7 +53,7 @@ export default function MainLayout() {
       case 'furniture':       return <InventoryPage assetType="General" onNavigate={setCurrentView} />;
       case 'vehicle':         return <VehiclePage onNavigate={setCurrentView} />;
       case 'staff-house':     return <StaffHousePage onNavigate={setCurrentView} />;
-      case 'office-supplies': return <OfficeSuppliesPage />;
+      case 'office-supplies': return <OfficeSuppliesPage onNavigate={setCurrentView} />;
       case 'mw':              return <MwPage onNavigate={setCurrentView} />;
       case 'medical-equipment': return <EquipmentPage key="medical" kind="medical" onNavigate={setCurrentView} />;
       case 'records-compliance': return <RecordsCompliancePage onNavigate={setCurrentView} />;

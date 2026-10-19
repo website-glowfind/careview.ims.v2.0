@@ -166,7 +166,7 @@ export function OfficeSupplyForm({ asset, assets, categories, onAddCategory, onD
       specifications: description, status: core, condition,
       assignedTo, department,
       purchaseDate, location, notes, attachments,
-      officeSupply: details,
+      officeSupply: { ...(asset?.officeSupply ?? {}), ...details }, // keep stock log, maintenance, transfers, disposal
       assetType: 'OfficeSupply',
     };
     onSave(payload);

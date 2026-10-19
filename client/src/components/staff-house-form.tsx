@@ -169,7 +169,7 @@ export function StaffHouseForm({ asset, assets, categories, onAddCategory, onDel
       specifications: description, status: core, condition,
       assignedTo, employeeId, department, position,
       purchaseDate, location, notes, attachments,
-      staffHouse: { ...details, statusLabel },
+      staffHouse: { ...(asset?.staffHouse ?? {}), ...details, statusLabel }, // keep maintenance, transfers, assignment, disposal history
       assetType: 'StaffHouse',
     };
     onSave(payload);

@@ -164,7 +164,7 @@ export function VehicleForm({ asset, assets, onSave, onCancel, onBack }: Props) 
       purchaseDate: acquisitionDate || new Date().toISOString().slice(0, 10),
       assignedTo, employeeId, department, position,
       attachments,
-      vehicle: details,
+      vehicle: { ...(asset?.vehicle ?? {}), ...details }, // keep logs, maintenance, transfers, disposal history
       assetType: 'Vehicle',
     };
     onSave(payload);

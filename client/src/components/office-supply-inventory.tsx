@@ -1,7 +1,7 @@
 import { useRowHighlight, HIGHLIGHT_ROW } from '@/hooks/useRowHighlight';
 import { menuPosition } from '@/utils/menuPosition';
 import { useMemo, useState } from 'react';
-import { Search, Eye, Edit, MoreHorizontal, Printer, Archive as ArchiveIcon, PackagePlus } from 'lucide-react';
+import { Search, Eye, Edit, MoreHorizontal, Printer, Archive as ArchiveIcon, PackagePlus, PackageMinus, UserPlus, ArrowRightLeft, Wrench, Recycle } from 'lucide-react';
 import type { ITAsset, Company, OfficeSupplyDetails } from '@/types/inventory';
 import { usePagination } from '@/hooks/usePagination';
 import { Pagination } from '@/components/ui/Pagination';
@@ -38,11 +38,7 @@ export const statusDisplay = (a: ITAsset) => {
     || a.status;
 };
 
-const MENU: { key: string; label: string; icon: any; danger?: boolean; admin?: boolean; consumable?: boolean }[] = [
-  { key: 'view', label: 'View Details', icon: Eye }, { key: 'edit', label: 'Edit', icon: Edit },
-  { key: 'restock', label: 'Restock', icon: PackagePlus, consumable: true },
-  { key: 'print', label: 'Print QR', icon: Printer }, { key: 'archive', label: 'Archive', icon: ArchiveIcon, danger: true, admin: true },
-];
+const MENU: { key: string; label: string; icon: any; danger?: boolean; admin?: boolean; consumable?: boolean }[] = [  { key: 'view', label: 'View Details', icon: Eye }, { key: 'edit', label: 'Edit', icon: Edit },  { key: 'assign', label: 'Assign', icon: UserPlus }, { key: 'transfer', label: 'Transfer', icon: ArrowRightLeft },  { key: 'maintenance', label: 'Maintenance', icon: Wrench },  { key: 'restock', label: 'Restock', icon: PackagePlus, consumable: true }, { key: 'issue', label: 'Issue Stock', icon: PackageMinus, consumable: true },  { key: 'disposal', label: 'Request Disposal', icon: Recycle },  { key: 'print', label: 'Print QR', icon: Printer }, { key: 'archive', label: 'Archive', icon: ArchiveIcon, danger: true, admin: true },];
 
 export function OfficeSupplyInventory({ assets, onEdit, onView, onDelete, onMenuAction, isAdmin, canEdit }: Props) {
   const allowEdit = canEdit ?? isAdmin;
@@ -136,7 +132,7 @@ export function OfficeSupplyInventory({ assets, onEdit, onView, onDelete, onMenu
                     {menuFor === a._id && (
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setMenuFor(null)} onWheel={() => setMenuFor(null)} />
-                        <div style={menuPosition(menuRect, 200)} className={`fixed z-50 w-44 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left`}>
+                        <div style={menuPosition(menuRect, 360)} className={`fixed z-50 w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left`}>
                           {MENU.filter((m) => (!m.admin || isAdmin) && (m.key === 'view' || m.key === 'print' || allowEdit) && (!m.consumable || consumable)).map((m) => (
                             <button key={m.key} onClick={() => { setMenuFor(null); if (onMenuAction) onMenuAction(a, m.key); else if (m.key === 'view') onView(a); else if (m.key === 'edit') onEdit(a); else if (m.key === 'archive') { if (confirm(`Archive ${a.deviceCode}?`)) onDelete(a._id!); } else if (m.key === 'print') window.print(); }} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
                               <m.icon className="w-4 h-4" /> {m.label}

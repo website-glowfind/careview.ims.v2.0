@@ -198,7 +198,7 @@ export function FurnitureForm({ asset, assets, categories, onAddCategory, onDele
       location,
       notes,
       attachments,
-      furniture: details,
+      furniture: { ...(asset?.furniture ?? {}), ...details }, // keep maintenance, transfers, assignment, disposal history
       assetType: 'General',
     };
     onSave(payload);

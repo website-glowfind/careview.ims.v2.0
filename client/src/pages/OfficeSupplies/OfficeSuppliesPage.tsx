@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus, Boxes, Recycle, RefreshCw, AlertTriangle, LayoutGrid, Package, ScrollText } from 'lucide-react';
 import { OfficeSupplyInventory, osOf, isConsumable, isLowStock, statusDisplay } from '@/components/office-supply-inventory';
 import { OfficeSupplyForm } from '@/components/office-supply-form';
+import { OfficeSupplyDetails, type OfficeSupplyModal } from '@/components/office-supply-details';
+import { ConfirmDisposalModal } from '@/components/confirm-disposal-modal';
+import { useDisposalDraftStore } from '@/store/disposalDraftStore';
 import { useAssetStore } from '@/store/assetStore';
 import { useHighlightStore } from '@/store/highlightStore';
 import { useAuthStore } from '@/store/authStore';
@@ -19,7 +22,7 @@ const PILL: Record<string, string> = {
   'Low Stock': 'bg-orange-100 text-orange-700',
 };
 
-export function OfficeSuppliesPage() {
+export function OfficeSuppliesPage({ onNavigate }: { onNavigate?: (view: string) => void }) {
   const { assets, fetchAssets, isLoading, addAsset, updateAsset, deleteAsset } = useAssetStore();
   const { categories, addCategory, deleteCategory, fetchCategories } = useOfficeSupplyCategoryStore();
   const { history, fetchHistory } = useActivityLogStore();
@@ -50,12 +53,27 @@ export function OfficeSuppliesPage() {
 
   const handleAdd = () => { setEditing(undefined); setShowForm(true); };
   const handleEdit = (a: ITAsset) => { setEditing(a); setShowForm(true); };
-  const handleView = (a: ITAsset) => { setEditing(a); setShowForm(true); };
+  const [viewing, setViewing] = useState<ITAsset | undefined>(undefined);
+  const [viewIntent, setViewIntent] = useState<{ tab?: string; modal?: OfficeSupplyModal }>({});
+  const [disposalItems, setDisposalItems] = useState<ITAsset[] | null>(null);
+  const setDisposalDraft = useDisposalDraftStore((s) => s.setItems);
+
+  const handleView = (a: ITAsset) => { setViewIntent({}); setViewing(a); };
+  const openWith = (a: ITAsset, tab: string, modal: OfficeSupplyModal) => { setViewIntent({ tab, modal }); setViewing(a); };
 
   const handleMenu = (a: ITAsset, action: string) => {
-    if (action === 'archive') { handleDelete(a._id!); return; }
-    // view / edit / restock all open the item form
-    setEditing(a); setShowForm(true);
+    switch (action) {
+      case 'edit':        handleEdit(a); break;
+      case 'assign':      openWith(a, 'Assignment', 'assign'); break;
+      case 'transfer':    openWith(a, 'Location', 'transfer'); break;
+      case 'maintenance': openWith(a, 'Maintenance', 'maintenance'); break;
+      case 'restock':     openWith(a, 'Stock', 'restock'); break;
+      case 'issue':       openWith(a, 'Stock', 'issue'); break;
+      case 'disposal':    setDisposalItems([a]); break;
+      case 'print':       window.print(); break;
+      case 'archive':     handleDelete(a._id!); break;
+      default:            handleView(a); break;
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -92,6 +110,39 @@ export function OfficeSuppliesPage() {
       <p className={`text-3xl font-bold mt-1 ${accent ?? 'text-gray-900 dark:text-white'}`}>{value}</p>
     </div>
   );
+
+  const formModal = showForm && canEdit ? (
+    <OfficeSupplyForm
+      asset={editing}
+      assets={assets}
+      categories={categories}
+      onAddCategory={addCategory}
+      onDeleteCategory={deleteCategory}
+      onSave={handleSave}
+      onCancel={() => { setShowForm(false); setEditing(undefined); }}
+    />
+  ) : null;
+
+  const disposalModal = disposalItems ? (
+    <ConfirmDisposalModal
+      initial={disposalItems}
+      pickFrom={items}
+      registerLabel="Office Supplies"
+      onClose={() => setDisposalItems(null)}
+      onProceed={(sel) => { setDisposalDraft(sel); setDisposalItems(null); onNavigate?.('disposal'); }}
+    />
+  ) : null;
+
+  if (viewing) {
+    return (
+      <div className="space-y-6">
+        <OfficeSupplyDetails asset={viewing} onClose={() => { setViewing(undefined); setViewIntent({}); }} onEdit={handleEdit}
+          isAdmin={isAdmin} canEdit={canEdit} initialTab={viewIntent.tab} initialModal={viewIntent.modal ?? null} />
+        {formModal}
+        {disposalModal}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -202,17 +253,8 @@ export function OfficeSuppliesPage() {
         </div>
       )}
 
-      {showForm && canEdit && (
-        <OfficeSupplyForm
-          asset={editing}
-          assets={assets}
-          categories={categories}
-          onAddCategory={addCategory}
-          onDeleteCategory={deleteCategory}
-          onSave={handleSave}
-          onCancel={() => { setShowForm(false); setEditing(undefined); }}
-        />
-      )}
+      {formModal}
+      {disposalModal}
     </div>
   );
 }
