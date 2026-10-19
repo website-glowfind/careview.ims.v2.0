@@ -3,7 +3,7 @@ export type AssetStatus = 'active' | 'in-maintenance' | 'in-storage' | 'availabl
 export type AssetCategory = 'laptop' | 'desktop' | 'monitor' | 'keyboard' | 'mouse' | 'printer' | 'server' | 'networking' | 'mobile' | 'mobile + subscription' | 'tablet' | 'other'
   | 'furniture' | 'appliance' | 'fixture' | 'equipment' | 'vehicle';
 
-export type AssetType = 'IT' | 'General' | 'Vehicle' | 'StaffHouse' | 'OfficeSupply';
+export type AssetType = 'IT' | 'General' | 'Vehicle' | 'StaffHouse' | 'OfficeSupply' | 'MW' | 'MedicalEquipment';
 
 export type LicenseSubscriptionType = 'license' | 'subscription';
 
@@ -46,6 +46,8 @@ export interface ITAsset {
   vehicle?: VehicleDetails;
   staffHouse?: StaffHouseDetails;
   officeSupply?: OfficeSupplyDetails;
+  /** MW / Medical Equipment register details (see config/equipment.ts) */
+  equipment?: Record<string, any>;
   assignedTo?: string;
   employeeId?: string;
   position?: string;

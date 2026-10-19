@@ -16,6 +16,7 @@ const A = {
   assign: { key: 'assign', label: 'Assign' },
   transfer: { key: 'transfer', label: 'Transfer' },
   maintenance: { key: 'maintenance', label: 'Maintenance' },
+  calibrate: { key: 'calibrate', label: 'Log Calibration' },
   dispose: { key: 'dispose', label: 'Dispose' },
   restock: { key: 'restock', label: 'Restock' },
   export: { key: 'export', label: 'Export' },
@@ -34,7 +35,8 @@ const A = {
 export const PERMISSION_CATALOG: PermModule[] = [
   { id: 'it-assets', name: 'IT Assets', actions: [A.view, A.create, A.edit, A.del, A.assign, A.transfer, A.dispose, A.export, A.import, A.print, A.subscriptions, A.categories] },
   { id: 'furniture', name: 'Furniture', actions: [A.view, A.create, A.edit, A.del, A.assign, A.transfer, A.maintenance, A.dispose, A.export, A.import, A.categories] },
-  { id: 'mw', name: 'MW (Maintenance / Equipment)', actions: [A.view, A.create, A.edit, A.del, A.export] },
+  { id: 'mw', name: 'MW (Machinery / Warehouse)', actions: [A.view, A.create, A.edit, A.del, A.assign, A.transfer, A.maintenance, A.calibrate, A.dispose, A.export, A.import, A.print, A.categories] },
+  { id: 'medical-equipment', name: 'Medical Equipment', actions: [A.view, A.create, A.edit, A.del, A.assign, A.transfer, A.maintenance, A.calibrate, A.dispose, A.export, A.import, A.print, A.categories] },
   { id: 'vehicle', name: 'Company Vehicle', actions: [A.view, A.create, A.edit, A.del, A.assign, A.transfer, A.maintenance, A.dispose, A.export, A.import] },
   { id: 'staff-house', name: 'Staff House', actions: [A.view, A.create, A.edit, A.del, A.assign, A.transfer, A.maintenance, A.dispose, A.export, A.import, A.categories] },
   { id: 'office-supplies', name: 'Office Supplies', actions: [A.view, A.create, A.edit, A.del, A.restock, A.export, A.import, A.categories] },
@@ -66,11 +68,11 @@ export function roleDefaults(role?: string): PermissionMap {
   if (role === 'admin') return fullAccessMap();
 
   const map: PermissionMap = {};
-  const assetModules = ['it-assets', 'furniture', 'mw', 'vehicle', 'staff-house', 'office-supplies'];
+  const assetModules = ['it-assets', 'furniture', 'mw', 'medical-equipment', 'vehicle', 'staff-house', 'office-supplies'];
   const keep = (id: string, keys: string[]) => { const avail = allActionKeys(id); map[id] = keys.filter((k) => avail.includes(k)); };
 
   if (role === 'encoder') {
-    for (const id of assetModules) keep(id, ['view', 'create', 'edit', 'assign', 'transfer', 'maintenance', 'restock', 'export', 'import', 'print', 'manage_categories', 'manage_subscriptions']);
+    for (const id of assetModules) keep(id, ['view', 'create', 'edit', 'assign', 'transfer', 'maintenance', 'calibrate', 'restock', 'export', 'import', 'print', 'manage_categories', 'manage_subscriptions']);
     keep('records-compliance', ['view', 'export']);
     keep('disposal', ['view', 'create', 'edit']);
     keep('employees', ['view', 'create', 'edit', 'import', 'export']);
@@ -97,7 +99,7 @@ export const ACCESS_TEMPLATES: AccessTemplate[] = [
   { key: 'viewer', label: 'Viewer' },
 ];
 
-const ASSET_MODULES = ['it-assets', 'furniture', 'mw', 'vehicle', 'staff-house', 'office-supplies'];
+const ASSET_MODULES = ['it-assets', 'furniture', 'mw', 'medical-equipment', 'vehicle', 'staff-house', 'office-supplies'];
 
 /** Permission preset for an access template. */
 export function templatePermissions(key: string): PermissionMap {
@@ -116,7 +118,7 @@ export function templatePermissions(key: string): PermissionMap {
       pick('history', ['view', 'export']);
       return map;
     case 'editor':
-      for (const id of ASSET_MODULES) pick(id, ['view', 'create', 'edit', 'assign', 'transfer', 'maintenance', 'restock', 'export', 'import', 'print', 'manage_categories', 'manage_subscriptions']);
+      for (const id of ASSET_MODULES) pick(id, ['view', 'create', 'edit', 'assign', 'transfer', 'maintenance', 'calibrate', 'restock', 'export', 'import', 'print', 'manage_categories', 'manage_subscriptions']);
       pick('records-compliance', ['view', 'export']);
       pick('disposal', ['view', 'create', 'edit']);
       pick('employees', ['view', 'create', 'edit', 'import', 'export']);

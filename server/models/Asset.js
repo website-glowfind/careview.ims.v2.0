@@ -8,7 +8,7 @@ const assetSchema = new mongoose.Schema({
     category: { type: String, required: true },
     // 'IT' = IT Inventory (default); 'General' = Asset List (furniture, etc.);
     // 'Vehicle' = Company Vehicle fleet; 'StaffHouse' = Staff House asset register
-    assetType: { type: String, enum: ['IT', 'General', 'Vehicle', 'StaffHouse', 'OfficeSupply'], default: 'IT' },
+    assetType: { type: String, enum: ['IT', 'General', 'Vehicle', 'StaffHouse', 'OfficeSupply', 'MW', 'MedicalEquipment'], default: 'IT' },
     company: { type: String, enum: ['KHEALTH', 'CAREVIEW', 'GLOWFIND'], required: true },
     companyId: { type: String },
     brand: { type: String },
@@ -35,6 +35,8 @@ const assetSchema = new mongoose.Schema({
     staffHouse: { type: mongoose.Schema.Types.Mixed },
     // Office Supplies details (itemType reusable/consumable, purchase, stock, etc.)
     officeSupply: { type: mongoose.Schema.Types.Mixed },
+    // MW / Medical Equipment register details (spec, regulatory, service & calibration, histories)
+    equipment: { type: mongoose.Schema.Types.Mixed },
     assignedTo: { type: String },
     employeeId: { type: String },
     position: { type: String },

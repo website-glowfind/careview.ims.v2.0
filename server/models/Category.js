@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const categorySchema = new mongoose.Schema({
   name:      { type: String, required: true, lowercase: true, trim: true },
   // 'IT' = IT Inventory categories, 'General' = Asset List categories
-  assetType: { type: String, enum: ['IT', 'General', 'StaffHouse', 'Vehicle', 'OfficeSupply'], default: 'IT' },
+  assetType: { type: String, enum: ['IT', 'General', 'StaffHouse', 'Vehicle', 'OfficeSupply', 'MW', 'MedicalEquipment'], default: 'IT' },
   isDefault: { type: Boolean, default: false },
 }, { timestamps: true });
 

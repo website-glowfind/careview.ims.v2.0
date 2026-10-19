@@ -1,6 +1,6 @@
 import {
   MonitorSmartphone, Armchair, Warehouse, CarFront, BedDouble, PencilRuler, Recycle,
-  KeyRound, Archive, ScrollText, ClipboardCheck, Contact, type LucideIcon,
+  KeyRound, Archive, ScrollText, ClipboardCheck, Contact, Stethoscope, type LucideIcon,
 } from 'lucide-react';
 
 export interface ModuleDef {
@@ -30,7 +30,8 @@ export const MODULES: ModuleDef[] = [
     { view: 'export',        label: 'Export Reports' },
   ], accent: 'bg-white text-[#0b5c96] ring-gray-200', code: 'ITA', group: 'Asset Registers' },
   { id: 'furniture', name: 'Furniture', description: 'Track office desks, chairs, cabinets, and other fixed company assets.', icon: Armchair, views: ['furniture'], entryView: 'furniture', adminOnly: true, accent: 'bg-white text-[#0b5c96] ring-gray-200', code: 'FUR', group: 'Asset Registers' },
-  { id: 'mw', name: 'MW', description: 'Maintain machinery, equipment, and tools inventory across sites.', icon: Warehouse, views: ['mw'], entryView: 'mw', upcoming: true, accent: 'bg-white text-[#0b5c96] ring-gray-200', code: 'MWE', group: 'Asset Registers' },
+  { id: 'mw', name: 'MW', description: 'Maintain machinery, equipment, and tools inventory across sites.', icon: Warehouse, views: ['mw'], entryView: 'mw', adminOnly: true, accent: 'bg-white text-[#0b5c96] ring-gray-200', code: 'MWE', group: 'Asset Registers' },
+  { id: 'medical-equipment', name: 'Medical Equipment', description: 'Track clinical and diagnostic equipment with regulatory registration, preventive maintenance, and calibration schedules.', icon: Stethoscope, views: ['medical-equipment'], entryView: 'medical-equipment', adminOnly: true, accent: 'bg-white text-[#0b5c96] ring-gray-200', code: 'MED', group: 'Asset Registers' },
   { id: 'vehicle', name: 'Company Vehicle', description: 'Monitor fleet vehicles, assignments, registration, insurance, fuel, and maintenance.', icon: CarFront, views: ['vehicle'], entryView: 'vehicle', adminOnly: true, accent: 'bg-white text-[#0b5c96] ring-gray-200', code: 'VEH', group: 'Asset Registers' },
   { id: 'staff-house', name: 'Staff House', description: 'Track staff house rooms, furniture, appliances, residents, and bed assignments.', icon: BedDouble, views: ['staff-house'], entryView: 'staff-house', adminOnly: true, accent: 'bg-white text-[#0b5c96] ring-gray-200', code: 'STH', group: 'Asset Registers' },
   { id: 'office-supplies', name: 'Office Supplies', description: 'Track accountable equipment individually and monitor consumable stock levels with issuance history.', icon: PencilRuler, views: ['office-supplies'], entryView: 'office-supplies', adminOnly: true, accent: 'bg-white text-[#0b5c96] ring-gray-200', code: 'OFS', group: 'Asset Registers' },

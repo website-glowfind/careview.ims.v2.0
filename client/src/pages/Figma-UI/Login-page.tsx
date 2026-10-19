@@ -111,7 +111,7 @@ export function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+        {/* <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <p className="text-xs text-gray-600 text-center mb-2 font-semibold">
             Default Login Credentials
           </p>
@@ -123,7 +123,7 @@ export function LoginPage() {
               <span className="font-semibold">Password:</span> admin123
             </p>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

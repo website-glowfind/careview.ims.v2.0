@@ -83,6 +83,7 @@ export const REGISTER_VIEW: Record<RegisterId, string> = {
   it: 'inventory',
   furniture: 'furniture',
   mw: 'mw',
+  'medical-equipment': 'medical-equipment',
   vehicle: 'vehicle',
   'staff-house': 'staff-house',
   'office-supplies': 'office-supplies',

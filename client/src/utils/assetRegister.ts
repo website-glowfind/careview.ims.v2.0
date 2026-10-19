@@ -1,7 +1,7 @@
 import type { ElementType } from 'react';
-import { Layers, MonitorSmartphone, Armchair, Warehouse, CarFront, BedDouble, PencilRuler } from 'lucide-react';
+import { Layers, MonitorSmartphone, Armchair, Warehouse, CarFront, BedDouble, PencilRuler, Stethoscope } from 'lucide-react';
 
-export type RegisterId = 'all' | 'it' | 'furniture' | 'mw' | 'vehicle' | 'staff-house' | 'office-supplies';
+export type RegisterId = 'all' | 'it' | 'furniture' | 'mw' | 'medical-equipment' | 'vehicle' | 'staff-house' | 'office-supplies';
 
 export interface RegisterDef {
   id: RegisterId;
@@ -15,6 +15,7 @@ export const REGISTERS: RegisterDef[] = [
   { id: 'it',              label: 'IT Assets',       icon: MonitorSmartphone },
   { id: 'furniture',       label: 'Furniture',       icon: Armchair },
   { id: 'mw',              label: 'MW',              icon: Warehouse },
+  { id: 'medical-equipment', label: 'Medical Equipment', icon: Stethoscope },
   { id: 'vehicle',         label: 'Company Vehicle', icon: CarFront },
   { id: 'staff-house',     label: 'Staff House',     icon: BedDouble },
   { id: 'office-supplies', label: 'Office Supplies', icon: PencilRuler },
@@ -31,6 +32,8 @@ export function assetRegisterId(a: { assetType?: string; category?: string } | u
   if (t === 'Vehicle') return 'vehicle';
   if (t === 'StaffHouse') return 'staff-house';
   if (t === 'OfficeSupply') return 'office-supplies';
+  if (t === 'MW') return 'mw';
+  if (t === 'MedicalEquipment') return 'medical-equipment';
   if (t === 'General') return 'furniture';
   return 'it';
 }
@@ -45,5 +48,7 @@ export function registerFromDeviceCode(code?: string): RegisterId {
   if (m[1] === 'VH') return 'vehicle';
   if (m[1] === 'SH') return 'staff-house';
   if (m[1] === 'OS') return 'office-supplies';
+  if (m[1] === 'MW') return 'mw';
+  if (m[1] === 'ME') return 'medical-equipment';
   return GENERAL_PREFIXES.has(m[1]) ? 'furniture' : 'it';
 }

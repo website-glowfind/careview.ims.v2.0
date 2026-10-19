@@ -12,6 +12,7 @@ import { ITExportReportsTab } from '@/pages/Inventory/ITExportReportsTab';
 import { VehiclePage } from '@/pages/Vehicle/VehiclePage';
 import { StaffHousePage } from '@/pages/StaffHouse/StaffHousePage';
 import { OfficeSuppliesPage } from '@/pages/OfficeSupplies/OfficeSuppliesPage';
+import { EquipmentPage } from '@/pages/Equipment/EquipmentPage';
 import { RecordsCompliancePage } from '@/pages/RecordsCompliance/RecordsCompliancePage';
 import { FormMasterlistPage } from './Form-Masterlist/FormMasterListPage';
 import { SubscriptionPage } from './Subscripton/SubscriptionPage';
@@ -52,6 +53,8 @@ export default function MainLayout() {
       case 'vehicle':         return <VehiclePage onNavigate={setCurrentView} />;
       case 'staff-house':     return <StaffHousePage onNavigate={setCurrentView} />;
       case 'office-supplies': return <OfficeSuppliesPage />;
+      case 'mw':              return <EquipmentPage key="mw" kind="mw" onNavigate={setCurrentView} />;
+      case 'medical-equipment': return <EquipmentPage key="medical" kind="medical" onNavigate={setCurrentView} />;
       case 'records-compliance': return <RecordsCompliancePage onNavigate={setCurrentView} />;
       case 'deleted':         return <DeletedDevices />;
       case 'history':         return <ActivityLog />;
