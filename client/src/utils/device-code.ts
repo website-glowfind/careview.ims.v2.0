@@ -113,7 +113,7 @@ export function getCompanyBadgeClasses(company: Company): string {
 // ── Company logos (public folder) ─────────────────────────────────────────
 export const COMPANY_LOGOS: Record<Company, string> = {
   KHEALTH:  '/khealthlogo.png',
-  CAREVIEW: '/logo.png',
+  CAREVIEW: '/careview-form-logo.webp',
   GLOWFIND: '/glowfindName.png',
 };
 
