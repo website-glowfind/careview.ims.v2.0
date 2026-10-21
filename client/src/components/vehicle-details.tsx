@@ -95,7 +95,7 @@ export function VehicleDetails({ asset, onClose, onEdit, isAdmin, canEdit, initi
         </div>
         <div className="flex items-center gap-4">
           <div className="flex flex-col items-center">
-            <QRCodeDisplay deviceCode={data.deviceCode} size={72} showDownload={false} showLabel={false} />
+            <QRCodeDisplay deviceCode={data.deviceCode} size={72} showDownload showLabel={false} />
             <button onClick={() => window.print()} className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[#0b5c96] dark:text-blue-400 hover:underline"><Printer className="w-3 h-3" /> Print QR</button>
           </div>
           {allowEdit && (

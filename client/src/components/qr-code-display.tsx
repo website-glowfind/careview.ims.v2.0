@@ -47,9 +47,10 @@ export function QRCodeDisplay({
     if (!ctx) return;
 
     // Set canvas size (higher resolution for better quality)
-    const scaleFactor = 4;
-    canvas.width = size * scaleFactor;
-    canvas.height = size * scaleFactor;
+    // (at least 512px so small on-screen QRs still download print-ready)
+    const px = Math.max(size * 4, 512);
+    canvas.width = px;
+    canvas.height = px;
 
     // Create an image from the SVG
     const svgData = new XMLSerializer().serializeToString(svg);
