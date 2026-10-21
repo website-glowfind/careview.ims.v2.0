@@ -38,7 +38,7 @@ export const statusDisplay = (a: ITAsset) => {
     || a.status;
 };
 
-const MENU: { key: string; label: string; icon: any; danger?: boolean; admin?: boolean; consumable?: boolean }[] = [  { key: 'view', label: 'View Details', icon: Eye }, { key: 'edit', label: 'Edit', icon: Edit },  { key: 'assign', label: 'Assign', icon: UserPlus }, { key: 'transfer', label: 'Transfer', icon: ArrowRightLeft },  { key: 'maintenance', label: 'Maintenance', icon: Wrench },  { key: 'restock', label: 'Restock', icon: PackagePlus, consumable: true }, { key: 'issue', label: 'Issue Stock', icon: PackageMinus, consumable: true },  { key: 'disposal', label: 'Request Disposal', icon: Recycle },  { key: 'print', label: 'Print QR', icon: Printer }, { key: 'archive', label: 'Delete', icon: ArchiveIcon, danger: true, admin: true },];
+const MENU: { key: string; label: string; icon: any; danger?: boolean; admin?: boolean; consumable?: boolean }[] = [  { key: 'view', label: 'View Details', icon: Eye }, { key: 'edit', label: 'Edit', icon: Edit },  { key: 'assign', label: 'Assign', icon: UserPlus }, { key: 'transfer', label: 'Transfer', icon: ArrowRightLeft },  { key: 'maintenance', label: 'Maintenance', icon: Wrench },  { key: 'restock', label: 'Restock', icon: PackagePlus, consumable: true }, { key: 'issue', label: 'Issue Stock', icon: PackageMinus, consumable: true },  { key: 'disposal', label: 'Request Disposal', icon: Recycle }, { key: 'archive', label: 'Delete', icon: ArchiveIcon, danger: true, admin: true },];
 
 export function OfficeSupplyInventory({ assets, onEdit, onView, onDelete, onMenuAction, isAdmin, canEdit }: Props) {
   const allowEdit = canEdit ?? isAdmin;
@@ -127,14 +127,13 @@ export function OfficeSupplyInventory({ assets, onEdit, onView, onDelete, onMenu
                   <td className="px-5 py-3 text-right whitespace-nowrap relative">
                     <button onClick={() => onView(a)} className="p-1.5 text-gray-400 hover:text-blue-600" title="View"><Eye className="w-4 h-4" /></button>
                     {allowEdit && <button onClick={() => onEdit(a)} className="p-1.5 text-gray-400 hover:text-green-600" title="Edit"><Edit className="w-4 h-4" /></button>}
-                    <button onClick={() => window.print()} className="p-1.5 text-gray-400 hover:text-gray-700" title="Print QR"><Printer className="w-4 h-4" /></button>
                     <button onClick={(e) => { setMenuRect(e.currentTarget.getBoundingClientRect()); setMenuFor(menuFor === a._id ? null : a._id!); }} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>
                     {menuFor === a._id && (
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setMenuFor(null)} onWheel={() => setMenuFor(null)} />
                         <div style={menuPosition(menuRect, 360)} className={`fixed z-50 w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left`}>
-                          {MENU.filter((m) => (!m.admin || isAdmin) && (m.key === 'view' || m.key === 'print' || allowEdit) && (!m.consumable || consumable)).map((m) => (
-                            <button key={m.key} onClick={() => { setMenuFor(null); if (m.key === 'archive' && onMenuAction) { if (confirm(`Delete ${a.deviceCode}? It will move to Deleted Device / Archived Records.`)) onMenuAction(a, m.key); return; } if (onMenuAction) onMenuAction(a, m.key); else if (m.key === 'view') onView(a); else if (m.key === 'edit') onEdit(a); else if (m.key === 'archive') { if (confirm(`Delete ${a.deviceCode}? It will move to Deleted Device / Archived Records.`)) onDelete(a._id!); } else if (m.key === 'print') window.print(); }} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
+                          {MENU.filter((m) => (!m.admin || isAdmin) && (m.key === 'view' || allowEdit) && (!m.consumable || consumable)).map((m) => (
+                            <button key={m.key} onClick={() => { setMenuFor(null); if (m.key === 'archive' && onMenuAction) { if (confirm(`Delete ${a.deviceCode}? It will move to Deleted Device / Archived Records.`)) onMenuAction(a, m.key); return; } if (onMenuAction) onMenuAction(a, m.key); else if (m.key === 'view') onView(a); else if (m.key === 'edit') onEdit(a); else if (m.key === 'archive') { if (confirm(`Delete ${a.deviceCode}? It will move to Deleted Device / Archived Records.`)) onDelete(a._id!); } }} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
                               <m.icon className="w-4 h-4" /> {m.label}
                             </button>
                           ))}

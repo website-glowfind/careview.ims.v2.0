@@ -78,7 +78,6 @@ export function FurnitureInventory({
     else if (action === 'edit') onEdit(a);
     else if (action === 'transfer') onTransfer(a);
     else if (action === 'archive') onDelete(a._id!);
-    else if (action === 'print') window.print();
   };
   const MENU: { key: string; label: string; icon: any; danger?: boolean; admin?: boolean }[] = [
     { key: 'view', label: 'View Details', icon: Eye },
@@ -87,7 +86,7 @@ export function FurnitureInventory({
     { key: 'transfer', label: 'Transfer', icon: ArrowRightLeft },
     { key: 'maintenance', label: 'Maintenance', icon: Wrench },
     { key: 'disposal', label: 'Request Disposal', icon: Recycle },
-    { key: 'print', label: 'Print QR', icon: Printer },
+
     { key: 'archive', label: 'Delete', icon: ArchiveIcon, danger: true, admin: true },
   ];
 
@@ -290,7 +289,7 @@ export function FurnitureInventory({
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setMenuFor(null)} onWheel={() => setMenuFor(null)} />
                         <div style={menuPosition(menuRect, 310)} className={`fixed z-50 w-48 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left`}>
-                          {MENU.filter((m) => (!m.admin || isAdmin) && (m.key === 'view' || m.key === 'print' || allowEdit)).map((m) => (
+                          {MENU.filter((m) => (!m.admin || isAdmin) && (m.key === 'view' || allowEdit)).map((m) => (
                             <button key={m.key} onClick={() => act(a, m.key)} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
                               <m.icon className="w-4 h-4" /> {m.label}
                             </button>

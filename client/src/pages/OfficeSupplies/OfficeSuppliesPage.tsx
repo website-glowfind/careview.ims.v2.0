@@ -70,7 +70,6 @@ export function OfficeSuppliesPage({ onNavigate }: { onNavigate?: (view: string)
       case 'restock':     openWith(a, 'Stock', 'restock'); break;
       case 'issue':       openWith(a, 'Stock', 'issue'); break;
       case 'disposal':    setDisposalItems([a]); break;
-      case 'print':       window.print(); break;
       case 'archive':     handleDelete(a._id!); break;
       default:            handleView(a); break;
     }

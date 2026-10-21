@@ -283,9 +283,6 @@ export function FurnitureForm({ asset, assets, categories, onAddCategory, onDele
                     <Label>QR Code</Label>
                     <div className="border border-gray-200 dark:border-[#1e3a5f] rounded-xl p-3 flex flex-col items-center">
                       <QRCodeDisplay deviceCode={previewCode} size={120} showDownload={false} showLabel={false} />
-                      <button onClick={() => window.print()} className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-[#0b5c96] dark:text-blue-400 hover:underline">
-                        <Printer className="w-3.5 h-3.5" /> Print QR
-                      </button>
                       <p className="text-[11px] text-gray-400 mt-0.5">Generated on save</p>
                     </div>
                   </div>

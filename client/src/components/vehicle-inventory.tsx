@@ -24,7 +24,7 @@ const VMENU: { key: string; label: string; icon: any; danger?: boolean; admin?: 
   { key: 'maintenance', label: 'Add Maintenance', icon: Wrench }, { key: 'repair', label: 'Add Repair', icon: Hammer },
   { key: 'inspection', label: 'Add Inspection', icon: ClipboardCheck }, { key: 'incident', label: 'Add Incident', icon: AlertTriangle },
   { key: 'documents', label: 'Upload Documents', icon: Upload }, { key: 'disposal', label: 'Request Disposal', icon: Recycle },
-  { key: 'print', label: 'Print QR', icon: Printer }, { key: 'archive', label: 'Delete', icon: ArchiveIcon, danger: true, admin: true },
+ { key: 'archive', label: 'Delete', icon: ArchiveIcon, danger: true, admin: true },
 ];
 
 const PILL = {
@@ -206,13 +206,13 @@ export function VehicleInventory({ assets, onAdd, onEdit, onView, onDelete, onMe
                   <td className="px-5 py-3 text-right whitespace-nowrap relative">
                     <button onClick={() => onView(a)} className="p-1.5 text-gray-400 hover:text-blue-600" title="View"><Eye className="w-4 h-4" /></button>
                     {allowEdit && <button onClick={() => onEdit(a)} className="p-1.5 text-gray-400 hover:text-green-600" title="Edit"><Edit className="w-4 h-4" /></button>}
-                    <button onClick={(e) => { setMenuRect(e.currentTarget.getBoundingClientRect()); setMenuFor(menuFor === a._id ? null : a._id!); }} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>
+                    {allowEdit && <button onClick={(e) => { setMenuRect(e.currentTarget.getBoundingClientRect()); setMenuFor(menuFor === a._id ? null : a._id!); }} className="p-1.5 text-gray-400 hover:text-gray-700" title="More"><MoreHorizontal className="w-4 h-4" /></button>}
                     {menuFor === a._id && (
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setMenuFor(null)} onWheel={() => setMenuFor(null)} />
                         <div style={menuPosition(menuRect, 420)} className={`fixed z-50 w-52 bg-white dark:bg-[#162236] border border-gray-200 dark:border-[#1e3a5f] rounded-xl shadow-lg py-1 text-left max-h-80 overflow-y-auto`}>
-                          {VMENU.filter((m) => (!m.admin || isAdmin) && (m.key === 'print' || allowEdit)).map((m) => (
-                            <button key={m.key} onClick={() => { setMenuFor(null); if (m.key === 'archive' && onMenuAction) { if (confirm(`Delete ${a.deviceCode}? It will move to Deleted Device / Archived Records.`)) onMenuAction(a, m.key); return; } if (onMenuAction) onMenuAction(a, m.key); else if (m.key === 'print') window.print(); else if (m.key === 'archive') { if (confirm(`Delete ${a.deviceCode}? It will move to Deleted Device / Archived Records.`)) onDelete(a._id!); } }} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
+                          {VMENU.filter((m) => (!m.admin || isAdmin) && allowEdit).map((m) => (
+                            <button key={m.key} onClick={() => { setMenuFor(null); if (m.key === 'archive' && onMenuAction) { if (confirm(`Delete ${a.deviceCode}? It will move to Deleted Device / Archived Records.`)) onMenuAction(a, m.key); return; } if (onMenuAction) onMenuAction(a, m.key); else if (m.key === 'archive') { if (confirm(`Delete ${a.deviceCode}? It will move to Deleted Device / Archived Records.`)) onDelete(a._id!); } }} className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-[#1e2d4a] ${m.danger ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>
                               <m.icon className="w-4 h-4" /> {m.label}
                             </button>
                           ))}

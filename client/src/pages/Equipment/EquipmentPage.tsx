@@ -49,7 +49,6 @@ export function EquipmentPage({ kind, onNavigate }: Props) {
       case 'maintenance': setViewIntent({ tab: 'Maintenance', modal: 'maintenance' }); setViewing(a); break;
       case 'calibration': setViewIntent({ tab: 'Calibration', modal: 'calibration' }); setViewing(a); break;
       case 'disposal':    setDisposalItems([a]); break;
-      case 'print':       window.print(); break;
       default:            setViewIntent({}); setViewing(a); break;
     }
   };
