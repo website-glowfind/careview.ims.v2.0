@@ -46,7 +46,7 @@ export function LoginPage() {
             className="h-14 w-auto mx-auto mb-5"
           />
           <h1 className="text-xl font-bold text-gray-900 mb-1">
-            Inventory Management System
+            Asset Management System
           </h1>
           <p className="text-gray-600">Sign in to your account</p>
         </div>

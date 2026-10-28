@@ -35,12 +35,12 @@ export function SidebarMenu({ currentView, onViewChange }: SidebarProps) {
         <div className="flex justify-center items-center gap-3 mb-3">
           <img
             src={'/logo.png'}
-            alt="IMS Logo"
+            alt="AMS Logo"
             className="w-12 h-12 object-contain"
           />
         </div>
         <div className="text-center">
-          <p className="text-gray-600 dark:text-slate-400 text-xs">Inventory Management System</p>
+          <p className="text-gray-600 dark:text-slate-400 text-xs">Asset Management System</p>
         </div>
       </div>
 

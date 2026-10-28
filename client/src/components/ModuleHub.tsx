@@ -17,7 +17,7 @@ export function ModuleHub({ onOpen }: ModuleHubProps) {
     <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10 lg:py-12">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2 mb-10">
         <div>
-          <h1 className="text-2xl lg:text-[28px] font-semibold text-gray-900 dark:text-white tracking-tight">Inventory Management System</h1>
+          <h1 className="text-2xl lg:text-[28px] font-semibold text-gray-900 dark:text-white tracking-tight">Asset Management System</h1>
           <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Welcome back, {userName}.</p>
         </div>
         <p className="text-sm text-gray-500 dark:text-slate-400">{today}</p>
