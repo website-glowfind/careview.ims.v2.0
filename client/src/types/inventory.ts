@@ -9,7 +9,7 @@ export type LicenseSubscriptionType = 'license' | 'subscription';
 
 export type Company = 'KHEALTH' | 'CAREVIEW' | 'GLOWFIND';
 
-export type UserRole = 'admin' | 'editor' | 'user';
+export type UserRole = 'admin' | 'encoder' | 'employee';
 
 export type DisposalMethod = 'Recycle' | 'Donate' | 'Sell' | 'Trash' | 'E-Waste Facility' | 'Return to Vendor' | 'Other';
 

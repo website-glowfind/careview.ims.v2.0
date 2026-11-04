@@ -93,14 +93,14 @@ export function UserManagement({
                   className={`w-12 h-12 rounded-full flex items-center justify-center ${
                     user.role === 'admin'
                       ? 'bg-blue-100 text-blue-600'
-                      : user.role === 'editor'
+                      : user.role === 'encoder'
                       ? 'bg-green-100 text-green-600'
                       : 'bg-gray-100 text-gray-600'
                   }`}
                 >
                   {user.role === 'admin' ? (
                     <Shield className="w-6 h-6" />
-                  ) : user.role === 'editor' ? (
+                  ) : user.role === 'encoder' ? (
                     <Edit2 className="w-6 h-6" />
                   ) : (
                     <UserIcon className="w-6 h-6" />
@@ -131,7 +131,7 @@ export function UserManagement({
                   className={`px-2 py-0.5 text-xs font-semibold rounded capitalize ${
                     user.role === 'admin'
                       ? 'bg-blue-100 text-blue-800'
-                      : user.role === 'editor'
+                      : user.role === 'encoder'
                       ? 'bg-green-100 text-green-800'
                       : 'bg-gray-100 text-gray-800'
                   }`}
