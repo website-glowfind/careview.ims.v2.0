@@ -353,26 +353,26 @@ export function FurnitureDetails({ asset, onClose, onEdit, isAdmin, canEdit, ini
 
       {/* MODALS */}
       {modal === 'assign' && (
-        <AssignModal data={data} busy={busy} onClose={() => setModal(null)} onSave={async (vals) => {
+        <AssignModal data={data} busy={busy} onClose={() => setModal(null)} onSave={async (vals: any) => {
           const next: ITAsset = { ...data, assignedTo: vals.assignedTo, employeeId: vals.employeeId, department: vals.department, position: vals.position,
             furniture: { ...f, dateAssigned: vals.dateAssigned, assignmentHistory: [...assignmentHistory, { assignedTo: vals.assignedTo, department: vals.department, date: vals.dateAssigned || today(), by: user?.name }] } };
           await save(next); await log(`Assigned to ${vals.assignedTo || 'Unassigned'}`, 'assign'); setModal(null);
         }} />
       )}
       {modal === 'transfer' && (
-        <TransferModal data={data} busy={busy} onClose={() => setModal(null)} onSave={async (vals) => {
+        <TransferModal data={data} busy={busy} onClose={() => setModal(null)} onSave={async (vals: any) => {
           const fromLocation = [f.siteBranch, f.building, f.floor, f.roomArea, f.specificLocation].filter(Boolean).join(' · ');
-          const toLocation = [vals.siteBranch || f.siteBranch, vals.building || f.building, vals.floor || f.floor, vals.roomArea || f.roomArea, vals.specificLocation || f.specificLocation].filter(Boolean).join(' · ');
+          const toLocation = [vals.siteBranch, vals.building, vals.floor, vals.roomArea, vals.specificLocation].filter(Boolean).join(' · ');
           const next: ITAsset = { ...data,
-            assignedTo: vals.newEmployee || data.assignedTo, employeeId: vals.employeeId || data.employeeId, department: vals.department || data.department,
-            location: toLocation || data.location,
-            furniture: { ...f, siteBranch: vals.siteBranch || f.siteBranch, building: vals.building || f.building, floor: vals.floor || f.floor, roomArea: vals.roomArea || f.roomArea, specificLocation: vals.specificLocation || f.specificLocation,
+            assignedTo: vals.newEmployee, employeeId: vals.employeeId, department: vals.department, position: '',
+            location: toLocation,
+            furniture: { ...f, siteBranch: vals.siteBranch, building: vals.building, floor: vals.floor, roomArea: vals.roomArea, specificLocation: vals.specificLocation,
               transfers: [...transfers, { fromLocation, toLocation, toEmployee: vals.newEmployee, reason: vals.reason, remarks: vals.remarks, date: vals.date || today(), by: user?.name }] } };
           await save(next); await log(`Transferred: ${vals.reason}`, 'transfer'); setModal(null);
         }} />
       )}
       {modal === 'maintenance' && (
-        <MaintenanceModal data={data} busy={busy} onClose={() => setModal(null)} onSave={async (vals) => {
+        <MaintenanceModal data={data} busy={busy} onClose={() => setModal(null)} onSave={async (vals: any) => {
           const statusNext: AssetStatus = (vals.repairStatus === 'Completed') ? (f.prevStatus as AssetStatus) || 'available' : 'in-maintenance';
           const next: ITAsset = { ...data, status: statusNext,
             furniture: { ...f, prevStatus: vals.repairStatus === 'Completed' ? undefined : (data.status === 'in-maintenance' ? f.prevStatus : data.status),
@@ -381,7 +381,7 @@ export function FurnitureDetails({ asset, onClose, onEdit, isAdmin, canEdit, ini
         }} />
       )}
       {modal === 'disposal' && (
-        <DisposalModal data={data} busy={busy} onClose={() => setModal(null)} onSave={async (vals) => {
+        <DisposalModal data={data} busy={busy} onClose={() => setModal(null)} onSave={async (vals: any) => {
           const next: ITAsset = { ...data, furniture: { ...f, disposal: { reason: vals.reason, date: vals.date || today(), method: vals.method, remarks: vals.remarks, by: user?.name } } };
           await save(next);
           await addFormRecord({ formType: 'Asset Disposal', assetTag: data.deviceCode, deviceCode: data.deviceCode, name: data.name, company: data.company,
@@ -443,12 +443,12 @@ function TransferModal({ data, busy, onClose, onSave }: any) {
   const set = (k: string) => (e: any) => setV((s) => ({ ...s, [k]: e.target.value }));
   return (
     <Shell title="Transfer Asset" subtitle={`${data.deviceCode} · ${data.name}`} onClose={onClose} width="max-w-2xl"
-      footer={<><button onClick={onClose} className={cancelBtn}>Cancel</button><button disabled={busy || !v.reason.trim()} onClick={() => onSave(v)} className="px-4 py-2 rounded-lg bg-[#0b5c96] text-white text-sm font-semibold hover:bg-[#094a79] disabled:opacity-50">Confirm Transfer</button></>}>
+      footer={<><button onClick={onClose} className={cancelBtn}>Cancel</button><button disabled={busy || !v.reason.trim() || ![v.siteBranch, v.building, v.floor, v.roomArea, v.specificLocation].some((x) => x.trim())} onClick={() => onSave(v)} className="px-4 py-2 rounded-lg bg-[#0b5c96] text-white text-sm font-semibold hover:bg-[#094a79] disabled:opacity-50">Confirm Transfer</button></>}>
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-lg border border-gray-200 dark:border-[#1e3a5f] p-3 text-xs"><p className="text-gray-400 mb-1">FROM</p><p className="text-gray-800 dark:text-slate-200">{data.assignedTo || 'Unassigned'} · {data.department || '—'}</p><p className="text-gray-500 mt-1">{fromLoc}</p></div>
-        <div className="rounded-lg border border-[#0b5c96]/40 bg-[#0b5c96]/5 p-3 text-xs"><p className="text-[#0b5c96] mb-1">TO</p><p className="text-gray-800 dark:text-slate-200">{v.newEmployee || data.assignedTo || 'Unassigned'} · {v.department || data.department || '—'}</p><p className="text-gray-500 mt-1">Fill below to change</p></div>
+        <div className="rounded-lg border border-[#0b5c96]/40 bg-[#0b5c96]/5 p-3 text-xs"><p className="text-[#0b5c96] mb-1">TO</p><p className="text-gray-800 dark:text-slate-200">{v.newEmployee || 'Unassigned'} · {v.department || '—'}</p><p className="text-gray-500 mt-1">{[v.siteBranch, v.building, v.floor, v.roomArea, v.specificLocation].filter(Boolean).join(' · ') || '—'}</p></div>
       </div>
-      <p className="text-xs text-gray-400">Leave a field blank to keep its current value.</p>
+      <p className="text-xs text-gray-400">The transfer replaces the current assignment and location — only the details entered here are kept. Fill in at least one location field.</p>
       <div className="grid grid-cols-2 gap-4 pb-2">
         <div><FLabel>New Employee</FLabel><input value={v.newEmployee} onChange={set('newEmployee')} className={INPUT} /></div>
         <div><FLabel>Employee ID</FLabel><input value={v.employeeId} onChange={set('employeeId')} className={INPUT} /></div>

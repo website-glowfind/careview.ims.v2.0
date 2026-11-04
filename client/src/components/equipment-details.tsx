@@ -312,8 +312,8 @@ export function EquipmentDetails({ kind, asset, onClose, onEdit, isAdmin, canEdi
       )}
       {modal === 'transfer' && (
         <TransferModal data={data} fromLabel={data.location} busy={busy} onClose={() => setModal(null)} onSave={async (vals: any) => {
-          await save(withEq({ specificLocation: vals.toLocation || eq.specificLocation, transfers: [...transfers, { fromLocation: data.location, toLocation: vals.toLocation, toEmployee: vals.newEmployee, reason: vals.reason, remarks: vals.remarks, date: vals.date || today(), by: user?.name }] },
-            { assignedTo: vals.newEmployee || data.assignedTo, department: vals.department || data.department, location: vals.toLocation || data.location }));
+          await save(withEq({ specificLocation: vals.toLocation, transfers: [...transfers, { fromLocation: data.location, toLocation: vals.toLocation, toEmployee: vals.newEmployee, reason: vals.reason, remarks: vals.remarks, date: vals.date || today(), by: user?.name }] },
+            { assignedTo: vals.newEmployee, employeeId: '', department: vals.department, position: '', location: vals.toLocation }));
           log(`Transferred: ${vals.reason}`, 'transfer'); setModal(null);
         }} />
       )}

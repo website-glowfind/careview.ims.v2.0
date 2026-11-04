@@ -137,11 +137,11 @@ export function TransferForm({ asset, onTransfer, onCancel, currentUser, onSaveF
       await updateAsset(asset._id, {
         ...asset,
         company:    toCompany,
-        assignedTo: newFullName    || asset.assignedTo,
-        employeeId: newEmployeeId  || asset.employeeId,
-        department: newDepartment  || asset.department,
-        position:   newPosition    || asset.position,
-        status:     'active',
+        assignedTo: newFullName,
+        employeeId: newEmployeeId,
+        department: newDepartment,
+        position:   newPosition,
+        status:     newFullName ? 'active' : 'available',
       });
     }
 
@@ -152,8 +152,8 @@ export function TransferForm({ asset, onTransfer, onCancel, currentUser, onSaveF
         assetTag: asset.deviceCode,
         deviceCode: asset.deviceCode,
         relatedAssetId: asset._id,
-        employeeName: newFullName || asset.assignedTo,
-        department: newDepartment || asset.department,
+        employeeName: newFullName,
+        department: newDepartment,
         company: toCompany,
         fromCompany,
         toCompany,
@@ -173,7 +173,7 @@ export function TransferForm({ asset, onTransfer, onCancel, currentUser, onSaveF
       });
     }
 
-    onTransfer(asset._id!, toCompany, asset.assignedTo, newFullName || asset.assignedTo);
+    onTransfer(asset._id!, toCompany, asset.assignedTo, newFullName);
   };
 
   const handlePrint = async () => {

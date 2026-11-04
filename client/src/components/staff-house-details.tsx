@@ -255,8 +255,8 @@ export function StaffHouseDetails({ asset, onClose, onEdit, isAdmin, canEdit, in
       )}
       {modal === 'transfer' && (
         <TransferModal data={data} fromLabel={data.location} busy={busy} onClose={() => setModal(null)} onSave={async (vals: any) => {
-          const next: ITAsset = { ...data, assignedTo: vals.newEmployee || data.assignedTo, department: vals.department || data.department, location: vals.toLocation || data.location,
-            staffHouse: { ...sh, specificArea: vals.toLocation || sh.specificArea, transfers: [...transfers, { fromLocation: data.location, toLocation: vals.toLocation, toEmployee: vals.newEmployee, reason: vals.reason, remarks: vals.remarks, date: vals.date || today(), by: user?.name }] } };
+          const next: ITAsset = { ...data, assignedTo: vals.newEmployee, employeeId: '', department: vals.department, position: '', location: vals.toLocation,
+            staffHouse: { ...sh, specificArea: vals.toLocation, transfers: [...transfers, { fromLocation: data.location, toLocation: vals.toLocation, toEmployee: vals.newEmployee, reason: vals.reason, remarks: vals.remarks, date: vals.date || today(), by: user?.name }] } };
           await save(next); log(`Transferred: ${vals.reason}`, 'transfer'); setModal(null);
         }} />
       )}

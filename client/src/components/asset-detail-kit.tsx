@@ -65,13 +65,13 @@ export function TransferModal({ data, fromLabel, busy, onClose, onSave }: any) {
   const set = (k: string) => (e: any) => setV((s) => ({ ...s, [k]: e.target.value }));
   return (
     <Shell title="Transfer Asset" subtitle={`${data.deviceCode} · ${data.name}`} onClose={onClose} width="max-w-xl"
-      footer={<><button onClick={onClose} className={cancelBtn}>Cancel</button><button disabled={busy || !v.reason.trim()} onClick={() => onSave(v)} className="px-4 py-2 rounded-lg bg-[#0b5c96] text-white text-sm font-semibold hover:bg-[#094a79] disabled:opacity-50">Confirm Transfer</button></>}>
+      footer={<><button onClick={onClose} className={cancelBtn}>Cancel</button><button disabled={busy || !v.reason.trim() || !v.toLocation.trim()} onClick={() => onSave(v)} className="px-4 py-2 rounded-lg bg-[#0b5c96] text-white text-sm font-semibold hover:bg-[#094a79] disabled:opacity-50">Confirm Transfer</button></>}>
       <div className="rounded-lg border border-gray-200 dark:border-[#1e3a5f] p-3 text-xs"><p className="text-gray-400 mb-1">CURRENT</p><p className="text-gray-800 dark:text-slate-200">{data.assignedTo || 'Unassigned'} · {fromLabel || data.location}</p></div>
-      <p className="text-xs text-gray-400">Leave a field blank to keep its current value.</p>
+      <p className="text-xs text-gray-400">The transfer replaces the current assignment — only the details entered here are kept. Leave New Assignee blank to make it unassigned.</p>
       <div className="grid grid-cols-2 gap-4 pb-2">
         <KField label="New Assignee" value={v.newEmployee} onChange={(x) => setV((s) => ({ ...s, newEmployee: x }))} />
         <KField label="Department" value={v.department} onChange={(x) => setV((s) => ({ ...s, department: x }))} />
-        <div className="col-span-2"><KField label="New Location" value={v.toLocation} onChange={(x) => setV((s) => ({ ...s, toLocation: x }))} /></div>
+        <div className="col-span-2"><KField label="New Location" required value={v.toLocation} onChange={(x) => setV((s) => ({ ...s, toLocation: x }))} /></div>
         <KField label="Transfer Date" required type="date" value={v.date} onChange={(x) => setV((s) => ({ ...s, date: x }))} />
         <KField label="Reason" required value={v.reason} onChange={(x) => setV((s) => ({ ...s, reason: x }))} placeholder="e.g. Relocation" />
         <div className="col-span-2"><FLabel>Remarks</FLabel><textarea value={v.remarks} onChange={set('remarks')} rows={2} className={INPUT} /></div>
