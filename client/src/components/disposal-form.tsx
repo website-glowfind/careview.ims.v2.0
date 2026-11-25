@@ -946,9 +946,7 @@ export function DisposalForm({ assets, currentUser, onSaveFormRecord, preselecte
             {/* Footer */}
             <div className="text-left text-xs text-gray-900 mt-8 pt-6 border-t border-gray-200">
               <p className="font-bold">
-                Asset Codes: {selectedAssets.length > 0
-                  ? selectedAssets.map(item => item.asset.deviceCode).join(', ')
-                  : 'N/A'}
+                KHC-CVC-IT-F-002 Rev.00,Effectivity Date: 07/30/2025
               </p>
             </div>
           </div>
