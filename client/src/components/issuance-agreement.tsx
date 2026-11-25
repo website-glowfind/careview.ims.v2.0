@@ -265,7 +265,7 @@ export function IssuanceAgreement({ asset, assetData, onClose, currentUser, onSa
 
             {/* Footer */}
             <div className="mt-8 pt-3 border-t border-gray-300 text-center text-xs text-gray-500">
-              <p>Asset Code: {data.deviceCode}</p>
+              <p>KHC-CVC-IT-F-001 Rev.00,Effectivity Date: 07/30/2025</p>
             </div>
           </div>
         </div>
