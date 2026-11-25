@@ -482,7 +482,7 @@ export function LicenseSubscriptionFormViewer({ subscription, linkedAsset, onClo
 
             {/* Footer */}
             <div className="mt-6 pt-4 border-t border-gray-300 text-center text-xs text-gray-500">
-              <p>KHC-CVC-IT-F-003 Rev.00,Effectivity Date: 07/30/2025</p>
+              <p>KHC-CVC-IT-F-003 Rev.00,Effectivity Date: 10/01/2026</p>
             </div>
           </div>
         </div>
