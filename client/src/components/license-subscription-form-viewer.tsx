@@ -482,8 +482,7 @@ export function LicenseSubscriptionFormViewer({ subscription, linkedAsset, onClo
 
             {/* Footer */}
             <div className="mt-6 pt-4 border-t border-gray-300 text-center text-xs text-gray-500">
-              <p>This is a system-generated document from the IT Asset Management System</p>
-              <p className="mt-1">Generated on: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</p>
+              <p>KHC-CVC-IT-F-003 Rev.00,Effectivity Date: 07/30/2025</p>
             </div>
           </div>
         </div>
