@@ -615,7 +615,7 @@ export function AssetRecordForm({
 
             {/* Footer */}
             <div className="text-left text-xs text-gray-900 mt-8 pt-6 border-t border-gray-200">
-              <p className="font-bold">Asset Code: {formData.deviceCode || 'N/A'}</p>
+              <p className="font-bold">KHC-CVC-IT-F-003 Rev.00,Effectivity Date: 10/01/2026</p>
             </div>
           </div>
         </div>
